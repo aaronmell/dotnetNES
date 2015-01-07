@@ -12,12 +12,30 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{89E43C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6AAF4081-0C45-46E8-A65D-23C349586540}"
 	ProjectSection(SolutionItems) = preProject
-		..\.gitignore = ..\.gitignore
-		..\LICENSE = ..\LICENSE
-		..\README.md = ..\README.md
+		.gitignore = .gitignore
+		LICENSE = LICENSE
+		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharpNES.Client", "sharpNES.Client\sharpNES.Client.csproj", "{71D512A8-FDA7-4390-ACC9-133E43724431}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharpNES.Engine", "sharpNES.Engine\sharpNES.Engine.csproj", "{BA671021-0C48-4107-A6CF-0CCE0406BD18}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71D512A8-FDA7-4390-ACC9-133E43724431}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71D512A8-FDA7-4390-ACC9-133E43724431}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71D512A8-FDA7-4390-ACC9-133E43724431}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71D512A8-FDA7-4390-ACC9-133E43724431}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA671021-0C48-4107-A6CF-0CCE0406BD18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA671021-0C48-4107-A6CF-0CCE0406BD18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA671021-0C48-4107-A6CF-0CCE0406BD18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA671021-0C48-4107-A6CF-0CCE0406BD18}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
