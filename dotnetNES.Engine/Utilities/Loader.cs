@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using sharpNES.Engine.Models;
+using dotnetNES.Engine.Models;
 
-namespace sharpNES.Engine.Utilities
+namespace dotnetNES.Engine.Utilities
 {
     /// <summary>
     /// This class is responsible for loading the cartridge. This loader only supports loading unzipped iNES formatted cartridges. 

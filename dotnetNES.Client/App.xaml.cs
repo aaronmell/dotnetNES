@@ -1,4 +1,4 @@
-﻿namespace sharpNES.Client
+﻿namespace dotnetNES.Client
 {
     /// <summary>
     /// Interaction logic for App.xaml

@@ -17,11 +17,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharpNES.Client", "sharpNES.Client\sharpNES.Client.csproj", "{71D512A8-FDA7-4390-ACC9-133E43724431}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnetNES.Client", "dotnetNES.Client\dotnetNES.Client.csproj", "{71D512A8-FDA7-4390-ACC9-133E43724431}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharpNES.Engine", "sharpNES.Engine\sharpNES.Engine.csproj", "{BA671021-0C48-4107-A6CF-0CCE0406BD18}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnetNES.Engine", "dotnetNES.Engine\dotnetNES.Engine.csproj", "{BA671021-0C48-4107-A6CF-0CCE0406BD18}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sharpNES.Tests", "sharpNES.Tests\sharpNES.Tests.csproj", "{A6A886B5-78F3-44A7-8C32-D36F4CC60358}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dotnetNES.Tests", "dotnetNES.Tests\dotnetNES.Tests.csproj", "{A6A886B5-78F3-44A7-8C32-D36F4CC60358}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

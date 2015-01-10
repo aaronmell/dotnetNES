@@ -1,4 +1,4 @@
-﻿namespace sharpNES.Engine.Models
+﻿namespace dotnetNES.Engine.Models
 {
     public class CartridgeModel
     {

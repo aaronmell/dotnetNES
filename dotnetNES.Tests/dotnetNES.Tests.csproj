@@ -51,9 +51,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\sharpNES.Engine\sharpNES.Engine.csproj">
+    <ProjectReference Include="..\dotnetNES.Engine\dotnetNES.Engine.csproj">
       <Project>{ba671021-0c48-4107-a6cf-0cce0406bd18}</Project>
-      <Name>sharpNES.Engine</Name>
+      <Name>dotnetNES.Engine</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

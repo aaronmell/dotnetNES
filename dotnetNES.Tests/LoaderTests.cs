@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
-using sharpNES.Engine.Utilities;
+using dotnetNES.Engine.Utilities;
 
-namespace sharpNES.Tests
+namespace dotnetNES.Tests
 {
     [TestFixture]
     public class LoaderTests
