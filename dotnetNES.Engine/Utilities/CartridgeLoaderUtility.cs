@@ -63,8 +63,16 @@ namespace dotnetNES.Engine.Utilities
             if (isTrainerPresent)
                 Array.Copy(rawData, 16, trainer, 0, 512);
 
-            var romBanks = new byte[romBanksCount][];
             var offset = isTrainerPresent ? 529 : 16;
+
+            //If we only have a single Rombank it must be mirrored
+            var romBanks = romBanksCount == 1 ? new byte[2][] : new byte[romBanksCount][];
+
+            if (romBanksCount == 1)
+            {
+                romBanks[1] = new byte[16384];
+                Array.Copy(rawData, offset, romBanks[1], 0, 16384);
+            }
             
             for (var i = 0; i < romBanksCount; i++)
             {

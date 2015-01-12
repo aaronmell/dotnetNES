@@ -90,6 +90,37 @@ namespace dotnetNES.Tests.Utilities
         }
 
         [Test]
+        public void Mirrors_Rom_When_Single_Bank()
+        {
+            var array = GetStandardByteArray(32784);
+            array[4] = 1;
+
+            for (var i = 16; i < 16400; i++)
+            {
+                array[i] = 1;
+            }
+
+            array[15] = 255;
+
+            var cartridge = CartridgeLoaderUtility.LoadCartridge(array);
+
+            foreach (var i in cartridge.ROMBanks[0])
+            {
+                Assert.AreEqual(1, i);
+            }
+
+            Assert.AreEqual(16384, cartridge.ROMBanks[0].Length);
+
+            foreach (var i in cartridge.ROMBanks[1])
+            {
+                Assert.AreEqual(1, i);
+            }
+
+            Assert.AreEqual(16384, cartridge.ROMBanks[1].Length);
+
+        }
+
+        [Test]
         public void Copies_ROM_With_Multiple_Banks()
         {
             var array = GetStandardByteArray(32784);
