@@ -1,19 +1,21 @@
 ﻿using System;
 using System.IO;
 using dotnetNES.Engine.Models;
+using JetBrains.Annotations;
 
 namespace dotnetNES.Engine.Utilities
 {
     /// <summary>
     /// This class is responsible for loading the cartridge. This loader only supports loading unzipped iNES formatted cartridges. 
     /// </summary>
-    public static class Loader
+    public static class CartridgeLoaderUtility
     {
         /// <summary>
         /// This method takes a fileName as input and loads it into a cartridge. It only accepts valid iNes formats.
         /// </summary>
         /// <param name="fileName">The file to load</param>
         /// <returns>The cartridge model</returns>
+        [Pure]
         public static CartridgeModel LoadCartridge(string fileName)
         {
             var rawData = LoadRawData(fileName);
@@ -25,6 +27,7 @@ namespace dotnetNES.Engine.Utilities
         /// </summary>
         /// <param name="rawData">The raw data to load</param>
         /// <returns>The cartridge model</returns>
+        [Pure]
         public static CartridgeModel LoadCartridge(byte[] rawData)
         {
             //First 3 bits are the always the ascii bits
@@ -67,7 +70,7 @@ namespace dotnetNES.Engine.Utilities
             {
                 romBanks[i] = new byte[16384];
                 Array.Copy(rawData, offset, romBanks[i], 0, 16384);
-                offset += 16385;
+                offset += 16384;
             }
 
             var vromBanks = new byte[vromBanksCount][];
@@ -75,7 +78,7 @@ namespace dotnetNES.Engine.Utilities
             {
                 vromBanks[i] = new byte[8192];
                 Array.Copy(rawData, offset, vromBanks[i], 0, 8192);
-                offset += 8193;
+                offset += 8192;
             }
 
             return new CartridgeModel

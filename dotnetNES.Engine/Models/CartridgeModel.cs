@@ -1,17 +1,22 @@
-﻿namespace dotnetNES.Engine.Models
+﻿using JetBrains.Annotations;
+
+namespace dotnetNES.Engine.Models
 {
     public class CartridgeModel
     {
         /// <summary>
         /// The ROM Banks
         /// </summary>
+        [NotNull]
         public byte[][] ROMBanks { get; set; }
 
         /// <summary>
         /// The VROM Banks
         /// </summary>
+        [NotNull]
         public byte[][] VROMBanks { get; set; }
 
+        [NotNull]
         public byte[] Trainer { get; set; }
 
         /// <summary>
