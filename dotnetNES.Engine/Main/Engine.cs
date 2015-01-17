@@ -1,36 +1,33 @@
-﻿using dotnetNES.Engine.Models;
-using dotnetNES.Engine.Utilities;
+﻿using dotnetNES.Engine.Utilities;
 using CPU = Processor.Processor;
+using PPU = dotnetNES.Engine.PictureProcessingUnit.PictureProcessingUnit;
 
 namespace dotnetNES.Engine.Main
 {
     public class Engine
     {
-        private readonly CartridgeModel _cartridgeModel;
-
         public readonly CPU Processor;
+        public readonly PPU PictureProcessingUnit;
 
-       
+        public bool Paused { get; set; }
 
         public Engine(string fileName)
         {
-           _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(fileName);
-            Processor = _cartridgeModel.GetProcessor();
+            var cartridgeModel = CartridgeLoaderUtility.LoadCartridge(fileName);
+            Processor = cartridgeModel.GetProcessor();
+            PictureProcessingUnit = new PPU(Processor);
         }
 
         public Engine(byte[] rawBytes)
         {
-            Processor = new CPU();
-            _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(rawBytes);
+            var cartridgeModel = CartridgeLoaderUtility.LoadCartridge(rawBytes);
+            Processor = cartridgeModel.GetProcessor();
+            PictureProcessingUnit = new PPU(Processor);
         }
- 
-
-        /// <summary>
-        /// Executes the Next Step
-        /// </summary>
-        public void NextStep()
+        
+        public void Step()
         {
-            Processor.NextStep();
+            PictureProcessingUnit.Step();
         }
     }
 }

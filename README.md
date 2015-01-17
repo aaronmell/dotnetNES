@@ -10,5 +10,3 @@ An Emulator of the NES/Famicom system.
 This project makes use of several 3rd party test roms. Attributes are below. If you would like one removed, please contact me. 
 
 instr_test-v5_official.nes: Shay Green <gblargg@gmail.com>
-instr_misc.nes: Shay Green <gblargg@gmail.com>
-instr_timing.nes: Shay Green <gblargg@gmail.com>
