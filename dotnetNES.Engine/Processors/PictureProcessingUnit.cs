@@ -33,6 +33,20 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         private readonly byte[] _objectAttributeMemory = new byte[256];
 
+        /// <summary>
+        /// A Buffer for reads form ppu memory when the address is in the 0x0 to 0x3EFF range.
+        /// </summary>
+        private byte _ppuDataReadBuffer;
+
+        /// <summary>
+        /// It takes two writes to the AddressRegister to get the actual address. This holds the address
+        /// </summary>
+        private int _internalAddress;
+        /// <summary>
+        /// Determines if the first bit has already been written to the address.
+        /// </summary>
+        private bool _isFirstInternalAddressBitSet;
+
         private readonly CPU _cpu = new CPU();
 
         /// <summary>
@@ -339,7 +353,74 @@ namespace dotnetNES.Engine.Processors
                         //TODO Inc hori(v)
                         break;
                     }
-                    //TODO: Add Cycles 257-320
+                    case 257:
+                    case 258:
+                    case 259:
+                    case 260:
+                    case 261:
+                    case 262:
+                    case 263:
+                    case 264:
+                    case 265:
+                    case 266:
+                    case 267:
+                    case 268:
+                    case 269:
+                    case 270:
+                    case 271:
+                    case 272:
+                    case 273:
+                    case 274:
+                    case 275:
+                    case 276:
+                    case 277:
+                    case 278:
+                    case 279:
+                    case 280:
+                    case 281:
+                    case 282:
+                    case 283:
+                    case 284:
+                    case 285:
+                    case 286:
+                    case 287:
+                    case 288:
+                    case 289:
+                    case 290:
+                    case 291:
+                    case 292:
+                    case 293:
+                    case 294:
+                    case 295:
+                    case 296:
+                    case 297:
+                    case 298:
+                    case 299:
+                    case 300:
+                    case 301:
+                    case 302:
+                    case 303:
+                    case 304:
+                    case 305:
+                    case 306:
+                    case 307:
+                    case 308:
+                    case 309:
+                    case 310:
+                    case 311:
+                    case 312:
+                    case 313:
+                    case 314:
+                    case 315:
+                    case 316:
+                    case 317:
+                    case 318:
+                    case 319:
+                    case 320:
+                    {
+                        ObjectAttributeMemoryRegister = 0;
+                        break;
+                    }
                 }
             }
             else if (_scanLine == 241)
@@ -386,22 +467,76 @@ namespace dotnetNES.Engine.Processors
 
         private void ReadMemoryAction(int address)
         {
-            if (address >= 0x4000 || (address & 0x7ff) != 0x2002)
-                return;
-
-            StatusRegister &= byte.MaxValue ^ (1 << 7);
-            AddressRegister = 0;
-            ScrollRegister = 0;
-            _nmiOccurred = false;
+            //Fixing the address due to unused address lines
+            var newaddress = address & 0x7ff;
             
+            switch (newaddress)
+            {
+                //Reading from the Status Register
+                case 0x2002:
+                    StatusRegister &= byte.MaxValue ^ (1 << 7);
+                    AddressRegister = 0;
+                    _isFirstInternalAddressBitSet = false;
+                    _internalAddress = 0;
+
+                    ScrollRegister = 0;
+                    _nmiOccurred = false;
+                    break;
+                //Reading from the PPUData Register
+                case 0x2007:
+                {
+                    if (_internalAddress < 0x3F00)
+                    {
+                        DataRegister = _ppuDataReadBuffer;
+                        _ppuDataReadBuffer = _internalMemory[_internalAddress];
+                 
+                    }
+                    else
+                    {
+                        DataRegister = _internalMemory[_internalAddress];
+                        //PPU Memory Mirror fix
+                        _ppuDataReadBuffer = _internalMemory[_internalAddress - 0x1000];
+                    }
+
+                    _internalAddress = ((ControlRegister & 0x4) == 0x4)
+                        ? _internalAddress += 32
+                        : _internalAddress++;
+                }
+                    break;
+            }
         }
 
         private void WriteMemoryAction(int address, byte value)
         {
-            if (address >= 0x4000 || (address & 0x7ff) != 0x2000)
-                return;
+            //Fixing the address due to unused address lines
+            var newaddress = address & 0x7ff;
 
-            _nmiOutput = (ControlRegister & 0x80) == 80;
+            switch (newaddress)
+            {
+                case 0x2000:
+                    _nmiOutput = (ControlRegister & 0x80) == 80;
+                    break;
+                case 0x2006:
+                    if (value == 0)
+                    {
+                        _internalAddress = 0;
+                        _isFirstInternalAddressBitSet = false;
+                        break;
+                    }
+                    
+                    _internalAddress = _isFirstInternalAddressBitSet
+                        ? _internalAddress & value
+                        : value << 2;
+
+                    break;
+
+                case 0x2007:
+                    _internalMemory[_internalAddress - 0x1000] = DataRegister;
+                    _internalAddress = ((ControlRegister & 0x4) == 0x4)
+                        ? _internalAddress += 32
+                        : _internalAddress++;
+                    break;
+            }
         }
 
         private bool IsRenderingDisabled()
