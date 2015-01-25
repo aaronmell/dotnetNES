@@ -25,11 +25,11 @@ namespace dotnetNES.Tests.Utilities
             var cartridge = CartridgeLoaderUtility.LoadCartridge(array);
             var cpu = cartridge.GetProcessor();
 
-            Assert.AreEqual(1, cpu.ReadMemoryValue(0x8000));
-            Assert.AreEqual(1, cpu.ReadMemoryValue(0xBFFF));
+            Assert.AreEqual(1, cpu.ReadMemoryValueWithoutCycle(0x8000));
+            Assert.AreEqual(1, cpu.ReadMemoryValueWithoutCycle(0xBFFF));
 
-            Assert.AreEqual(2, cpu.ReadMemoryValue(0xC000));
-            Assert.AreEqual(2, cpu.ReadMemoryValue(0xFFFF));
+            Assert.AreEqual(2, cpu.ReadMemoryValueWithoutCycle(0xC000));
+            Assert.AreEqual(2, cpu.ReadMemoryValueWithoutCycle(0xFFFF));
         }
     }
 }

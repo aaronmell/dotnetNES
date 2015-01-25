@@ -28,12 +28,12 @@ namespace dotnetNES.Tests.Engine
                     fileName));
 
             var steps = 0;
-            while (steps < 31000 || engine.Processor.ReadMemoryValue(0x6000) >= 0x80)
+            while (steps < 31000 || engine.Processor.ReadMemoryValueWithoutCycle(0x6000) >= 0x80)
             {
                 engine.Step();
                 steps++;
 
-                if (engine.Processor.ReadMemoryValue(0x6000) > 0x00 && engine.Processor.ReadMemoryValue(0x6000) < 0x80)
+                if (engine.Processor.ReadMemoryValueWithoutCycle(0x6000) > 0x00 && engine.Processor.ReadMemoryValueWithoutCycle(0x6000) < 0x80)
                     break;
             }
 
@@ -41,7 +41,7 @@ namespace dotnetNES.Tests.Engine
             var position = 0;
             for (var i = 0x6004; i < 0x6017; i++)
             {
-                testOutput[position] = engine.Processor.ReadMemoryValue(i);
+                testOutput[position] = engine.Processor.ReadMemoryValueWithoutCycle(i);
                 position++;
             }
 

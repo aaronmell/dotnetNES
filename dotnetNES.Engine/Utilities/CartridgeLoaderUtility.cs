@@ -8,7 +8,7 @@ namespace dotnetNES.Engine.Utilities
     /// <summary>
     /// This class is responsible for loading the cartridge. This loader only supports loading unzipped iNES formatted cartridges. 
     /// </summary>
-    public static class CartridgeLoaderUtility
+    internal static class CartridgeLoaderUtility
     {
         /// <summary>
         /// This method takes a fileName as input and loads it into a cartridge. It only accepts valid iNes formats.
@@ -16,7 +16,7 @@ namespace dotnetNES.Engine.Utilities
         /// <param name="fileName">The file to load</param>
         /// <returns>The cartridge model</returns>
         [Pure]
-        public static CartridgeModel LoadCartridge(string fileName)
+        internal static CartridgeModel LoadCartridge(string fileName)
         {
             var rawData = LoadRawData(fileName);
             return LoadCartridge(rawData);
@@ -28,7 +28,7 @@ namespace dotnetNES.Engine.Utilities
         /// <param name="rawData">The raw data to load</param>
         /// <returns>The cartridge model</returns>
         [Pure]
-        public static CartridgeModel LoadCartridge(byte[] rawData)
+        internal static CartridgeModel LoadCartridge(byte[] rawData)
         {
             //First 3 bits are the always the ascii bits
             if (System.Text.Encoding.ASCII.GetString(rawData, 0, 3).ToUpper() != "NES")

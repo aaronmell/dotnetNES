@@ -1,20 +1,20 @@
 ﻿using System;
 using dotnetNES.Engine.Models;
-using CPU = Processor.Processor;
+using dotnetNES.Engine.Processors;
 
 namespace dotnetNES.Engine.Utilities
 {
     /// <summary>
     /// CPU Utility Classes
     /// </summary>
-    public static class CPUUtility
+    internal static class CPUUtility
     {
         /// <summary>
         /// Gets a new instance of the 6502 Processor
         /// </summary>
         /// <param name="cartridgeModel">The cartridge to load</param>
         /// <returns>A Processor Object</returns>
-        public static CPU GetProcessor(this CartridgeModel cartridgeModel)
+        internal static CPU GetProcessor(this CartridgeModel cartridgeModel)
         {
             var initialProgram = GetInitialProgram(cartridgeModel);
 
@@ -30,7 +30,7 @@ namespace dotnetNES.Engine.Utilities
         /// <param name="cartridgeModel">The cartridge to load. </param>
         /// <param name="programCounter">The initial Program Counter</param>
         /// <returns>A Processor Object</returns>
-        public static CPU GetProcessor(this CartridgeModel cartridgeModel, int programCounter)
+        internal static CPU GetProcessor(this CartridgeModel cartridgeModel, int programCounter)
         {
             var initialProgram = GetInitialProgram(cartridgeModel);
 

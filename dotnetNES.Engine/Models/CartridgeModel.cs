@@ -2,7 +2,10 @@
 
 namespace dotnetNES.Engine.Models
 {
-    public class CartridgeModel
+    /// <summary>
+    /// The data model for a cartridge.
+    /// </summary>
+    internal class CartridgeModel
     {
         /// <summary>
         /// The ROM Banks
@@ -16,6 +19,9 @@ namespace dotnetNES.Engine.Models
         [NotNull]
         public byte[][] VROMBanks { get; set; }
 
+        /// <summary>
+        /// The trainer
+        /// </summary>
         [NotNull]
         public byte[] Trainer { get; set; }
 
