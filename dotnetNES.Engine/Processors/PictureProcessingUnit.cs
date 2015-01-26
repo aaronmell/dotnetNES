@@ -47,8 +47,20 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         private bool _isFirstInternalAddressBitSet;
 
-        private readonly CPU _cpu = new CPU();
+        /// <summary>
+        /// It takes two writes to the ScrollRegister to get the actual address. This holds the address
+        /// </summary>
+        private int _internalScroll;
+        /// <summary>
+        /// Determines if the first bit has already been written to the Scroll.
+        /// </summary>
+        private bool _isFirstInternalScrollBitSet;
 
+        /// <summary>
+        /// The CPU
+        /// </summary>
+        private readonly CPU _cpu = new CPU();
+        
         /// <summary>
         /// The number of cycles that have currently elapsed
         /// </summary>
@@ -75,6 +87,7 @@ namespace dotnetNES.Engine.Processors
         /// The PPUCTRL Register, maps to $2000. This register causes things to happen when it is written to. 
         /// 0: X scroll name table selection
         /// 1: Y scroll name table selection
+        /// 0-1: Base NameTable Address 0= 0x2000 1= 0x2400 2= 0x2800 3= 0x2C00
         /// 2: The amount to increment the Vram address per Read/Write of 0x2007. 0 = increment 1, 1 = increment 32
         /// 3: Sprite atten table address for 8x8 Sprites. 0= 0x0000 1= 0x1000. This is ignored in 8x16 mode
         /// 4: Background pattern table address 0= 0x0000 1= 0x1000
@@ -514,28 +527,52 @@ namespace dotnetNES.Engine.Processors
             switch (newaddress)
             {
                 case 0x2000:
+                {
                     _nmiOutput = (ControlRegister & 0x80) == 80;
                     break;
+                }
+                case 0x2005:
+                {
+                    if (value == 0)
+                    {
+                        _internalScroll = 0;
+                        _isFirstInternalAddressBitSet = false;
+                        break;
+                    }
+
+                    _internalScroll = _isFirstInternalScrollBitSet
+                        ? _internalScroll & value
+                        : value << 2;
+
+                    _isFirstInternalScrollBitSet = !_isFirstInternalScrollBitSet;
+
+                    break;
+                }
                 case 0x2006:
+                {
                     if (value == 0)
                     {
                         _internalAddress = 0;
                         _isFirstInternalAddressBitSet = false;
                         break;
                     }
-                    
+
                     _internalAddress = _isFirstInternalAddressBitSet
                         ? _internalAddress & value
                         : value << 2;
 
-                    break;
+                    _isFirstInternalAddressBitSet = !_isFirstInternalAddressBitSet;
 
+                    break;
+                }
                 case 0x2007:
+                {
                     _internalMemory[_internalAddress - 0x1000] = DataRegister;
                     _internalAddress = ((ControlRegister & 0x4) == 0x4)
                         ? _internalAddress += 32
                         : _internalAddress++;
                     break;
+                }
             }
         }
 
