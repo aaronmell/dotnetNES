@@ -22,10 +22,27 @@ namespace dotnetNES.Tests.Engine
         [TestCase("14-rti.nes", "\n14-rti\n\nPassed\n\0\0\0")]
         [TestCase("15-brk.nes", "\n15-brk\n\nPassed\n\0\0\0")]
         [TestCase("16-special.nes", "\n16-special\n\nPassed")]
-        public void Instruction_Test_No_Errors(string fileName, string expectedString)
+        public void CPU_Instruction_Test_No_Errors(string fileName, string expectedString)
         {
-            var engine = new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "instr_test-v5",
-                    fileName));
+            var output = RunTest(fileName, "instr_test-v5");
+
+            Assert.AreEqual(expectedString, output);
+        }
+
+        //[TestCase("1.frame_basics.nes", "")] //I have no way to pass this test yet, because I am not rendering anything!
+        public void VBlank_NMI_Timing_Test_No_Errors(string fileName, string expectedString)
+        {
+            var output = RunTest(fileName, "vbl_nmi_timing");
+
+            Assert.AreEqual(expectedString, output);
+        }
+
+
+        private string RunTest(string fileName, string folder)
+        {
+            var engine =
+               new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder,
+                   fileName));
 
             var steps = 0;
             while (steps < 31000 || engine.Processor.ReadMemoryValueWithoutCycle(0x6000) >= 0x80)
@@ -33,7 +50,8 @@ namespace dotnetNES.Tests.Engine
                 engine.Step();
                 steps++;
 
-                if (engine.Processor.ReadMemoryValueWithoutCycle(0x6000) > 0x00 && engine.Processor.ReadMemoryValueWithoutCycle(0x6000) < 0x80)
+                if (engine.Processor.ReadMemoryValueWithoutCycle(0x6000) > 0x00 &&
+                    engine.Processor.ReadMemoryValueWithoutCycle(0x6000) < 0x80)
                     break;
             }
 
@@ -45,9 +63,7 @@ namespace dotnetNES.Tests.Engine
                 position++;
             }
 
-            var output = System.Text.Encoding.ASCII.GetString(testOutput);
-
-            Assert.AreEqual(expectedString, output);
+            return System.Text.Encoding.ASCII.GetString(testOutput);
         }
-    }
+}
 }

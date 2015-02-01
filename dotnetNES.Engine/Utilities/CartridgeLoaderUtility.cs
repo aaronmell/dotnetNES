@@ -40,7 +40,6 @@ namespace dotnetNES.Engine.Utilities
             var vromBanksCount = rawData[5];
             //Bit 8 is the number of VRAM Banks. For compatibility, assume this always has a minimum of 1 bank.
             var ramBanksCount = rawData[8] > 0 ? rawData[8] : 1;
-
             //bit 0     1 for vertical mirroring, 0 for horizontal mirroring.
             //bit 1     1 for battery-backed RAM at $6000-$7FFF.
             //bit 2     1 for a 512-byte trainer at $7000-$71FF.
@@ -81,12 +80,22 @@ namespace dotnetNES.Engine.Utilities
                 offset += 16384;
             }
 
-            var vromBanks = new byte[vromBanksCount][];
-            for (var i = 0; i < vromBanksCount; i++)
+            byte[][] vromBanks;
+            if (vromBanksCount > 0)
             {
-                vromBanks[i] = new byte[8192];
-                Array.Copy(rawData, offset, vromBanks[i], 0, 8192);
-                offset += 8192;
+                 vromBanks= new byte[vromBanksCount][];
+
+                for (var i = 0; i < vromBanksCount; i++)
+                {
+                    vromBanks[i] = new byte[8192];
+                    Array.Copy(rawData, offset, vromBanks[i], 0, 8192);
+                    offset += 8192;
+                }
+            }
+            else
+            {
+                vromBanks = new byte[1][];
+                vromBanks[0] = new byte[8192];
             }
 
             return new CartridgeModel
