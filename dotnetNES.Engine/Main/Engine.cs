@@ -36,7 +36,7 @@ namespace dotnetNES.Engine.Main
         /// </summary>
         public void Step()
         {
-            PictureProcessingUnit.Step();
+           Processor.NextStep();
         }
     }
 }
