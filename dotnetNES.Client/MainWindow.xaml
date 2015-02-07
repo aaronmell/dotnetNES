@@ -1,8 +1,22 @@
 ﻿<Window x:Class="dotnetNES.Client.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
+        Title="dotnetNES" Height="350" Width="525"
+        DataContext="{Binding Main, Source={StaticResource Locator}}">
+    <Grid Name="MainGrid">
+        <Menu HorizontalAlignment="Left" Height="20" VerticalAlignment="Top" Width="{Binding ElementName=MainGrid, Path=ActualWidth}">
+            <MenuItem Header="File">
+                <MenuItem Header="Open ROM" Command="{Binding Path=LoadFileCommand}" ></MenuItem>
+            </MenuItem>
+            <MenuItem Header="NES" IsEnabled="{Binding Path=IsCartridgeLoaded}">
+                <MenuItem Header="Reset" Command="{Binding Path=ResetNesCommand}"></MenuItem>
+                <MenuItem Header="Power" Command="{Binding Path=PowerNesCommand}"></MenuItem>
+                <Separator></Separator>
+                <MenuItem Header="Pause" Command="{Binding Path=PauseCommand}" IsChecked="{Binding IsEnginePaused}"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="Debug">
+                <MenuItem Header="Patterns and Palettes" Command="{Binding Path=OpenPatternsAndPalettesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"></MenuItem>
+            </MenuItem>
+        </Menu>
     </Grid>
 </Window>
