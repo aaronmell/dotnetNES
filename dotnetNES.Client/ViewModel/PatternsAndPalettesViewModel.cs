@@ -18,6 +18,7 @@ namespace dotnetNES.Client.ViewModel
 
         public WriteableBitmap PatternTable1 { get; set; }
 
+        public WriteableBitmap Palettes { get; set; }
         
         public PatternsAndPalettesViewModel(Engine.Main.Engine engine)
             : this()
@@ -28,8 +29,9 @@ namespace dotnetNES.Client.ViewModel
         [PreferredConstructor]
         public PatternsAndPalettesViewModel()
         {
-            PatternTable0 = new WriteableBitmap(128,128,300,300, PixelFormats.Bgra32, null);
-            PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgra32, null);
+            PatternTable0 = new WriteableBitmap(128,128,300,300, PixelFormats.Bgr24, null);
+            PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
+            Palettes = new WriteableBitmap(512,16,300,300, PixelFormats.Bgra32, null);
 
             Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
         }

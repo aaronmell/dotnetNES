@@ -65,5 +65,5 @@ namespace dotnetNES.Tests.Engine
 
             return System.Text.Encoding.ASCII.GetString(testOutput);
         }
-}
+    }
 }

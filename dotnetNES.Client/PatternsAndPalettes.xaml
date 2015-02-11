@@ -6,6 +6,8 @@
     <Grid Name="MainGrid">
         <Image HorizontalAlignment="Left" Height="256" Margin="19,41,0,0" VerticalAlignment="Top" Width="256" Source="{Binding PatternTable0 }"/>
         <Image HorizontalAlignment="Left" Height="256" Margin="307,41,0,0" VerticalAlignment="Top" Width="256" Source ="{Binding PatternTable1 }"/>
-        <Label Content="Palettes" HorizontalAlignment="Left" Margin="19,15,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.263,0.462"/>
+        <Label Content="Patterns" HorizontalAlignment="Left" Margin="19,15,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.263,0.462"/>
+        <Label Content="Palettes" Margin="20,312,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" RenderTransformOrigin="0.263,0.462"/>
+        <Image Width="512" Height="32" Margin="19,374,47,55" Source="{Binding Palettes}"/>
     </Grid>
 </Window>

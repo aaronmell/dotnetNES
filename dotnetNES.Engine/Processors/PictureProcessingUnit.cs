@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using Common.Logging;
 using dotnetNES.Engine.Models;
 
 namespace dotnetNES.Engine.Processors
@@ -25,7 +28,7 @@ namespace dotnetNES.Engine.Processors
         /// 0x3F00-0x3F1F 	0x0020 	Palette RAM indexes
         /// 0x3F20-0x3FFF 	0x00E0 	Mirrors of 0x3F00-0x3F1F 
         /// </summary>
-        private static readonly byte[] _internalMemory = new byte[16384];
+        private readonly byte[] _internalMemory = new byte[16384];
 
         /// <summary>
         /// The OAM. This is manipulated by reads/writes to 0x2003 0x2004 and 0x4014
@@ -153,7 +156,9 @@ namespace dotnetNES.Engine.Processors
         /// <summary>
         /// This is the current address. The PPU uses this address to get the data it needs to render a pixel.
         /// </summary>
+
         private int _currentAddress;
+       
 
         /// <summary>
         /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bits of the value are copied here
@@ -233,30 +238,47 @@ namespace dotnetNES.Engine.Processors
         /// A Buffer for reads form ppu memory when the address is in the 0x0 to 0x3EFF range.
         /// </summary>
         private byte _ppuDataReadBuffer;
-        
+
+        /// <summary>
+        /// this flag is set when 0x00 is written to the <see cref="MaskRegister"/>
+        /// </summary>
+        private bool _isRenderingDisabled;
+
         /// <summary>
         /// The CPU
         /// </summary>
         private readonly CPU _cpu = new CPU();
 
-        /// <summary>
-        /// Helper Property to determine if rendering has been disabled
-        /// </summary>
-        private bool IsRenderingDisabled
+        private static readonly ILog _logger = LogManager.GetLogger("PictureProcessingUnit");
+
+        //This contains all of the colors the NES can display converted into RGB format.
+        private static byte[] _pallet = new byte[]
         {
-            get
-            {
-                return (MaskRegister & 0x1E) == 0;
-            }
-        }
+            124, 124, 124, 0, 0, 252, 0, 0, 188, 68, 40, 188, 148, 0, 132, 168, 0, 32, 168, 16, 0, 136, 20, 0, 80, 48, 0,
+            0, 120, 0, 0, 104, 0, 0, 88, 0, 0, 64, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 188, 188, 188, 0, 120, 248, 0, 88, 248,
+            104, 68, 252, 216, 0, 204, 228, 0, 88, 248, 56, 0, 228, 92, 16, 172, 124, 0, 0, 184, 0, 0, 168, 0, 0, 168,
+            68, 0, 136, 136, 0, 0, 0, 0, 0, 0, 0, 0, 0, 248, 248, 248, 60, 188, 252, 104, 136, 252, 152, 120, 248, 248,
+            120, 248, 248, 88, 152, 248, 120, 88, 252, 160, 68, 248, 184, 0, 184, 248, 24, 88, 216, 84, 88, 248, 152, 0,
+            232, 216, 120, 120, 12, 0, 0, 0, 0, 0, 0, 252, 252, 252, 164, 228, 252, 184, 184, 248, 216, 184, 248, 248,
+            184, 248, 248, 164, 192, 240, 208, 176, 252, 224, 168, 248, 216, 120, 216, 248, 120, 184, 248, 184, 184, 248,
+            216, 0, 252, 252, 248, 216, 248, 0, 0, 0, 0, 0, 0
+        };
+
+        /// <summary>
+        /// This flag is set after a reset or power event. Any writes to 0x2000, 0x2001, 0x2005, or 0x2006 are ignored until the flag is cleared.
+        /// </summary>
+        private bool _internalResetFlag;
+
+        /// <summary>
+        /// This is set by <see cref="ControlRegister"/> bit 2
+        /// </summary>
+        private int _currentAddressIncrement;
         #endregion
 
         /// <summary>
         /// This action is fired each time a new frame is available
         /// </summary>
         internal Action OnNewFrameAction { get; set; }
-
-
         #region Constructor
         /// <summary>
         /// Constructor for the PPU
@@ -272,6 +294,7 @@ namespace dotnetNES.Engine.Processors
 
             LoadInitialMemory(cartridgeModel);
             OnNewFrameAction = () => { };
+            _internalResetFlag = true;
         }
         #endregion
 
@@ -279,7 +302,13 @@ namespace dotnetNES.Engine.Processors
 
         internal void Reset()
         {
-           
+            _isOddFrame = false;
+            _tempAddressHasBeenWrittenTo = false;
+            ScrollRegister = 0;
+            DataRegister = 0;
+            ControlRegister = 0;
+            MaskRegister = 0;
+            _internalResetFlag = true;
         }
 
         /// <summary>
@@ -299,6 +328,11 @@ namespace dotnetNES.Engine.Processors
         {
             return GetPatternTable(false);
         }
+
+        internal byte ReadPPUMemory(int address)
+        {
+            return _internalMemory[address];
+        }
         #endregion
 
         #region Private Methods
@@ -306,6 +340,9 @@ namespace dotnetNES.Engine.Processors
         #region Main Loop
         private void CPUCycleCountIncremented()
         {
+            if (_internalResetFlag && _cpu.GetCycleCount() > 29658)
+                _internalResetFlag = false;
+           
             StepPPU();
             StepPPU();
             StepPPU();
@@ -313,16 +350,21 @@ namespace dotnetNES.Engine.Processors
 
         private void StepPPU()
         {
-            var isRenderingDisabled = IsRenderingDisabled;
+          
 
             if (_nmiOccurred && _nmiOutput)
             {
                 _cpu.NonMaskableInterrupt();
+                WriteLog("NMI Occurred!");
             }
 
-            if (!isRenderingDisabled)
+            if (!_isRenderingDisabled)
             {
                 OuterCycleAction();
+            }
+            else
+            {
+                WriteLog("Rendering Is Disabled!");
             }
 
             _cycleCount++;
@@ -340,10 +382,9 @@ namespace dotnetNES.Engine.Processors
             else
             {
                 _scanLine = 0;
+                _isOddFrame = !_isOddFrame;
                 OnNewFrameAction();
             }
-
-            _isOddFrame = !_isOddFrame;
         }
 
         private void OuterCycleAction()
@@ -354,10 +395,11 @@ namespace dotnetNES.Engine.Processors
                 if (_scanLine == 0)
                 {
                     //Copy Temporary to Current at the beginning of each Frame
-                    _currentAddress = _temporaryAddress;
+                    //_currentAddress = _temporaryAddress;
 
                     if (_cycleCount == 0 && _isOddFrame)
                     {
+                        WriteLog("Odd Frame, skipping first cycle");
                         _cycleCount++;
                     }
                 }
@@ -365,14 +407,11 @@ namespace dotnetNES.Engine.Processors
                 //Shift the Registers right one
                 _upperShiftRegister >>= 1;
                 _lowerShiftRegister >>= 1;
-
-                InnerCycleAction();
-
             }
             else if (_scanLine == 241 && _cycleCount == 2)
             {
-
-                StatusRegister |= 0x80;
+                WriteLog("Setting _nmiOccurred");
+                //StatusRegister |= 0x80;
                 _nmiOccurred = true;
 
             }
@@ -380,17 +419,18 @@ namespace dotnetNES.Engine.Processors
             {
                 if (_cycleCount == 1)
                 {
-                    //Clear Vertical Blank
-                    StatusRegister &= byte.MaxValue ^ (1 << 7);
+                    //TODO: FIX these
                     //Clear Sprite 0 Hit
-                    StatusRegister &= byte.MaxValue ^ (1 << 6);
+                    //StatusRegister &= byte.MaxValue ^ (1 << 6);
                     //Clear Sprite Overflow
-                    StatusRegister &= byte.MaxValue ^ (1 << 5);
+                    //StatusRegister &= byte.MaxValue ^ (1 << 5);
                     _nmiOccurred = false;
-                }
 
-                InnerCycleAction();
+                    WriteLog("Clearing _nmiOccurred");
+                }
             }
+
+            InnerCycleAction();
         }
 
         private void InnerCycleAction()
@@ -791,13 +831,15 @@ namespace dotnetNES.Engine.Processors
                         _upperShiftRegister |= _highBackgroundTileByte << 8;
                         _lowerShiftRegister |= _lowBackgroundTileByte << 8;
 
+                        
                         IncrementVerticalCoordinate();
+                        
                         break;
                     }
                 case 257:
                     {
                         _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
-                        _currentAddress = _temporaryAddress & 0x41F;
+                        _currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
                         ObjectAttributeMemoryRegister = 0;
                         break;
                     }
@@ -811,16 +853,16 @@ namespace dotnetNES.Engine.Processors
 
             if (_cycleCount > 279 && _cycleCount < 305)
             {
-                _currentAddress = _temporaryAddress;
+                _currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
             }
         }
 
-        private static byte[] GetPatternTable(bool fetchPattern0)
+        private byte[] GetPatternTable(bool fetchPattern0)
         {
             var start = fetchPattern0 ? 0 : 0x1000;
             var end = fetchPattern0 ? 0x0FFF : 0x1FFF; 
 
-            var bits = new byte[65536];
+            var bits = new byte[49152];
             //We process across 8 vertical pixels for each iteration of the loop. The rowline, is used to calculate the correct offset in the array.
             var tileRow = 0;
            
@@ -858,125 +900,125 @@ namespace dotnetNES.Engine.Processors
                 //$0xxE=$42  01000010
                 //$0xxF=$87  10000111
 
-                var bit0 = (lowBit & 0x1) | ((highBit & 0x01) << 1);
-                var bit1 = ((lowBit & 0x2) >> 1) | (highBit & 0x02);
-                var bit2 = ((lowBit & 0x04) >> 2) | ((highBit & 0x04) >> 1);
-                var bit3 = ((lowBit & 0x08) >> 3) | ((highBit & 0x08) >> 2);
-                var bit4 = ((lowBit & 0x10) >> 4) | ((highBit & 0x10) >> 3);
-                var bit5 = ((lowBit & 0x20) >> 5) | ((highBit & 0x20) >> 4);
-                var bit6 = ((lowBit & 0x40) >> 6) | ((highBit & 0x40) >> 5);
-                var bit7 = (lowBit >> 7) | (((highBit & 0x80) >> 6));
+                var bit0 = _internalMemory[0x3F00 + (lowBit & 0x1) | ((highBit & 0x01) << 1)];
+                var bit1 =  _internalMemory[0x3F00 + ((lowBit & 0x2) >> 1) | (highBit & 0x02)];
+                var bit2 =  _internalMemory[0x3F00 + ((lowBit & 0x04) >> 2) | ((highBit & 0x04) >> 1)];
+                var bit3 =  _internalMemory[0x3F00 + ((lowBit & 0x08) >> 3) | ((highBit & 0x08) >> 2)];
+                var bit4 =  _internalMemory[0x3F00 + ((lowBit & 0x10) >> 4) | ((highBit & 0x10) >> 3)];
+                var bit5 =  _internalMemory[0x3F00 + ((lowBit & 0x20) >> 5) | ((highBit & 0x20) >> 4)];
+                var bit6 =  _internalMemory[0x3F00 + ((lowBit & 0x40) >> 6) | ((highBit & 0x40) >> 5)];
+                var bit7 =  _internalMemory[0x3F00 + (lowBit >> 7) | (((highBit & 0x80) >> 6))];
                 
-                var index = pixelColumnOffset + (tileRow * 4096);
+                var index = pixelColumnOffset + (tileRow * 3072);
                 
                 switch (i & 0x7)
                 {
                     case 0:
                         {
                             SetColor(bits, index, bit7);
-                            SetColor(bits, index + 4, bit6);
-                            SetColor(bits, index + 8, bit5);
-                            SetColor(bits, index + 12, bit4);
-                            SetColor(bits, index + 16, bit3);
-                            SetColor(bits, index + 20, bit2);
-                            SetColor(bits, index + 24, bit1);
-                            SetColor(bits, index + 28, bit0);
+                            SetColor(bits, index + 3, bit6);
+                            SetColor(bits, index + 6, bit5);
+                            SetColor(bits, index + 9, bit4);
+                            SetColor(bits, index + 12, bit3);
+                            SetColor(bits, index + 15, bit2);
+                            SetColor(bits, index + 18, bit1);
+                            SetColor(bits, index + 21, bit0);
                             break;
                         }
                     case 1:
                         {
-                            var offset = index + 512;
+                            var offset = index + 384;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             break;
                         }
                     case 2:
                         {
-                            var offset = index + 1024;
+                            var offset = index + 768;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             break;
                         }
                     case 3:
                         {
-                            var offset = index + 1536;
+                            var offset = index + 1152;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             break;
                         }
                     case 4:
                         {
-                            var offset = index + 2048;
+                            var offset = index + 1536;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             break;
                         }
                     case 5:
                         {
-                            var offset = index + 2560;
+                            var offset = index + 1920;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             break;
                         }
                     case 6:
                         {
-                            var offset = index + 3072;
+                            var offset = index + 2304;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             break;
                         }
                     case 7:
                         {
-                            var offset = index + 3584;
+                            var offset = index + 2688;
                             SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 4, bit6);
-                            SetColor(bits, offset + 8, bit5);
-                            SetColor(bits, offset + 12, bit4);
-                            SetColor(bits, offset + 16, bit3);
-                            SetColor(bits, offset + 20, bit2);
-                            SetColor(bits, offset + 24, bit1);
-                            SetColor(bits, offset + 28, bit0);
+                            SetColor(bits, offset + 3, bit6);
+                            SetColor(bits, offset + 6, bit5);
+                            SetColor(bits, offset + 9, bit4);
+                            SetColor(bits, offset + 12, bit3);
+                            SetColor(bits, offset + 15, bit2);
+                            SetColor(bits, offset + 18, bit1);
+                            SetColor(bits, offset + 21, bit0);
                             
                             //Since we process both the high and low byte at once, 
                             //we need to skip the next 8 address in memory 
                             i += 8;
-                            pixelColumnOffset += 32;
+                            pixelColumnOffset += 24;
                             break;
                         }
                 }                
@@ -984,35 +1026,12 @@ namespace dotnetNES.Engine.Processors
             return bits;
         }
 
-        private static void SetColor(IList<byte> bits, int i, int paletteBit)
+        private static void SetColor(IList<byte> bits, int i, byte paletteLookup)
         {
+            bits[i] = _pallet[paletteLookup * 3 + 2];
+            bits[i + 1] = _pallet[paletteLookup * 3 + 1];
+            bits[i + 2] = _pallet[paletteLookup * 3];
             
-            bits[i + 3] = 0xFF;
-
-            switch (paletteBit)
-            {
-                case 0:
-                {
-                   
-                    break;
-                }
-                case 1:
-                {
-                    bits[i] = 0xFF;
-                    break;
-                }
-                case 2:
-                {
-                    bits[i + 1] = 0xFF;
-                    break;
-                }
-                case 3:
-                {
-                   
-                    bits[i + 2] = 0xFF;
-                    break;
-                }
-            }
         }
         #endregion
 
@@ -1021,14 +1040,17 @@ namespace dotnetNES.Engine.Processors
         private void IncrementHorizontalCoordinate()
         {
             //Perform the Coarse X Increment
-            if ((_currentAddress & 0x001F) == 31)
-            {
-                //Wrapping Occurred.
-                _currentAddress &= ~0x001F;
-                _currentAddress ^= 0x0400;
-            }
-            else
-                _currentAddress += 1; // increment coarse X
+            //if ((_currentAddress & 0x001F) == 0x001F)
+            //{
+            //    _currentAddress ^= 0x041F;
+            //    WriteLog(string.Format("IncrementV: Wrapping Occurred, _currentAddress is now {0}", _currentAddress));
+            //}
+            //else
+            //{
+            //    _currentAddress++;
+            //    WriteLog(string.Format("IncrementV: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
+            //}
+               
         }
 
         //This method increments the Vertical Coordinate on Cycle 256 of the scanline
@@ -1036,35 +1058,22 @@ namespace dotnetNES.Engine.Processors
         {
             if ((_currentAddress & 0x7000) != 0x7000)
             {
-                _currentAddress += 0x1000; // increment fine Y
+                //_currentAddress += 0x1000; // increment fine Y
+                WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
             }
             else
             {
                 _currentAddress &= ~0x7000;                    // fine Y = 0
-                var y = (_currentAddress & 0x03E0) >> 5;    // let y = coarse Y
-                switch (y)
+
+                switch (_currentAddress & 0x3E0)
                 {
-                    //Switch Verticle Nametable
-                    case 29:
-                        {
-                            y = 0;
-                            _currentAddress ^= 0x0800;
-                            break;
-                        }
-                    //Don't switch Nametable
-                    case 31:
-                        {
-                            y = 0;
-                            break;
-                        }
-                    //Increment coarse U
-                    default:
-                        {
-                            y += 1;
-                            break;
-                        }
+                    case 0x3A0: _currentAddress ^= 0xBA0; break;
+                    case 0x3E0: _currentAddress ^= 0x3E0; break;
+                    default: _currentAddress += 0x20; break;
+                        
                 }
-                _currentAddress = (_currentAddress & ~0x03E0) | (y << 5); // put coarse Y back into v
+
+                WriteLog(string.Format("IncrementH: Wrapping Occurred, _currentAddress is now {0}", _currentAddress));
             }
         }
         #endregion
@@ -1084,29 +1093,42 @@ namespace dotnetNES.Engine.Processors
             {
                 //Reading from the Status Register
                 case 0x2002:
-                    StatusRegister &= byte.MaxValue ^ (1 << 7);
+                {
+                    var statusRegister = StatusRegister;
+
+                    if (_nmiOccurred)
+                    {
+                        StatusRegister |= 0x80;
+                    }
+                    else
+                    {
+                        StatusRegister &= byte.MaxValue ^ (1 << 7);
+                    }
+
                     _tempAddressHasBeenWrittenTo = false;
                     _nmiOccurred = false;
                     break;
+                }
+                
                 //Reading from the PPUData Register
                 case 0x2007:
                     {
+                        //If the _crrent address is not a palette read, it goes into a buffer. Otherwise
+                        //It is ready directly
                         if (_currentAddress < 0x3F00)
                         {
                             DataRegister = _ppuDataReadBuffer;
                             _ppuDataReadBuffer = _internalMemory[_currentAddress];
-
                         }
                         else
                         {
                             DataRegister = _internalMemory[_currentAddress];
                             //PPU Memory Mirror fix
-                            _ppuDataReadBuffer = _internalMemory[_currentAddress - 0x1000];
+                            _ppuDataReadBuffer = _internalMemory[_currentAddress];
                         }
 
-                        _currentAddress = ((ControlRegister & 0x4) == 0x4)
-                            ? _currentAddress += 32
-                            : _currentAddress++;
+                        _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
+                        WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", _currentAddress));
                     }
                     break;
             }
@@ -1115,58 +1137,96 @@ namespace dotnetNES.Engine.Processors
         private void WriteMemoryAction(int address, byte value)
         {
             //Fixing the address due to unused address lines
-            var newaddress = address & 0x7ff;
+            var newaddress = address; //& 0x3FFF;
 
             switch (newaddress)
             {
                 case 0x2000:
-                    {
-                        _temporaryAddress |= (value & 0x3) << 10;
+                {
+                    if (_internalResetFlag)
+                        return;
 
-                        _nmiOutput = (ControlRegister & 0x80) == 80;
-                        break;
-                    }
+                    _temporaryAddress |= (value & 0x3) << 10;
+
+                    _nmiOutput = (ControlRegister & 0x80) != 0;
+
+                    _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
+
+                    break;
+                }
+                case 0x2001:
+                {
+                    _isRenderingDisabled = (MaskRegister & 0x1E) == 0;
+                    break;
+                }
                 case 0x2005:
-                    {
-                        if (!_tempAddressHasBeenWrittenTo)
-                        {
-                            _fineXScroll = value & 0x07;
-                            _temporaryAddress = (value >> 3) & 0x1F;
-                        }
-                        else
-                        {
-                            _temporaryAddress = (value & 7) << 12 | (value & 0x1f8) << 2;
-                            _currentAddress = _temporaryAddress;
-                        }
-                        _tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
+                {
+                    if (_internalResetFlag)
+                        return;
 
-                        break;
+                    if (!_tempAddressHasBeenWrittenTo)
+                    {
+                        _fineXScroll = value & 0x07;
+                        _temporaryAddress = (value >> 3) & 0x1F;
+                        WriteLog(string.Format("Memory: 0x2005 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
                     }
+                    else
+                    {
+                        _temporaryAddress = (value & 7) << 12 | (value & 0x1f8) << 2;
+                        WriteLog(string.Format("Memory: 0x2005 write x2, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
+                    }
+                    _tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
+
+                    break;
+                }
                 case 0x2006:
-                    {
-                        if (!_tempAddressHasBeenWrittenTo)
-                        {
-                            _temporaryAddress &= (~(1 << 13)) | ((value & 0x3F) << 7);
-                        }
-                        else
-                        {
-                            _temporaryAddress |= (value & 0xFF);
-                        }
-                        _tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
+                {
+                    if (_internalResetFlag)
+                        return;
 
-                        break;
-                    }
-                case 0x2007:
+                    if (!_tempAddressHasBeenWrittenTo)
                     {
-                        _internalMemory[_currentAddress - 0x1000] = DataRegister;
-                        _currentAddress = ((ControlRegister & 0x4) == 0x4)
-                            ? _currentAddress += 32
-                            : _currentAddress++;
-                        break;
+                        _temporaryAddress = ((value & 0x3F) << 8);
+                        WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
                     }
+                    else
+                    {
+                        _temporaryAddress |= (value & 0xFF);
+                        _currentAddress = _temporaryAddress;
+                        WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}, _currentAddress is now {2} ", value, _temporaryAddress, _currentAddress));
+                    }
+                    _tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
+
+                    break;
+                    
+                }
+                case 0x2007:
+                {
+                    //Mirroring
+                    var mirrorAddress = 0;
+                    
+                    if (_currentAddress > 0x3F1F)
+                    {
+                        mirrorAddress = _currentAddress - 0x20;
+                    }
+                    else
+                        mirrorAddress = _currentAddress;
+                    
+                    _internalMemory[mirrorAddress] = DataRegister;
+
+                    _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
+                    WriteLog(string.Format("Memory: 0x2007 write, value {0} written to address {1}  Current Address Incremented to {2}", DataRegister, mirrorAddress, _currentAddress));
+                    break;
+                }
             }
         }
         #endregion
+
+        [Conditional("DEBUG")]
+        private void WriteLog(string log)
+        {
+            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} {6}", _scanLine, _cycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, log);
+        }
         #endregion
     }
 }
