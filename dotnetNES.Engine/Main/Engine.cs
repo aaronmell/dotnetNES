@@ -63,7 +63,7 @@ namespace dotnetNES.Engine.Main
         /// <summary>
         /// This gets the Pattern table 0
         /// </summary>
-        /// <returns>A byte array of BRGA32 data that represents Pattern Table 0</returns>
+        /// <returns>A byte array of BRG32 data that represents Pattern Table 0</returns>
         public byte[] GetPatternTable0()
         {
             return PictureProcessingUnit.GetPatternTable0();
@@ -72,10 +72,28 @@ namespace dotnetNES.Engine.Main
         /// <summary>
         /// This gets the Pattern table 1
         /// </summary>
-        /// <returns>A byte array of BRGA32 data that represents Pattern Table 1</returns>
+        /// <returns>A byte array of BRG32 data that represents Pattern Table 1</returns>
         public byte[] GetPatternTable1()
         {
             return PictureProcessingUnit.GetPatternTable1();
+        }
+
+        /// <summary>
+        /// This gets the background palette
+        /// </summary>
+        /// <returns>A byte array of BRG32 data the represents the palettes</returns>
+        public byte[] GetBackgroundPalette()
+        {
+            return PictureProcessingUnit.GetBackgroundPalette();
+        }
+
+        /// <summary>
+        /// This gets the background palette
+        /// </summary>
+        /// <returns>A byte array of BRG32 data the represents the palettes</returns>
+        public byte[] GetSpritePalette()
+        {
+            return PictureProcessingUnit.GetSpritePalette();
         }
     }
 }

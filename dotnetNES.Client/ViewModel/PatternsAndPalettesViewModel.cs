@@ -18,7 +18,9 @@ namespace dotnetNES.Client.ViewModel
 
         public WriteableBitmap PatternTable1 { get; set; }
 
-        public WriteableBitmap Palettes { get; set; }
+        public WriteableBitmap BackgroundPalettes { get; set; }
+
+        public WriteableBitmap SpritePalettes { get; set; }
         
         public PatternsAndPalettesViewModel(Engine.Main.Engine engine)
             : this()
@@ -29,9 +31,10 @@ namespace dotnetNES.Client.ViewModel
         [PreferredConstructor]
         public PatternsAndPalettesViewModel()
         {
-            PatternTable0 = new WriteableBitmap(128,128,300,300, PixelFormats.Bgr24, null);
+            PatternTable0 = new WriteableBitmap(128,128,1,1, PixelFormats.Bgr24, null);
             PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
-            Palettes = new WriteableBitmap(512,16,300,300, PixelFormats.Bgra32, null);
+            BackgroundPalettes = new WriteableBitmap(512, 32,1,1, PixelFormats.Bgr24, null);
+            SpritePalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
 
             Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
         }
@@ -47,6 +50,7 @@ namespace dotnetNES.Client.ViewModel
 
         private void Refresh()
         {
+            #region Left Pattern Table
             var patternTable0 = Engine.GetPatternTable0();
 
             PatternTable0.Lock();
@@ -64,8 +68,9 @@ namespace dotnetNES.Client.ViewModel
             PatternTable0.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable0.Unlock();
             RaisePropertyChanged("PatternTable0");
+            #endregion
 
-
+            #region Right Pattern Table
             var patternTable1 = Engine.GetPatternTable1();
 
             PatternTable1.Lock();
@@ -83,6 +88,46 @@ namespace dotnetNES.Client.ViewModel
             PatternTable1.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable1.Unlock();
             RaisePropertyChanged("PatternTable1");
+            #endregion
+
+            #region Background Palette
+            var backgroundPalette = Engine.GetBackgroundPalette();
+
+            BackgroundPalettes.Lock();
+            bufferPtr = BackgroundPalettes.BackBuffer;
+
+            unsafe
+            {
+                var pbuff = (byte*)bufferPtr.ToPointer();
+
+                for (var i = 0; i < backgroundPalette.Length; i++)
+                {
+                    pbuff[i] = backgroundPalette[i];
+                }
+            }
+            BackgroundPalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
+            BackgroundPalettes.Unlock();
+            RaisePropertyChanged("BackgroundPalettes");
+            #endregion
+
+            #region Sprite Palette
+            var spritePalette = Engine.GetSpritePalette();
+            SpritePalettes.Lock();
+            bufferPtr = SpritePalettes.BackBuffer;
+
+            unsafe
+            {
+                var pbuff = (byte*)bufferPtr.ToPointer();
+
+                for (var i = 0; i < spritePalette.Length; i++)
+                {
+                    pbuff[i] = spritePalette[i];
+                }
+            }
+            SpritePalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
+            SpritePalettes.Unlock();
+            RaisePropertyChanged("SpritePalettes");
+            #endregion
         }
     }
 }
