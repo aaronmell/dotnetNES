@@ -294,6 +294,8 @@ namespace dotnetNES.Engine.Processors
             LoadInitialMemory(cartridgeModel);
             OnNewFrameAction = () => { };
             _internalResetFlag = true;
+            _scanLine = 241;
+            _cycleCount = 0;
         }
         #endregion
 
@@ -308,6 +310,8 @@ namespace dotnetNES.Engine.Processors
             ControlRegister = 0;
             MaskRegister = 0;
             _internalResetFlag = true;
+            _scanLine = 241;
+            _cycleCount = 0;
         }
 
         /// <summary>
@@ -372,11 +376,14 @@ namespace dotnetNES.Engine.Processors
 
         private void StepPPU()
         {
-          
+            WriteLog("Stepping PPU");
 
             if (_nmiOccurred && _nmiOutput)
             {
+                _nmiOccurred = false;
                 _cpu.NonMaskableInterrupt();
+
+               
                 WriteLog("NMI Occurred!");
             }
 
@@ -387,26 +394,25 @@ namespace dotnetNES.Engine.Processors
             else
             {
                 WriteLog("Rendering Is Disabled!");
-            }
-
-            _cycleCount++;
+            }           
 
             if (_cycleCount < 340)
                 _cycleCount++;
             else
             {
                 _cycleCount = 0;
-                _scanLine++;
+
+                if (_scanLine < 261)
+                    _scanLine++;
+                else
+                {
+                    _scanLine = 0;
+                    _isOddFrame = !_isOddFrame;
+                    OnNewFrameAction();
+                }
             }
 
-            if (_scanLine < 261)
-                _scanLine++;
-            else
-            {
-                _scanLine = 0;
-                _isOddFrame = !_isOddFrame;
-                OnNewFrameAction();
-            }
+            
         }
 
         private void OuterCycleAction()
@@ -905,7 +911,7 @@ namespace dotnetNES.Engine.Processors
             if ((_currentAddress & 0x7000) != 0x7000)
             {
                 //_currentAddress += 0x1000; // increment fine Y
-                WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
+                //WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
             }
             else
             {
@@ -932,16 +938,12 @@ namespace dotnetNES.Engine.Processors
 
         private void ReadMemoryAction(int address)
         {
-            //Fixing the address due to unused address lines
-            var newaddress = address & 0x7ff;
-
-            switch (newaddress)
+            switch (address)
             {
                 //Reading from the Status Register
                 case 0x2002:
                 {
-                    var statusRegister = StatusRegister;
-
+                   
                     if (_nmiOccurred)
                     {
                         StatusRegister |= 0x80;
@@ -982,10 +984,7 @@ namespace dotnetNES.Engine.Processors
 
         private void WriteMemoryAction(int address, byte value)
         {
-            //Fixing the address due to unused address lines
-            var newaddress = address; //& 0x3FFF;
-
-            switch (newaddress)
+            switch (address)
             {
                 case 0x2000:
                 {

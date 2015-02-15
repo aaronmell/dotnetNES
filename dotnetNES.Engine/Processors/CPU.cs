@@ -21,7 +21,18 @@ namespace dotnetNES.Engine.Processors
         /// <param name="data">The data to write</param>
         public override void WriteMemoryValue(int address, byte data)
         {
-            Memory[address < 0x4000 ? address & 0x7FF : address] = data;
+            //Memory from 0x1000-0x17FF mirrors 0x0000-0x7FFF
+            if (address < 0x1800)
+            {
+                address &= 0x7FF;
+            }
+            //Memory between 0x2008-0x3FFF mirrors every 8 bytes.
+            else if (address > 0x1FFF && address < 0x4000)
+            {
+                address = (address & 0x7) + 0x2000;
+            }
+
+            Memory[address] = data;
             IncrementCycleCount();
             //Not sure if this is in the right place
             WriteMemoryAction(address, data);
@@ -34,9 +45,20 @@ namespace dotnetNES.Engine.Processors
         /// <returns>the byte being returned</returns>
         public override byte ReadMemoryValue(int address)
         {
+            //Memory from 0x1000-0x17FF mirrors 0x0000-0x7FFF
+            if (address < 0x1800)
+            {
+                address &= 0x7FF;
+            }
+            //Memory between 0x2008-0x3FFF mirrors every 8 bytes.
+            else if (address > 0x1FFF &&  address < 0x4000) 
+            {
+                address = (address & 0x7) + 0x2000;
+            }
+
             ReadMemoryAction(address);
 
-            var value = Memory[address < 0x4000 ? address & 0x7FF : address];
+            var value = Memory[address];
             IncrementCycleCount();
             return value;
         }
@@ -48,7 +70,18 @@ namespace dotnetNES.Engine.Processors
         /// <returns>the value from memory</returns>
         public byte ReadMemoryValueWithoutCycle(int address)
         {
-            var value = Memory[address < 0x4000 ? address & 0x7FF : address];
+            //Memory from 0x1000-0x17FF mirrors 0x0000-0x7FFF
+            if (address < 0x1800)
+            {
+                address &= 0x7FF;
+            }
+            //Memory between 0x2008-0x3FFF mirrors every 8 bytes.
+            else if (address > 0x1FFF && address < 0x4000)
+            {
+                address = (address & 0x7) + 0x2000;
+            }
+
+            var value = Memory[address];
             return value;
         }
 
@@ -58,8 +91,19 @@ namespace dotnetNES.Engine.Processors
         /// <param name="address">The address to write to</param>
         /// <param name="data">The data to write</param>
         public void WriteMemoryValueWithoutCycle(int address, byte data)
-        {
-            Memory[address < 0x4000 ? address & 0x7FF : address] = data;
+        { 
+            //Memory from 0x1000-0x17FF mirrors 0x0000-0x7FFF
+            if (address < 0x1800)
+            {
+                address &= 0x7FF;
+            }
+            //Memory between 0x2008-0x3FFF mirrors every 8 bytes.
+            else if (address > 0x1FFF && address < 0x4000)
+            {
+                address = (address & 0x7) + 0x2000;
+            }
+
+            Memory[address] = data;
         }
 
         /// <summary>
