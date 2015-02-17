@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 
@@ -6,7 +7,7 @@ namespace dotnetNES.Tests.Engine
 {
     public class EngineTests
     {
-        [TestCase("01-basics.nes", "\n01-basics\n\nPassed\n")]
+        [TestCase("01-basics.nes", "\n01-basics\n\nPassed\n\0")]
         //[TestCase("02-implied.nes", "\n02-implied\n\nPassed\n")] //Fails due to unsupported op codes
         //[TestCase("03-immediate.nes", "\n03-immediate\n\nPassed\n")] //Fails due to unsupported op codes
         //[TestCase("04-zero_page.nes", "\n04-zero_page\n\nPassed\n")] //Fails due to unsupported op codes
@@ -15,16 +16,38 @@ namespace dotnetNES.Tests.Engine
         //[TestCase("07-abs_xy.nes", "\n07-abs_xy\n\nPassed\n")] //Fails due to unsupported op codes
         //[TestCase("08-ind_x.nes", "\n08-ind_x\n\nPassed\n")] //Fails due to unsupported op codes
         //[TestCase("09-ind_y.nes", "\n09-ind_y\n\nPassed\n")] //Fails due to unsupported op codes
-        [TestCase("10-branches.nes", "\n10-branches\n\nPasse")]
+        [TestCase("10-branches.nes", "\n10-branches\n\nPassed\n\0")]
         [TestCase("11-stack.nes", "\n11-stack\n\nPassed\n\0")]
-        [TestCase("12-jmp_jsr.nes", "\n12-jmp_jsr\n\nPassed")]
-        [TestCase("13-rts.nes", "\n13-rts\n\nPassed\n\0\0\0")]
-        [TestCase("14-rti.nes", "\n14-rti\n\nPassed\n\0\0\0")]
-        [TestCase("15-brk.nes", "\n15-brk\n\nPassed\n\0\0\0")]
-        [TestCase("16-special.nes", "\n16-special\n\nPassed")]
+        [TestCase("12-jmp_jsr.nes", "\n12-jmp_jsr\n\nPassed\n\0")]
+        [TestCase("13-rts.nes", "\n13-rts\n\nPassed\n\0")]
+        [TestCase("14-rti.nes", "\n14-rti\n\nPassed\n\0")]
+        [TestCase("15-brk.nes", "\n15-brk\n\nPassed\n\0")]
+        [TestCase("16-special.nes", "\n16-special\n\nPassed\n\0")]
         public void CPU_Instruction_Test_No_Errors(string fileName, string expectedString)
         {
             var output = RunTest(fileName, "instr_test-v5");
+
+            Assert.AreEqual(expectedString, output);
+        }
+
+        [TestCase("01-abs_x_wrap.nes", "\n01-abs_x_wrap\n\nPassed\n\0")]
+        [TestCase("02-branch_wrap.nes", "\n02-branch_wrap\n\nPassed\n\0")]
+        //[TestCase("03-dummy_reads.nes", "\n02-branch_wrap\n\nPassed\n\0")]
+        public void CPU_Instruction_Misc_No_Errors(string fileName, string expectedString)
+        {
+            var output = RunTest(fileName, "instr_misc");
+
+            Assert.AreEqual(expectedString, output);
+        }
+
+        //[TestCase("1-cli_latency.nes","")]
+        //[TestCase("2-nmi_and_brk.nes", "")]
+        //[TestCase("3-nmi_and_irq.nes", "")]
+        //[TestCase("4-irq_and_dma.nes", "")]
+        //[TestCase("5-branch_delays_irq.nes", "")]
+        public void CPU_Interrupts_No_Errors(string fileName, string expectedString)
+        {
+            var output = RunTest(fileName, "cpu_int_v2");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -55,15 +78,21 @@ namespace dotnetNES.Tests.Engine
                     break;
             }
 
-            var testOutput = new byte[19];
-            var position = 0;
-            for (var i = 0x6004; i < 0x6017; i++)
-            {
-                testOutput[position] = engine.Processor.ReadMemoryValueWithoutCycle(i);
-                position++;
-            }
+            var testOutput = new List<byte>();
+            var startAddress = 0x6004;
 
-            return System.Text.Encoding.ASCII.GetString(testOutput);
+            while (true)
+            {
+                testOutput.Add(engine.Processor.ReadMemoryValueWithoutCycle(startAddress));
+
+                if (System.Text.Encoding.ASCII.GetString(testOutput.ToArray()).Contains("\n\0"))
+                {
+                    break;
+                }
+               
+                startAddress++;
+            }
+            return System.Text.Encoding.ASCII.GetString(testOutput.ToArray());
         }
     }
 }

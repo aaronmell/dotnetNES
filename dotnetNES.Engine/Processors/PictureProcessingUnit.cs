@@ -381,7 +381,7 @@ namespace dotnetNES.Engine.Processors
             if (_nmiOccurred && _nmiOutput)
             {
                 _nmiOccurred = false;
-                _cpu.NonMaskableInterrupt();
+                //_cpu.NonMaskableInterrupt();
 
                
                 WriteLog("NMI Occurred!");
