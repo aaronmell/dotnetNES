@@ -120,7 +120,7 @@ namespace dotnetNES.Engine.Processors
         protected override void AddWithCarryOperation(AddressingMode addressingMode)
         {
             //Accumulator, Carry = Accumulator + ValueInMemoryLocation + Carry 
-            var memoryValue = ReadMemoryValueWithoutCycle(GetAddressByAddressingMode(addressingMode));
+            var memoryValue = ReadMemoryValue(GetAddressByAddressingMode(addressingMode));
             var newValue = memoryValue + Accumulator + (CarryFlag ? 1 : 0);
 
             OverflowFlag = (((Accumulator ^ newValue) & 0x80) != 0) && (((Accumulator ^ memoryValue) & 0x80) == 0);
@@ -144,7 +144,7 @@ namespace dotnetNES.Engine.Processors
         //Overriding the SBC operaiton to remove decimal mode
         protected override void SubtractWithBorrowOperation(AddressingMode addressingMode)
         {
-            var memoryValue = ReadMemoryValueWithoutCycle(GetAddressByAddressingMode(addressingMode));
+            var memoryValue = ReadMemoryValue(GetAddressByAddressingMode(addressingMode));
             var newValue = Accumulator - memoryValue - (CarryFlag ? 0 : 1);
 
             CarryFlag = newValue >= 0;

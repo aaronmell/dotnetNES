@@ -210,12 +210,12 @@ namespace dotnetNES.Engine.Processors
         /// <summary>
         /// The number of cycles that have currently elapsed
         /// </summary>
-        private int _cycleCount;
+        internal int CycleCount;
         
         /// <summary>
         /// The current scanLine of the PPU
         /// </summary>
-        private int _scanLine;
+        internal int ScanLine;
         
         /// <summary>
         /// Odd frames skip a cycle on the first cycle and scanline
@@ -294,8 +294,8 @@ namespace dotnetNES.Engine.Processors
             LoadInitialMemory(cartridgeModel);
             OnNewFrameAction = () => { };
             _internalResetFlag = true;
-            _scanLine = 241;
-            _cycleCount = 0;
+            ScanLine = 241;
+            CycleCount = 0;
         }
         #endregion
 
@@ -310,8 +310,8 @@ namespace dotnetNES.Engine.Processors
             ControlRegister = 0;
             MaskRegister = 0;
             _internalResetFlag = true;
-            _scanLine = 241;
-            _cycleCount = 0;
+            ScanLine = 241;
+            CycleCount = 0;
         }
 
         /// <summary>
@@ -396,17 +396,17 @@ namespace dotnetNES.Engine.Processors
                 WriteLog("Rendering Is Disabled!");
             }           
 
-            if (_cycleCount < 340)
-                _cycleCount++;
+            if (CycleCount < 340)
+                CycleCount++;
             else
             {
-                _cycleCount = 0;
+                CycleCount = 0;
 
-                if (_scanLine < 261)
-                    _scanLine++;
+                if (ScanLine < 261)
+                    ScanLine++;
                 else
                 {
-                    _scanLine = 0;
+                    ScanLine = 0;
                     _isOddFrame = !_isOddFrame;
                     OnNewFrameAction();
                 }
@@ -417,18 +417,18 @@ namespace dotnetNES.Engine.Processors
 
         private void OuterCycleAction()
         {
-            if (_scanLine < 240)
+            if (ScanLine < 240)
             {
                 //Skip the first cycle on the first scanline if an odd frame
-                if (_scanLine == 0)
+                if (ScanLine == 0)
                 {
                     //Copy Temporary to Current at the beginning of each Frame
                     //_currentAddress = _temporaryAddress;
 
-                    if (_cycleCount == 0 && _isOddFrame)
+                    if (CycleCount == 0 && _isOddFrame && (StatusRegister & 8) == 8)
                     {
                         WriteLog("Odd Frame, skipping first cycle");
-                        _cycleCount++;
+                        CycleCount++;
                     }
                 }
 
@@ -436,16 +436,16 @@ namespace dotnetNES.Engine.Processors
                 _upperShiftRegister >>= 1;
                 _lowerShiftRegister >>= 1;
             }
-            else if (_scanLine == 241 && _cycleCount == 2)
+            else if (ScanLine == 241 && CycleCount == 2)
             {
                 WriteLog("Setting _nmiOccurred");
                 //StatusRegister |= 0x80;
                 _nmiOccurred = true;
 
             }
-            else if (_scanLine == 261)
+            else if (ScanLine == 261)
             {
-                if (_cycleCount == 1)
+                if (CycleCount == 1)
                 {
                     //TODO: FIX these
                     //Clear Sprite 0 Hit
@@ -463,7 +463,7 @@ namespace dotnetNES.Engine.Processors
 
         private void InnerCycleAction()
         {
-            switch (_cycleCount)
+            switch (CycleCount)
             {
                 //NameTable Address Fetch
                 case 1:
@@ -845,7 +845,7 @@ namespace dotnetNES.Engine.Processors
                         _upperShiftRegister |= _highBackgroundTileByte << 8;
                         _lowerShiftRegister |= _lowBackgroundTileByte << 8;
 
-                        if (_cycleCount < 256 || _cycleCount > 327)
+                        if (CycleCount < 256 || CycleCount > 327)
                         {
                             IncrementHorizontalCoordinate();
                         }
@@ -873,13 +873,13 @@ namespace dotnetNES.Engine.Processors
                     }
             }
 
-            if (_cycleCount < 256 || _cycleCount > 320)
+            if (CycleCount < 256 || CycleCount > 320)
                 return;
 
             ObjectAttributeMemoryRegister = 0;
 
 
-            if (_cycleCount > 279 && _cycleCount < 305)
+            if (CycleCount > 279 && CycleCount < 305)
             {
                 _currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
             }
@@ -922,7 +922,6 @@ namespace dotnetNES.Engine.Processors
                     case 0x3A0: _currentAddress ^= 0xBA0; break;
                     case 0x3E0: _currentAddress ^= 0x3E0; break;
                     default: _currentAddress += 0x20; break;
-                        
                 }
 
                 WriteLog(string.Format("IncrementH: Wrapping Occurred, _currentAddress is now {0}", _currentAddress));
@@ -1279,7 +1278,7 @@ namespace dotnetNES.Engine.Processors
         [Conditional("DEBUG")]
         private void WriteLog(string log)
         {
-            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} {6}", _scanLine, _cycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, log);
+            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} {6}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, log);
         }
         #endregion
     }

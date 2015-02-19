@@ -40,7 +40,7 @@ namespace dotnetNES.Tests.Engine
             Assert.AreEqual(expectedString, output);
         }
 
-        //[TestCase("1-cli_latency.nes","")]
+        //[TestCase("1-cli_latency.nes","")] //Needs APU
         //[TestCase("2-nmi_and_brk.nes", "")]
         //[TestCase("3-nmi_and_irq.nes", "")]
         //[TestCase("4-irq_and_dma.nes", "")]
@@ -60,6 +60,71 @@ namespace dotnetNES.Tests.Engine
             Assert.AreEqual(expectedString, output);
         }
 
+        [Test]
+        public void Nestest_Matches()
+        {
+            var engine =
+               new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
+                   "nestest.nes"));
+            //Changing the Initial PC to 0xC000
+            engine.Processor.WriteMemoryValueWithoutCycle(65532, 0);
+            engine.Processor.Reset();
+
+            var testData = LoadNesTestData();
+
+
+
+            var steps = 1;
+            while (steps < 5002) //Can't run the full test, since past this point unofficial op codes show up.
+            {
+               engine.Step();
+
+               if (steps == 4275)
+               {
+                   var x = 1;
+                   var y = x;
+               }
+
+               Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter, string.Format("Step {0} PC: ", steps));
+               Assert.AreEqual(testData[steps].Accumulator, engine.Processor.Accumulator, string.Format("Step {0} Accumulator: ", steps));
+               Assert.AreEqual(testData[steps].XRegister, engine.Processor.XRegister, string.Format("Step {0} XRegister: ", steps));
+               Assert.AreEqual(testData[steps].YRegister, engine.Processor.YRegister, string.Format("Step {0} YRegister: ", steps));
+
+               Assert.AreEqual(testData[steps].StackPointer, engine.Processor.StackPointer, string.Format("Step {0} StackPointer: ", steps));
+
+               Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount, string.Format("Step {0} CycleCount: ", steps));
+               Assert.AreEqual(testData[steps].ScanLine, engine.PictureProcessingUnit.ScanLine, string.Format("Step {0} ScanLine: ", steps));
+                steps++;
+            }
+        }
+
+        private List<NesTestData> LoadNesTestData()
+        {
+            var reader = new StreamReader(File.OpenRead(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
+                   "nestest.csv")));
+
+            var data = new List<NesTestData>();
+
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                var values = line.Split(',');
+
+                data.Add(new NesTestData
+                {
+                    ProgramCounter = Int32.Parse(values[0], System.Globalization.NumberStyles.HexNumber),
+                    Accumulator = Int32.Parse(values[1], System.Globalization.NumberStyles.HexNumber),
+                    XRegister = Int32.Parse(values[2], System.Globalization.NumberStyles.HexNumber),
+                    YRegister = Int32.Parse(values[3], System.Globalization.NumberStyles.HexNumber),
+                    Flags = Int32.Parse(values[4], System.Globalization.NumberStyles.HexNumber),
+                    StackPointer = Int32.Parse(values[5], System.Globalization.NumberStyles.HexNumber),
+                    CycleCount = int.Parse(values[6]),
+                    ScanLine = int.Parse(values[7]),
+                });
+            }
+
+            return data;
+        }
 
         private string RunTest(string fileName, string folder)
         {
@@ -94,5 +159,7 @@ namespace dotnetNES.Tests.Engine
             }
             return System.Text.Encoding.ASCII.GetString(testOutput.ToArray());
         }
+    
+        
     }
 }

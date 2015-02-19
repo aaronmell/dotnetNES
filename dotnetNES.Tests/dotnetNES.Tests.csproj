@@ -64,9 +64,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Engine\EngineTests.cs" />
+    <Compile Include="NesTestData.cs" />
     <Compile Include="PPU_Tests.cs" />
-    <Compile Include="Utilities\CPUUtilityTests.cs" />
-    <Compile Include="Utilities\LoaderTests.cs" />
+    <Compile Include="UtilityTests\CPUUtilityTests.cs" />
+    <Compile Include="UtilityTests\LoaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +143,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestRoms\cpu_int_v2\5-branch_delays_irq.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\nestest\nestest.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\nestest\nestest.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestRoms\vbl_nmi_timing\1.frame_basics.nes">
