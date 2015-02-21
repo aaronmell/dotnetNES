@@ -296,6 +296,7 @@ namespace dotnetNES.Engine.Processors
             _internalResetFlag = true;
             ScanLine = 241;
             CycleCount = 0;
+            _isRenderingDisabled = true;
         }
         #endregion
 
@@ -312,6 +313,7 @@ namespace dotnetNES.Engine.Processors
             _internalResetFlag = true;
             ScanLine = 241;
             CycleCount = 0;
+            _isRenderingDisabled = true;
         }
 
         /// <summary>
@@ -366,7 +368,7 @@ namespace dotnetNES.Engine.Processors
         #region Main Loop
         private void CPUCycleCountIncremented()
         {
-            if (_internalResetFlag && _cpu.GetCycleCount() > 29658)
+            if (_internalResetFlag && _cpu.GetCycleCount() > 33132)
                 _internalResetFlag = false;
            
             StepPPU();
@@ -376,25 +378,21 @@ namespace dotnetNES.Engine.Processors
 
         private void StepPPU()
         {
-            WriteLog("Stepping PPU");
-
-            if (_nmiOccurred && _nmiOutput)
+            if (!_internalResetFlag)
             {
-                _nmiOccurred = false;
-                //_cpu.NonMaskableInterrupt();
+                WriteLog("Stepping PPU");
 
-               
-                WriteLog("NMI Occurred!");
+                if (_nmiOccurred && _nmiOutput)
+                {
+                    _nmiOccurred = false;
+                    _cpu.NonMaskableInterrupt();
+
+
+                    WriteLog("NMI Occurred!");
+                }
+
+                OuterCycleAction();   
             }
-
-            if (!_isRenderingDisabled)
-            {
-                OuterCycleAction();
-            }
-            else
-            {
-                WriteLog("Rendering Is Disabled!");
-            }           
 
             if (CycleCount < 340)
                 CycleCount++;
@@ -411,54 +409,55 @@ namespace dotnetNES.Engine.Processors
                     OnNewFrameAction();
                 }
             }
-
-            
         }
 
         private void OuterCycleAction()
-        {
-            if (ScanLine < 240)
-            {
-                //Skip the first cycle on the first scanline if an odd frame
-                if (ScanLine == 0)
+        {           
+                if (ScanLine < 240)
                 {
-                    //Copy Temporary to Current at the beginning of each Frame
-                    //_currentAddress = _temporaryAddress;
-
-                    if (CycleCount == 0 && _isOddFrame && (StatusRegister & 8) == 8)
+                    //Skip the first cycle on the first scanline if an odd frame
+                    if (ScanLine == 0)
                     {
-                        WriteLog("Odd Frame, skipping first cycle");
-                        CycleCount++;
+                        //Copy Temporary to Current at the beginning of each Frame
+                        //_currentAddress = _temporaryAddress;
+
+                        if (CycleCount == 0 && _isOddFrame && (StatusRegister & 8) == 8)
+                        {
+                            WriteLog("Odd Frame, skipping first cycle");
+                            CycleCount++;
+                        }
+                    }
+
+                    //Shift the Registers right one
+                    _upperShiftRegister >>= 1;
+                    _lowerShiftRegister >>= 1;
+                }
+                else if (ScanLine == 241 && CycleCount == 2)
+                {
+                    WriteLog("Setting _nmiOccurred");
+                    //StatusRegister |= 0x80;
+                    _nmiOccurred = true;
+
+                }
+                else if (ScanLine == 261)
+                {
+                    if (CycleCount == 1)
+                    {
+                        //TODO: FIX these
+                        //Clear Sprite 0 Hit
+                        //StatusRegister &= byte.MaxValue ^ (1 << 6);
+                        //Clear Sprite Overflow
+                        //StatusRegister &= byte.MaxValue ^ (1 << 5);
+                        _nmiOccurred = false;
+
+                        WriteLog("Clearing _nmiOccurred");
                     }
                 }
 
-                //Shift the Registers right one
-                _upperShiftRegister >>= 1;
-                _lowerShiftRegister >>= 1;
-            }
-            else if (ScanLine == 241 && CycleCount == 2)
+            if (!_isRenderingDisabled)
             {
-                WriteLog("Setting _nmiOccurred");
-                //StatusRegister |= 0x80;
-                _nmiOccurred = true;
-
+                InnerCycleAction();
             }
-            else if (ScanLine == 261)
-            {
-                if (CycleCount == 1)
-                {
-                    //TODO: FIX these
-                    //Clear Sprite 0 Hit
-                    //StatusRegister &= byte.MaxValue ^ (1 << 6);
-                    //Clear Sprite Overflow
-                    //StatusRegister &= byte.MaxValue ^ (1 << 5);
-                    _nmiOccurred = false;
-
-                    WriteLog("Clearing _nmiOccurred");
-                }
-            }
-
-            InnerCycleAction();
         }
 
         private void InnerCycleAction()
@@ -995,7 +994,6 @@ namespace dotnetNES.Engine.Processors
                     _nmiOutput = (ControlRegister & 0x80) != 0;
 
                     _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
-
                     break;
                 }
                 case 0x2001:
@@ -1246,7 +1244,7 @@ namespace dotnetNES.Engine.Processors
 
             for (var memoryLocation = startposition; memoryLocation < endposition; memoryLocation++)
             {
-                WritePalette((memoryLocation & 3) == 0 ? 0x3f00 : memoryLocation, backgroundPalette, rowOffset);
+                WritePalette(memoryLocation, backgroundPalette, rowOffset);
                 rowOffset += 96;
             }
 

@@ -30,12 +30,15 @@ namespace dotnetNES.Engine.Processors
             else if (address > 0x1FFF && address < 0x4000)
             {
                 address = (address & 0x7) + 0x2000;
-            }
 
+                Memory[0x2002] = (byte)(Memory[0x2002] | data & 0x1F);
+            }
+            
             Memory[address] = data;
             IncrementCycleCount();
             //Not sure if this is in the right place
             WriteMemoryAction(address, data);
+            
         }
 
         /// <summary>
