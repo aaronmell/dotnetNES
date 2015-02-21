@@ -77,16 +77,31 @@ namespace dotnetNES.Client.ViewModel
 
         private void LoadFile()
         {
+            IsEnginePaused = true;
+            RaisePropertyChanged("IsEnginePaused");
+
             var dlg = new OpenFileDialog {DefaultExt = ".nes", Filter = "NES Roms (*.nes)|*.nes"};
 
-            if (dlg.ShowDialog() != true) 
+            if (dlg.ShowDialog() != true)
+            {
+                IsEnginePaused = false;
+                RaisePropertyChanged("IsEnginePaused");
                 return;
+            }
 
             _fileName = dlg.FileName;
             Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
+            
             IsCartridgeLoaded = true;
             RaisePropertyChanged("IsCartridgeLoaded");
-            
+
+            _backgroundWorker.CancelAsync();
+
+            while (_backgroundWorker.IsBusy)
+            {
+
+            }
+
             IsEnginePaused = false;
             RaisePropertyChanged("IsEnginePaused");
 
