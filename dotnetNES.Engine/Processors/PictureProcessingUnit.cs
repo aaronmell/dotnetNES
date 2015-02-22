@@ -368,7 +368,7 @@ namespace dotnetNES.Engine.Processors
         #region Main Loop
         private void CPUCycleCountIncremented()
         {
-            if (_internalResetFlag && _cpu.GetCycleCount() > 33132)
+            if (_internalResetFlag && _cpu.GetCycleCount() > 33132 & ScanLine == 240)
                 _internalResetFlag = false;
            
             StepPPU();
@@ -866,7 +866,7 @@ namespace dotnetNES.Engine.Processors
                 case 257:
                     {
                         _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
-                        _currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
+                        //_currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
                         ObjectAttributeMemoryRegister = 0;
                         break;
                     }
@@ -1276,7 +1276,7 @@ namespace dotnetNES.Engine.Processors
         [Conditional("DEBUG")]
         private void WriteLog(string log)
         {
-            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} {6}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, log);
+            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress, log);
         }
         #endregion
     }

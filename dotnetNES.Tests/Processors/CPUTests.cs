@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace dotnetNES.Tests.Engine
 {
-    public class EngineTests
+    public class CPUTests
     {
         [TestCase("01-basics.nes", "\n01-basics\n\nPassed\n\0")]
         //[TestCase("02-implied.nes", "\n02-implied\n\nPassed\n")] //Fails due to unsupported op codes
@@ -41,7 +41,7 @@ namespace dotnetNES.Tests.Engine
         }
 
         //[TestCase("1-cli_latency.nes","")] //Needs APU
-        //[TestCase("2-nmi_and_brk.nes", "")]
+        //[TestCase("2-nmi_and_brk.nes", "")] //
         //[TestCase("3-nmi_and_irq.nes", "")]
         //[TestCase("4-irq_and_dma.nes", "")]
         //[TestCase("5-branch_delays_irq.nes", "")]
@@ -79,17 +79,12 @@ namespace dotnetNES.Tests.Engine
             {
                engine.Step();
 
-               if (steps == 4275)
-               {
-                   var x = 1;
-                   var y = x;
-               }
-
                Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter, string.Format("Step {0} PC: ", steps));
                Assert.AreEqual(testData[steps].Accumulator, engine.Processor.Accumulator, string.Format("Step {0} Accumulator: ", steps));
                Assert.AreEqual(testData[steps].XRegister, engine.Processor.XRegister, string.Format("Step {0} XRegister: ", steps));
                Assert.AreEqual(testData[steps].YRegister, engine.Processor.YRegister, string.Format("Step {0} YRegister: ", steps));
-
+               Assert.AreEqual(testData[steps].Flags, (byte)((engine.Processor.CarryFlag ? 0x01 : 0) + (engine.Processor.ZeroFlag ? 0x02 : 0) + (engine.Processor.DisableInterruptFlag ? 0x04 : 0) +
+                         (engine.Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (engine.Processor.OverflowFlag ? 0x40 : 0) + (engine.Processor.NegativeFlag ? 0x80 : 0)), string.Format("Step {0} Flag:", steps));
                Assert.AreEqual(testData[steps].StackPointer, engine.Processor.StackPointer, string.Format("Step {0} StackPointer: ", steps));
 
                Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount, string.Format("Step {0} CycleCount: ", steps));
@@ -159,7 +154,5 @@ namespace dotnetNES.Tests.Engine
             }
             return System.Text.Encoding.ASCII.GetString(testOutput.ToArray());
         }
-    
-        
     }
 }
