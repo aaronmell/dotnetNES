@@ -42,7 +42,7 @@ namespace dotnetNES.Client.ViewModel
             NameTable.Lock();
             var bufferPtr = NameTable.BackBuffer;
 
-            Engine.GetNameTables((byte*)bufferPtr.ToPointer());
+            Engine.SetNameTables((byte*)bufferPtr.ToPointer());
            
             NameTable.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
             NameTable.Unlock();

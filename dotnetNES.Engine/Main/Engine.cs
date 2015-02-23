@@ -75,7 +75,7 @@ namespace dotnetNES.Engine.Main
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws PatternTable1</param>
         public unsafe void SetPatternTable1(byte* bitmapPointer)
         {
-            PictureProcessingUnit.GetPatternTable1(bitmapPointer);
+            PictureProcessingUnit.SetPatternTable1(bitmapPointer);
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace dotnetNES.Engine.Main
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the background palette</param>
         public unsafe void SetBackgroundPalette(byte* bitmapPointer)
         {
-            PictureProcessingUnit.GetBackgroundPalette(bitmapPointer);
+            PictureProcessingUnit.SetBackgroundPalette(bitmapPointer);
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace dotnetNES.Engine.Main
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the sprite palette</param>
         public unsafe void SetSpritePalette(byte* bitmapPointer)
         {
-            PictureProcessingUnit.GetSpritePalette(bitmapPointer);
+            PictureProcessingUnit.SetSpritePalette(bitmapPointer);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace dotnetNES.Engine.Main
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the nametable</param>
         public unsafe void SetNameTables(byte* bitmapPointer)
         {
-            PictureProcessingUnit.GetNameTables(bitmapPointer);
+            PictureProcessingUnit.SetNameTable(bitmapPointer);
         }
     }
 }
