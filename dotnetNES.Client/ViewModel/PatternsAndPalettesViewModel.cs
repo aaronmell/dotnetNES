@@ -48,82 +48,51 @@ namespace dotnetNES.Client.ViewModel
                 Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,new Action(Refresh)); 
         }
 
-        private void Refresh()
+        private unsafe void Refresh()
         {
             #region Left Pattern Table
-            var patternTable0 = Engine.GetPatternTable0();
+           
 
             PatternTable0.Lock();
             var bufferPtr = PatternTable0.BackBuffer;
-
-            unsafe
-            {
-                var pbuff = (byte*)bufferPtr.ToPointer();
-
-                for (var i = 0; i < patternTable0.Length; i++)
-                {
-                    pbuff[i] = patternTable0[i];
-                }
-            }
+           
+            Engine.GetPatternTable0((byte*)bufferPtr.ToPointer());
+           
             PatternTable0.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable0.Unlock();
             RaisePropertyChanged("PatternTable0");
             #endregion
 
             #region Right Pattern Table
-            var patternTable1 = Engine.GetPatternTable1();
+            
 
             PatternTable1.Lock();
             bufferPtr = PatternTable1.BackBuffer;
-
-            unsafe
-            {
-                var pbuff = (byte*)bufferPtr.ToPointer();
-
-                for (var i = 0; i < patternTable1.Length; i++)
-                {
-                    pbuff[i] = patternTable1[i];
-                }
-            }
+            Engine.GetPatternTable1((byte*)bufferPtr.ToPointer());
+           
             PatternTable1.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable1.Unlock();
             RaisePropertyChanged("PatternTable1");
             #endregion
 
             #region Background Palette
-            var backgroundPalette = Engine.GetBackgroundPalette();
+         
 
             BackgroundPalettes.Lock();
             bufferPtr = BackgroundPalettes.BackBuffer;
-
-            unsafe
-            {
-                var pbuff = (byte*)bufferPtr.ToPointer();
-
-                for (var i = 0; i < backgroundPalette.Length; i++)
-                {
-                    pbuff[i] = backgroundPalette[i];
-                }
-            }
+            Engine.GetBackgroundPalette((byte*)bufferPtr.ToPointer());
+            
             BackgroundPalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
             BackgroundPalettes.Unlock();
             RaisePropertyChanged("BackgroundPalettes");
             #endregion
 
             #region Sprite Palette
-            var spritePalette = Engine.GetSpritePalette();
+            
             SpritePalettes.Lock();
             bufferPtr = SpritePalettes.BackBuffer;
-
-            unsafe
-            {
-                var pbuff = (byte*)bufferPtr.ToPointer();
-
-                for (var i = 0; i < spritePalette.Length; i++)
-                {
-                    pbuff[i] = spritePalette[i];
-                }
-            }
+            Engine.GetSpritePalette((byte*)bufferPtr.ToPointer());
+            
             SpritePalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
             SpritePalettes.Unlock();
             RaisePropertyChanged("SpritePalettes");

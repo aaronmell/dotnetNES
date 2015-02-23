@@ -61,44 +61,48 @@ namespace dotnetNES.Engine.Main
 
 
         /// <summary>
-        /// This gets the Pattern table 0
+        /// This sets PatternTable0 on its bitmap.
         /// </summary>
-        /// <returns>A byte array of BRG32 data that represents Pattern Table 0</returns>
-        public byte[] GetPatternTable0()
+        /// <param name="bitmapPointer">A pointer to the bitmap object that draws PatternTable0</param>
+        public unsafe void SetPatternTable0(byte* bitmapPointer)
         {
-            return PictureProcessingUnit.GetPatternTable0();
+            PictureProcessingUnit.GetPatternTable0(bitmapPointer);
         }
 
         /// <summary>
-        /// This gets the Pattern table 1
+        /// This sets PatternTable1 on its bitmap.
         /// </summary>
-        /// <returns>A byte array of BRG32 data that represents Pattern Table 1</returns>
-        public byte[] GetPatternTable1()
+        /// <param name="bitmapPointer">A pointer to the bitmap object that draws PatternTable1</param>
+        public unsafe void SetPatternTable1(byte* bitmapPointer)
         {
-            return PictureProcessingUnit.GetPatternTable1();
+            PictureProcessingUnit.GetPatternTable1(bitmapPointer);
         }
 
         /// <summary>
-        /// This gets the background palette
+        /// This sets the background palette on its bitmap.
         /// </summary>
-        /// <returns>A byte array of BRG32 data the represents the palettes</returns>
-        public byte[] GetBackgroundPalette()
+        /// <param name="bitmapPointer">A pointer to the bitmap object that draws the background palette</param>
+        public unsafe void SetBackgroundPalette(byte* bitmapPointer)
         {
-            return PictureProcessingUnit.GetBackgroundPalette();
+            PictureProcessingUnit.GetBackgroundPalette(bitmapPointer);
         }
 
         /// <summary>
-        /// This gets the background palette
+        /// This sets the sprite palette on its bitmap.
         /// </summary>
-        /// <returns>A byte array of BRG32 data the represents the palettes</returns>
-        public byte[] GetSpritePalette()
+        /// <param name="bitmapPointer">A pointer to the bitmap object that draws the sprite palette</param>
+        public unsafe void SetSpritePalette(byte* bitmapPointer)
         {
-            return PictureProcessingUnit.GetSpritePalette();
+            PictureProcessingUnit.GetSpritePalette(bitmapPointer);
         }
 
-        public byte[] GetNameTables()
+        /// <summary>
+        /// This sets the nametable on its bitmap.
+        /// </summary>
+        /// <param name="bitmapPointer">A pointer to the bitmap object that draws the nametable</param>
+        public unsafe void SetNameTables(byte* bitmapPointer)
         {
-            return PictureProcessingUnit.GetNameTables();
+            PictureProcessingUnit.GetNameTables(bitmapPointer);
         }
     }
 }

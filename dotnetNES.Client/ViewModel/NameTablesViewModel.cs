@@ -37,22 +37,13 @@ namespace dotnetNES.Client.ViewModel
                 Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(Refresh));
         }
 
-        private void Refresh()
+        private unsafe void Refresh()
         {
-            var nameTables = Engine.GetNameTables();
-
             NameTable.Lock();
             var bufferPtr = NameTable.BackBuffer;
 
-            unsafe
-            {
-                var pbuff = (byte*)bufferPtr.ToPointer();
-
-                for (var i = 0; i < nameTables.Length; i++)
-                {
-                    pbuff[i] = nameTables[i];
-                }
-            }
+            Engine.GetNameTables((byte*)bufferPtr.ToPointer());
+           
             NameTable.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
             NameTable.Unlock();
             RaisePropertyChanged("NameTable");

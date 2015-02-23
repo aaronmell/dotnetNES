@@ -141,13 +141,13 @@ namespace dotnetNES.Engine.Processors
         /// yyyyy = coarse Y scroll
         /// XXXXX = coarse X srcoll
         /// 
-        /// The first write to the <see cref="ScrollRegister"/> will copy the upper five bits of the write to that register into the temporary address
-        /// The second write to the <see cref="ScrollRegister"/> will copy the lower 3 bits to D14-D12 and the upper five bits to D9-D5 in the register.
+        /// The first write to the <see cref="ScrollRegister"/> will copy the upper five bitmapPointer of the write to that register into the temporary address
+        /// The second write to the <see cref="ScrollRegister"/> will copy the lower 3 bitmapPointer to D14-D12 and the upper five bitmapPointer to D9-D5 in the register.
         /// 
-        /// The first write to the <see cref="AddressRegister"/> will clear D14, and D13-D8 will be loaded with the lower six bits of the value written
+        /// The first write to the <see cref="AddressRegister"/> will clear D14, and D13-D8 will be loaded with the lower six bitmapPointer of the value written
         /// The second write to the <see cref="AddressRegister"/> will be copied to D7-D0 of this register. After this write the temporary address will be copied into the <see cref="_currentAddress"/>
         /// 
-        /// Writing to <see cref="ControlRegister"/> will copy the NameTable bits from the ControlRegister into D10-D11
+        /// Writing to <see cref="ControlRegister"/> will copy the NameTable bitmapPointer from the ControlRegister into D10-D11
         /// 
         /// At the beginning of each frame, this address will be copied into <see cref="_currentAddress"/>. This will also occur from cycle 280 to 304
         /// At cycle 257 D10, and D4-D0 are coped into <see cref="_currentAddress"/>
@@ -161,20 +161,20 @@ namespace dotnetNES.Engine.Processors
        
 
         /// <summary>
-        /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bits of the value are copied here
+        /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bitmapPointer of the value are copied here
         /// </summary>
         private int _fineXScroll;
 
         /// <summary>
         /// This is the register that the <see cref="_highBackgroundTileByte"/> gets loaded into at the end of every 8 clock cycles.
-        /// It is always loaded into the 8 high bits.
+        /// It is always loaded into the 8 high bitmapPointer.
         /// This register is shifted each clock cycle to the right 1 bit
         /// </summary>
         private int _upperShiftRegister;
 
         /// <summary>
         /// This is the register that the <see cref="_lowBackgroundTileByte"/> gets loaded into at the end of every 8 clock cycles.
-        /// It is always loaded into the 8 high bits.
+        /// It is always loaded into the 8 high bitmapPointer.
         /// This register is shifted each clock cycle to the right 1 bit
         /// </summary>
         private int _lowerShiftRegister;
@@ -318,21 +318,22 @@ namespace dotnetNES.Engine.Processors
         }
 
         /// <summary>
-        /// This gets the Pattern table 0 stored between 0x00 and 0x0FF
+        /// This sets the Pattern table 1 stored between 0x00 and 0x0FF on its bitmap
         /// </summary>
-        /// <returns>A byte array of BRGA32 data</returns>
-        internal byte[] GetPatternTable0()
+        /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
+        internal unsafe void GetPatternTable0(byte* bitmapPointer)
         {
-            return GetNewPatternTable(true);
+            GetNewPatternTable(bitmapPointer, true);
         }
 
+        
         /// <summary>
-        /// This gets the Pattern table 0 stored between 0x00 and 0x0FF
+        /// This sets the Pattern table 1 stored between 0x100 and 0x1FF on its bitmap
         /// </summary>
-        /// <returns>A byte array of BRGA32 data</returns>
-        internal byte[] GetPatternTable1()
+        /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
+        internal unsafe void SetPatternTable1(byte* bitmapPointer)
         {
-            return GetNewPatternTable(false);
+            GetNewPatternTable(bitmapPointer, false);
         }
 
         /// <summary>
@@ -346,30 +347,29 @@ namespace dotnetNES.Engine.Processors
         }
 
         /// <summary>
-        /// Gets the background palette
+        /// Draws the background palette on its bitmap
         /// </summary>
-        /// <returns>a BRG byte array of background palettes</returns>
-        internal byte[] GetBackgroundPalette()
+        /// <param name="palettePointer">A pointer that points to the sprite bitmap</param>
+        internal unsafe void SetBackgroundPalette(byte* palettePointer)
         {
-            return GetPalette(true);
+            GetPalette(palettePointer, true);
         }
 
         /// <summary>
-        /// Gets the sprite palette
+        /// Draws the sprites palette on its bitmap
         /// </summary>
-        /// <returns>A BRG array of sprite palettes</returns>
-        internal byte[] GetSpritePalette()
+        /// <param name="palettePointer">A pointer that points to the sprite bitmap</param>
+        internal unsafe void SetSpritePalette(byte* palettePointer)
         {
-            return GetPalette(false);
+            GetPalette(palettePointer, false);
         }
 
         /// <summary>
-        /// Gets the Name Tables
+        /// Draws the nametable on its bitmap
         /// </summary>
-        /// <returns></returns>
-        internal byte[] GetNameTables()
+        /// <param name="nameTablePointer">A pointer that points to the nametable bitmap</param>
+        internal unsafe void SetNameTable(byte* nameTablePointer)
         {
-           var nameTablePixels = new byte[184320];
 
             // 32 Tiles Wide
             // 30 Rows Tall
@@ -382,12 +382,10 @@ namespace dotnetNES.Engine.Processors
                 for (var tableColumn = 0; tableColumn < 32; tableColumn++)
                 {
                     var nameTableByte = _internalMemory[currentPosition];
-                    DrawTileToArray(nameTablePixels, 32, nameTableByte, offset, tableRow, tableColumn);
+                    DrawTileToArray(nameTablePointer, 32, nameTableByte, offset, tableRow, tableColumn);
                     currentPosition++;
                 }
             }
-
-            return nameTablePixels;
         }
         
         #endregion
@@ -1093,9 +1091,8 @@ namespace dotnetNES.Engine.Processors
         #endregion
 
         #region Palette Methods
-        private byte[] GetNewPatternTable(bool fetchPattern0)
+        private unsafe void GetNewPatternTable(byte* bitmapBuffer, bool fetchPattern0)
         {
-            var bits = new byte[49152];
             var tileOffset = (fetchPattern0 ? 0 : 0x1000);
 
             //Iterate over each row and column
@@ -1103,14 +1100,12 @@ namespace dotnetNES.Engine.Processors
             {
                  for (var column = 0; column < 16; column++)
                  {
-                     DrawTileToArray(bits, 16, (row * 16) + column, tileOffset, row, column);
+                     DrawTileToArray(bitmapBuffer, 16, (row * 16) + column, tileOffset, row, column);
                  }
             }
-
-            return bits;
         }
 
-        private void DrawTileToArray(byte[] bits, int totalColumns, int tileAddress, int tileOffset, int row, int column)
+        private unsafe void DrawTileToArray(byte* bitmapPointer, int totalColumns, int tileAddress, int tileOffset, int row, int column)
         {
             //Calculate the starting place in memory of the tile. 
             var tileMemoryIndex = (16 * tileAddress) + tileOffset;
@@ -1122,17 +1117,17 @@ namespace dotnetNES.Engine.Processors
             //Iterate of each row of the tile and fill the array
             for (var pixelColumn = 0; pixelColumn < 8; pixelColumn++)
             {
-                ConvertTileToPixels(bits, tileMemoryIndex, pixelArrayStartPosition, pixelRowOffset);
+                ConvertTileToPixels(bitmapPointer, tileMemoryIndex, pixelArrayStartPosition, pixelRowOffset);
                 tileMemoryIndex++;
             }
         }
 
-        private void ConvertTileToPixels(byte[] bits, int tileStartPosition, int pixelArrayIndex, int pixelRowOffset)
+        private unsafe void ConvertTileToPixels(byte* bitmapPointer, int tileStartPosition, int pixelArrayIndex, int pixelRowOffset)
         {
                 byte lowBit = _internalMemory[tileStartPosition];
                 byte highBit = _internalMemory[tileStartPosition + 8];
 
-                //Each pixel has 2 bits that control the color, a high bit and a low bit.
+                //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
                 //Each tile is 16 bytes.
                 //$0xx0=$41  01000001
                 //$0xx1=$C2  11000010
@@ -1165,113 +1160,112 @@ namespace dotnetNES.Engine.Processors
                 {
                     case 0:
                         {
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 1:
                         {
                             pixelArrayIndex += pixelRowOffset;
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 2:
                         {
                             pixelArrayIndex += (pixelRowOffset * 2);
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 3:
                         {
                             pixelArrayIndex += (pixelRowOffset * 3);
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 4:
                         {
                             pixelArrayIndex += (pixelRowOffset * 4);
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 5:
                         {
                             pixelArrayIndex += (pixelRowOffset * 5);
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 6:
                         {
                             pixelArrayIndex += (pixelRowOffset * 6);
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 7:
                         {
                             pixelArrayIndex += (pixelRowOffset * 7);
-                            SetColor(bits, pixelArrayIndex, bit7);
-                            SetColor(bits, pixelArrayIndex + 3, bit6);
-                            SetColor(bits, pixelArrayIndex + 6, bit5);
-                            SetColor(bits, pixelArrayIndex + 9, bit4);
-                            SetColor(bits, pixelArrayIndex + 12, bit3);
-                            SetColor(bits, pixelArrayIndex + 15, bit2);
-                            SetColor(bits, pixelArrayIndex + 18, bit1);
-                            SetColor(bits, pixelArrayIndex + 21, bit0);
+                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
+                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
                             break;
                         }
                 }
         }
 
-        private byte[] GetPalette(bool background)
+        private unsafe void GetPalette(byte* palette, bool background)
         {
-            var backgroundPalette = new byte[49152];
             var rowOffset = 0;
 
             var startposition = background ? 0x3F00 : 0x3F10;
@@ -1279,14 +1273,12 @@ namespace dotnetNES.Engine.Processors
 
             for (var memoryLocation = startposition; memoryLocation < endposition; memoryLocation++)
             {
-                WritePalette(memoryLocation, backgroundPalette, rowOffset);
+                WritePalette(memoryLocation, palette, rowOffset);
                 rowOffset += 96;
             }
-
-            return backgroundPalette;
         }
 
-        private void WritePalette(int palleteLocation, IList<byte> backgroundPalette, int columnStartPosition)
+        private unsafe void WritePalette(int palleteLocation, byte* backgroundPalette, int columnStartPosition)
         {
             var paletteLookup = _internalMemory[palleteLocation];
 
@@ -1299,7 +1291,7 @@ namespace dotnetNES.Engine.Processors
             }
         }
 
-        private static void SetColor(IList<byte> bits, int pixelArrayIndex, byte paletteLookup)
+        private static unsafe void SetColor(byte* bits, int pixelArrayIndex, byte paletteLookup)
         {
             bits[pixelArrayIndex] = _pallet[paletteLookup * 3 + 2];
             bits[pixelArrayIndex + 1] = _pallet[paletteLookup * 3 + 1];
