@@ -23,6 +23,14 @@ namespace dotnetNES.Client
                 patternsAndPalettes.Closing += (sender, args) => Messenger.Default.Unregister(patternsAndPalettes);
                 patternsAndPalettes.Show(); 
             }
+
+            if (notificationMessage.Notification == "OpenNameTables")
+            {
+                var nameTables = new NameTables { DataContext = new NameTablesViewModel(notificationMessage.Content) };
+
+                nameTables.Closing += (sender, args) => Messenger.Default.Unregister(nameTables);
+                nameTables.Show();
+            }
         }
     }
 }

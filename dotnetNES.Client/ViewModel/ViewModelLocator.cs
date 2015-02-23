@@ -31,6 +31,7 @@ namespace dotnetNES.Client.ViewModel
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<PatternsAndPalettesViewModel>();
+            SimpleIoc.Default.Register<NameTablesViewModel>();
         }
 
         public MainViewModel Main
@@ -44,6 +45,11 @@ namespace dotnetNES.Client.ViewModel
         public PatternsAndPalettesViewModel PatternsAndPalettes
         {
             get { return ServiceLocator.Current.GetInstance<PatternsAndPalettesViewModel>(); }
+        }
+
+        public NameTablesViewModel NameTables
+        {
+            get { return ServiceLocator.Current.GetInstance<NameTablesViewModel>(); }
         }
         
         public static void Cleanup()

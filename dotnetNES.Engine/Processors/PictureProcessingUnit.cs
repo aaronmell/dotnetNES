@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Common.Logging;
 using dotnetNES.Engine.Models;
+using log4net.Appender;
 
 namespace dotnetNES.Engine.Processors
 {
@@ -155,7 +157,6 @@ namespace dotnetNES.Engine.Processors
         /// <summary>
         /// This is the current address. The PPU uses this address to get the data it needs to render a pixel.
         /// </summary>
-
         private int _currentAddress;
        
 
@@ -322,7 +323,7 @@ namespace dotnetNES.Engine.Processors
         /// <returns>A byte array of BRGA32 data</returns>
         internal byte[] GetPatternTable0()
         {
-            return GetPatternTable(true);
+            return GetNewPatternTable(true);
         }
 
         /// <summary>
@@ -331,7 +332,7 @@ namespace dotnetNES.Engine.Processors
         /// <returns>A byte array of BRGA32 data</returns>
         internal byte[] GetPatternTable1()
         {
-            return GetPatternTable(false);
+            return GetNewPatternTable(false);
         }
 
         /// <summary>
@@ -361,6 +362,34 @@ namespace dotnetNES.Engine.Processors
         {
             return GetPalette(false);
         }
+
+        /// <summary>
+        /// Gets the Name Tables
+        /// </summary>
+        /// <returns></returns>
+        internal byte[] GetNameTables()
+        {
+           var nameTablePixels = new byte[184320];
+
+            // 32 Tiles Wide
+            // 30 Rows Tall
+            var currentPosition = 0x2000;
+           
+            var offset = (ControlRegister & 0x10) == 0x10 ? 0x1000 : 0;
+
+            for (var tableRow = 0; tableRow < 30; tableRow++)
+            {
+                for (var tableColumn = 0; tableColumn < 32; tableColumn++)
+                {
+                    var nameTableByte = _internalMemory[currentPosition];
+                    DrawTileToArray(nameTablePixels, 32, nameTableByte, offset, tableRow, tableColumn);
+                    currentPosition++;
+                }
+            }
+
+            return nameTablePixels;
+        }
+        
         #endregion
 
         #region Private Methods
@@ -386,8 +415,6 @@ namespace dotnetNES.Engine.Processors
                 {
                     _nmiOccurred = false;
                     _cpu.NonMaskableInterrupt();
-
-
                     WriteLog("NMI Occurred!");
                 }
 
@@ -880,7 +907,7 @@ namespace dotnetNES.Engine.Processors
 
             if (CycleCount > 279 && CycleCount < 305)
             {
-                _currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
+                //_currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
             }
         }
 
@@ -1053,10 +1080,11 @@ namespace dotnetNES.Engine.Processors
                     }
                     else
                         mirrorAddress = _currentAddress;
-                    
+
                     _internalMemory[mirrorAddress] = DataRegister;
 
                     _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
+
                     WriteLog(string.Format("Memory: 0x2007 write, value {0} written to address {1}  Current Address Incremented to {2}", DataRegister, mirrorAddress, _currentAddress));
                     break;
                 }
@@ -1065,28 +1093,44 @@ namespace dotnetNES.Engine.Processors
         #endregion
 
         #region Palette Methods
-        private byte[] GetPatternTable(bool fetchPattern0)
+        private byte[] GetNewPatternTable(bool fetchPattern0)
         {
-            var start = fetchPattern0 ? 0 : 0x1000;
-            var end = fetchPattern0 ? 0x0FFF : 0x1FFF;
-
             var bits = new byte[49152];
-            //We process across 8 vertical pixels for each iteration of the loop. The rowline, is used to calculate the correct offset in the array.
-            var tileRow = 0;
+            var tileOffset = (fetchPattern0 ? 0 : 0x1000);
 
-            //This is the offset of each pixel column. 8 pixles * 4 bytes = 32 offset per tile
-            var pixelColumnOffset = 0;
-            for (var i = start; i < end; i++)
+            //Iterate over each row and column
+            for (var row = 0; row < 16; row++)
             {
-                //Checking for 0 and 4096 so we don't increment the rowline on the very first loop!
-                if ((i % 256) == 0 && i != 0 && i != 4096)
-                {
-                    tileRow++;
-                    pixelColumnOffset = 0;
-                }
+                 for (var column = 0; column < 16; column++)
+                 {
+                     DrawTileToArray(bits, 16, (row * 16) + column, tileOffset, row, column);
+                 }
+            }
 
-                byte lowBit = _internalMemory[i];
-                byte highBit = _internalMemory[i + 8];
+            return bits;
+        }
+
+        private void DrawTileToArray(byte[] bits, int totalColumns, int tileAddress, int tileOffset, int row, int column)
+        {
+            //Calculate the starting place in memory of the tile. 
+            var tileMemoryIndex = (16 * tileAddress) + tileOffset;
+            var pixelRowOffset = totalColumns*24;
+
+            //Calculate the StartPosition of the first pixel in the array;
+            var pixelArrayStartPosition = (row * totalColumns * 192) + (column * 24);
+
+            //Iterate of each row of the tile and fill the array
+            for (var pixelColumn = 0; pixelColumn < 8; pixelColumn++)
+            {
+                ConvertTileToPixels(bits, tileMemoryIndex, pixelArrayStartPosition, pixelRowOffset);
+                tileMemoryIndex++;
+            }
+        }
+
+        private void ConvertTileToPixels(byte[] bits, int tileStartPosition, int pixelArrayIndex, int pixelRowOffset)
+        {
+                byte lowBit = _internalMemory[tileStartPosition];
+                byte highBit = _internalMemory[tileStartPosition + 8];
 
                 //Each pixel has 2 bits that control the color, a high bit and a low bit.
                 //Each tile is 16 bytes.
@@ -1117,121 +1161,112 @@ namespace dotnetNES.Engine.Processors
                 var bit6 = _internalMemory[0x3F00 + ((lowBit & 0x40) >> 6) | ((highBit & 0x40) >> 5)];
                 var bit7 = _internalMemory[0x3F00 + (lowBit >> 7) | (((highBit & 0x80) >> 6))];
 
-                var index = pixelColumnOffset + (tileRow * 3072);
-
-                switch (i & 0x7)
+                switch (tileStartPosition & 0x7)
                 {
                     case 0:
                         {
-                            SetColor(bits, index, bit7);
-                            SetColor(bits, index + 3, bit6);
-                            SetColor(bits, index + 6, bit5);
-                            SetColor(bits, index + 9, bit4);
-                            SetColor(bits, index + 12, bit3);
-                            SetColor(bits, index + 15, bit2);
-                            SetColor(bits, index + 18, bit1);
-                            SetColor(bits, index + 21, bit0);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 1:
                         {
-                            var offset = index + 384;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
+                            pixelArrayIndex += pixelRowOffset;
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 2:
                         {
-                            var offset = index + 768;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
+                            pixelArrayIndex += (pixelRowOffset * 2);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 3:
                         {
-                            var offset = index + 1152;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
+                            pixelArrayIndex += (pixelRowOffset * 3);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 4:
                         {
-                            var offset = index + 1536;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
+                            pixelArrayIndex += (pixelRowOffset * 4);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 5:
                         {
-                            var offset = index + 1920;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
+                            pixelArrayIndex += (pixelRowOffset * 5);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 6:
                         {
-                            var offset = index + 2304;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
+                            pixelArrayIndex += (pixelRowOffset * 6);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                     case 7:
                         {
-                            var offset = index + 2688;
-                            SetColor(bits, offset, bit7);
-                            SetColor(bits, offset + 3, bit6);
-                            SetColor(bits, offset + 6, bit5);
-                            SetColor(bits, offset + 9, bit4);
-                            SetColor(bits, offset + 12, bit3);
-                            SetColor(bits, offset + 15, bit2);
-                            SetColor(bits, offset + 18, bit1);
-                            SetColor(bits, offset + 21, bit0);
-
-                            //Since we process both the high and low byte at once, 
-                            //we need to skip the next 8 address in memory 
-                            i += 8;
-                            pixelColumnOffset += 24;
+                            pixelArrayIndex += (pixelRowOffset * 7);
+                            SetColor(bits, pixelArrayIndex, bit7);
+                            SetColor(bits, pixelArrayIndex + 3, bit6);
+                            SetColor(bits, pixelArrayIndex + 6, bit5);
+                            SetColor(bits, pixelArrayIndex + 9, bit4);
+                            SetColor(bits, pixelArrayIndex + 12, bit3);
+                            SetColor(bits, pixelArrayIndex + 15, bit2);
+                            SetColor(bits, pixelArrayIndex + 18, bit1);
+                            SetColor(bits, pixelArrayIndex + 21, bit0);
                             break;
                         }
                 }
-            }
-            return bits;
         }
 
         private byte[] GetPalette(bool background)
@@ -1264,11 +1299,11 @@ namespace dotnetNES.Engine.Processors
             }
         }
 
-        private static void SetColor(IList<byte> bits, int i, byte paletteLookup)
+        private static void SetColor(IList<byte> bits, int pixelArrayIndex, byte paletteLookup)
         {
-            bits[i] = _pallet[paletteLookup * 3 + 2];
-            bits[i + 1] = _pallet[paletteLookup * 3 + 1];
-            bits[i + 2] = _pallet[paletteLookup * 3];
+            bits[pixelArrayIndex] = _pallet[paletteLookup * 3 + 2];
+            bits[pixelArrayIndex + 1] = _pallet[paletteLookup * 3 + 1];
+            bits[pixelArrayIndex + 2] = _pallet[paletteLookup * 3];
 
         }
         #endregion

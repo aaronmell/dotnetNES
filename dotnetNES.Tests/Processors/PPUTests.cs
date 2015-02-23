@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using NUnit.Framework;
 
@@ -127,6 +128,27 @@ namespace dotnetNES.Tests.Processors
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1e), "0X3F1e");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1f), "0X3F1f");
 
+        }
+    
+    
+        [Test]
+        public void PPU_NameTables_LoadedCorrectly_DK_Rom()
+        {
+            var engine =
+               new dotnetNES.Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
+
+            var steps = 0;
+            while (steps < 154262)
+            {
+                engine.Step();
+                steps++;
+            }
+
+
+            for (var i = 0x2000; i < 0x2083; i++)
+            {
+                Assert.AreEqual(0x24, engine.PictureProcessingUnit.ReadPPUMemory(i), i.ToString("X"));
+            }
         }
     }
 }

@@ -95,5 +95,10 @@ namespace dotnetNES.Engine.Main
         {
             return PictureProcessingUnit.GetSpritePalette();
         }
+
+        public byte[] GetNameTables()
+        {
+            return PictureProcessingUnit.GetNameTables();
+        }
     }
 }

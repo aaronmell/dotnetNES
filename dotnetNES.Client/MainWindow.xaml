@@ -16,7 +16,8 @@
                 <MenuItem Header="Pause" Command="{Binding Path=PauseCommand}" IsChecked="{Binding IsEnginePaused}"></MenuItem>
             </MenuItem>
             <MenuItem Header="Debug">
-                <MenuItem Header="Patterns and Palettes" Command="{Binding Path=OpenPatternsAndPalettesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"></MenuItem>
+                <MenuItem Header="Patterns and Palettes" Command="{Binding Path=OpenPatternsAndPalettesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"/>
+                <MenuItem Header="NameTables" Command="{Binding Path=OpenNameTablesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"/>
             </MenuItem>
         </Menu>
     </Grid>

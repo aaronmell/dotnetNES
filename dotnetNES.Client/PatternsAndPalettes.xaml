@@ -1,7 +1,7 @@
 ﻿<Window x:Class="dotnetNES.Client.PatternsAndPalettes"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PatternsAndPalettes" Height="492.5" Width="586"
+        Title="Patterns And Palettes" Height="492.5" Width="586"
         DataContext="{Binding PatternsAndPalettes, Source={StaticResource Locator}}"
         Background="LightGray">
     <Grid Name="MainGrid">

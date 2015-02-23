@@ -105,6 +105,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="NameTables.xaml.cs">
+      <DependentUpon>NameTables.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModel\NameTablesViewModel.cs" />
     <Compile Include="PatternsAndPalettes.xaml.cs">
       <DependentUpon>PatternsAndPalettes.xaml</DependentUpon>
     </Compile>
@@ -123,6 +127,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="NameTables.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PatternsAndPalettes.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

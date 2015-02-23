@@ -34,6 +34,8 @@ namespace dotnetNES.Client.ViewModel
 
         public RelayCommand OpenPatternsAndPalettesCommand { get; set; }
 
+        public RelayCommand OpenNameTablesCommand { get; set; }
+
         public RelayCommand PauseCommand { get; set; }
 
         public bool IsCartridgeLoaded { get; set; }
@@ -51,7 +53,15 @@ namespace dotnetNES.Client.ViewModel
                 Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
             });
             OpenPatternsAndPalettesCommand =
-                new RelayCommand(() => Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine, "OpenPatternsAndPalettes")));
+                new RelayCommand(
+                    () =>
+                        Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine,
+                            "OpenPatternsAndPalettes")));
+
+            OpenNameTablesCommand =
+                new RelayCommand(
+                    () => Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine, "OpenNameTables")));
+
             PauseCommand = new RelayCommand(PauseEngine);
             
             IsEnginePaused = false;
