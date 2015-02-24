@@ -31,17 +31,28 @@ namespace dotnetNES.Client.ViewModel
         [PreferredConstructor]
         public PatternsAndPalettesViewModel()
         {
-            PatternTable0 = new WriteableBitmap(128,128,1,1, PixelFormats.Bgr24, null);
-            PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
-            BackgroundPalettes = new WriteableBitmap(512, 32,1,1, PixelFormats.Bgr24, null);
-            SpritePalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
-
+            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
             Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
+        }
+
+        private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+        {
+            if (obj.Notification != MessageNames.LoadDebugWindow)
+            {
+                return;
+            }
+
+            Engine = obj.Content;
+
+            PatternTable0 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
+            PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
+            BackgroundPalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
+            SpritePalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
         }
 
         private void RefreshScreen(NotificationMessage obj)
         {
-            if (obj.Notification != "UpdateDebugScreens" || Engine == null)
+            if (obj.Notification != MessageNames.UpdateDebugScreens || Engine == null)
                 return;
 
             if (Application.Current != null)

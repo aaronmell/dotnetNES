@@ -5,6 +5,10 @@
         DataContext="{Binding NameTables, Source={StaticResource Locator}}"
         Background="LightGray">
     <Grid>
-        <Image HorizontalAlignment="Left" Height="480" Margin="10,10,0,0" VerticalAlignment="Top" Width="512" Source="{Binding NameTable }" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        <Image HorizontalAlignment="Left" Height="240" Margin="10,10,0,0" VerticalAlignment="Top" Width="256" Source="{Binding NameTable0 }" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        <Image HorizontalAlignment="Left" Height="240" Margin="278,10,0,0" VerticalAlignment="Top" Width="256" Source="{Binding NameTable1 }" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        <Image HorizontalAlignment="Left" Height="240" Margin="10,269,0,0" VerticalAlignment="Top" Width="256" Source="{Binding NameTable2 }" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+        <Image HorizontalAlignment="Left" Height="240" Margin="278,269,0,0" VerticalAlignment="Top" Width="256" Source="{Binding NameTable3 }" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+
     </Grid>
 </Window>

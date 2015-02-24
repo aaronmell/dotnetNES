@@ -52,15 +52,8 @@ namespace dotnetNES.Client.ViewModel
             {
                 Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
             });
-            OpenPatternsAndPalettesCommand =
-                new RelayCommand(
-                    () =>
-                        Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine,
-                            "OpenPatternsAndPalettes")));
-
-            OpenNameTablesCommand =
-                new RelayCommand(
-                    () => Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine, "OpenNameTables")));
+            OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
+            OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
 
             PauseCommand = new RelayCommand(PauseEngine);
             
@@ -69,6 +62,12 @@ namespace dotnetNES.Client.ViewModel
 
             _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
             _backgroundWorker.DoWork += BackgroundWorkerDoWork;
+        }
+
+        private void OpenDebugWindowWithEngine(string windowName)
+        {
+            Messenger.Default.Send(new NotificationMessage(windowName));
+            Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine, MessageNames.LoadDebugWindow));
         }
 
         private void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -122,9 +121,9 @@ namespace dotnetNES.Client.ViewModel
         {
             _frameCount++;
 
-            if (_frameCount % 180 == 0)
+            if (_frameCount % 60 == 0)
             {
-                Messenger.Default.Send(new NotificationMessage("UpdateDebugScreens"));
+                Messenger.Default.Send(new NotificationMessage(MessageNames.UpdateDebugScreens));
             }
         }
 

@@ -368,12 +368,27 @@ namespace dotnetNES.Engine.Processors
         /// Draws the nametable on its bitmap
         /// </summary>
         /// <param name="nameTablePointer">A pointer that points to the nametable bitmap</param>
-        internal unsafe void SetNameTable(byte* nameTablePointer)
+        /// <param name="nameTableSelect">The nametable to select</param>
+        internal unsafe void SetNameTable(byte* nameTablePointer, int nameTableSelect)
         {
-
             // 32 Tiles Wide
             // 30 Rows Tall
-            var currentPosition = 0x2000;
+            var currentPosition = 0;
+            switch (nameTableSelect)
+            {
+                case 0:
+                    currentPosition = 0x2000;
+                    break;
+                case 1:
+                    currentPosition = 0x2400;
+                    break;
+                case 2:
+                    currentPosition = 0x2800;
+                    break;
+                case 3:
+                    currentPosition = 0x2C00;
+                    break;
+            }
            
             var offset = (ControlRegister & 0x10) == 0x10 ? 0x1000 : 0;
 

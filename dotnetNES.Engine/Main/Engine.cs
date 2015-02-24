@@ -1,4 +1,5 @@
 ﻿using System;
+using dotnetNES.Engine.Models;
 using dotnetNES.Engine.Processors;
 using dotnetNES.Engine.Utilities;
 using PPU = dotnetNES.Engine.Processors.PictureProcessingUnit;
@@ -12,16 +13,23 @@ namespace dotnetNES.Engine.Main
     {
         internal readonly CPU Processor;
         internal readonly PPU PictureProcessingUnit;
-       
+        private readonly CartridgeModel _cartridgeModel;
+
+        public bool IsVerticalMirroringEnabled
+        {
+            get { return _cartridgeModel.IsVerticalMirroringEnabled; }
+        }
+
         /// <summary>
         /// Public Constructor for the Engine
         /// </summary>
         /// <param name="fileName">The full path of a .nes cartridge file</param>
         public Engine(string fileName)
         {
-            var cartridgeModel = CartridgeLoaderUtility.LoadCartridge(fileName);
-            Processor = cartridgeModel.GetProcessor();
-            PictureProcessingUnit = new PPU(cartridgeModel, Processor);
+            
+            _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(fileName);
+            Processor = _cartridgeModel.GetProcessor();
+            PictureProcessingUnit = new PPU(_cartridgeModel, Processor);
         }
 
         /// <summary>
@@ -30,9 +38,9 @@ namespace dotnetNES.Engine.Main
         /// <param name="rawBytes">The raw bytes from a .net cartridge file</param>
         public Engine(byte[] rawBytes)
         {
-            var cartridgeModel = CartridgeLoaderUtility.LoadCartridge(rawBytes);
-            Processor = cartridgeModel.GetProcessor();
-            PictureProcessingUnit = new PPU(cartridgeModel, Processor);
+            _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(rawBytes);
+            Processor = _cartridgeModel.GetProcessor();
+            PictureProcessingUnit = new PPU(_cartridgeModel, Processor);
         }
         
         /// <summary>
@@ -100,9 +108,10 @@ namespace dotnetNES.Engine.Main
         /// This sets the nametable on its bitmap.
         /// </summary>
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the nametable</param>
-        public unsafe void SetNameTables(byte* bitmapPointer)
+        /// <param name="nameTableSelect">The nametable to fetch from</param>
+        public unsafe void SetNameTables(byte* bitmapPointer, int nameTableSelect)
         {
-            PictureProcessingUnit.SetNameTable(bitmapPointer);
+            PictureProcessingUnit.SetNameTable(bitmapPointer, nameTableSelect);
         }
     }
 }

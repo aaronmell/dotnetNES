@@ -11,22 +11,22 @@ namespace dotnetNES.Client
         public MainWindow()
         {
             InitializeComponent();
-            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, NotificationMessageReceived);
+            Messenger.Default.Register<NotificationMessage>(this, NotificationMessageReceived);
         }
 
-        private static void NotificationMessageReceived(NotificationMessage<Engine.Main.Engine> notificationMessage)
+        private static void NotificationMessageReceived(NotificationMessage notificationMessage)
         {
-            if (notificationMessage.Notification == "OpenPatternsAndPalettes")
+            if (notificationMessage.Notification == MessageNames.OpenPatternsAndPalettes)
             {
-                var patternsAndPalettes = new PatternsAndPalettes {DataContext = new PatternsAndPalettesViewModel(notificationMessage.Content)};
-
+                var patternsAndPalettes = new PatternsAndPalettes();
+                
                 patternsAndPalettes.Closing += (sender, args) => Messenger.Default.Unregister(patternsAndPalettes);
                 patternsAndPalettes.Show(); 
             }
 
-            if (notificationMessage.Notification == "OpenNameTables")
+            if (notificationMessage.Notification == MessageNames.OpenNameTables)
             {
-                var nameTables = new NameTables { DataContext = new NameTablesViewModel(notificationMessage.Content) };
+                var nameTables = new NameTables();
 
                 nameTables.Closing += (sender, args) => Messenger.Default.Unregister(nameTables);
                 nameTables.Show();
