@@ -1,5 +1,4 @@
-﻿using dotnetNES.Client.ViewModel;
-using GalaSoft.MvvmLight.Messaging;
+﻿using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client
 {

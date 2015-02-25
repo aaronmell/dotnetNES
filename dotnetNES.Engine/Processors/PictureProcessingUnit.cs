@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Common.Logging;
 using dotnetNES.Engine.Models;
-using log4net.Appender;
 
 namespace dotnetNES.Engine.Processors
 {
@@ -252,7 +249,7 @@ namespace dotnetNES.Engine.Processors
         private static readonly ILog _logger = LogManager.GetLogger("PictureProcessingUnit");
 
         //This contains all of the colors the NES can display converted into RGB format.
-        private static byte[] _pallet =
+        private static readonly byte[] _pallet =
         {
             124, 124, 124, 0, 0, 252, 0, 0, 188, 68, 40, 188, 148, 0, 132, 168, 0, 32, 168, 16, 0, 136, 20, 0, 80, 48, 0,
             0, 120, 0, 0, 104, 0, 0, 88, 0, 0, 64, 88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 188, 188, 188, 0, 120, 248, 0, 88, 248,
@@ -1141,7 +1138,7 @@ namespace dotnetNES.Engine.Processors
                 case 0x2007:
                 {
                     //Mirroring
-                    var mirrorAddress = 0;
+                    int mirrorAddress;
                     
                     if (_currentAddress > 0x3F1F)
                     {

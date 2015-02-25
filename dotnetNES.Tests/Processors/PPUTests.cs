@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
 using NUnit.Framework;
 
@@ -12,7 +11,7 @@ namespace dotnetNES.Tests.Processors
         {
             
             var engine =
-              new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "instr_test-v5",
+              new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "instr_test-v5",
                   "01-basics.nes"));
 
             var steps = 0;
@@ -46,7 +45,7 @@ namespace dotnetNES.Tests.Processors
         {
 
             var engine =
-              new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
+              new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
                   "nestest.nes"));
 
             var steps = 0;
@@ -79,17 +78,11 @@ namespace dotnetNES.Tests.Processors
         {
 
             var engine =
-              new dotnetNES.Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
+              new Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
 
             var steps = 0;
             while (steps < 40000)
             {
-                if (steps == 10)
-                {
-                    var x = 1;
-                    var y = x;
-                }
-
                 engine.Step();
                 steps++;
             }
@@ -135,7 +128,7 @@ namespace dotnetNES.Tests.Processors
         public void PPU_NameTables_LoadedCorrectly_DK_Rom()
         {
             var engine =
-               new dotnetNES.Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
+               new Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
 
             var steps = 0;
             while (steps < 154262)

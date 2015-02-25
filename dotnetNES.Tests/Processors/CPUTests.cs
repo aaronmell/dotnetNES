@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 
-namespace dotnetNES.Tests.Engine
+namespace dotnetNES.Tests.Processors
 {
     public class CPUTests
     {
@@ -64,7 +64,7 @@ namespace dotnetNES.Tests.Engine
         public void Nestest_Matches()
         {
             var engine =
-               new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
+               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
                    "nestest.nes"));
             //Changing the Initial PC to 0xC000
             engine.Processor.WriteMemoryValueWithoutCycle(65532, 0);
@@ -124,7 +124,7 @@ namespace dotnetNES.Tests.Engine
         private string RunTest(string fileName, string folder)
         {
             var engine =
-               new dotnetNES.Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder,
+               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder,
                    fileName));
 
             var steps = 0;

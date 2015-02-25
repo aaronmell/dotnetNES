@@ -1,7 +1,7 @@
 ﻿using dotnetNES.Engine.Utilities;
 using NUnit.Framework;
 
-namespace dotnetNES.Tests.Utilities
+namespace dotnetNES.Tests.UtilityTests
 {
     public class CPUUtilityTests
     {
