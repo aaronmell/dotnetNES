@@ -326,7 +326,6 @@ namespace dotnetNES.Engine.Processors
             GetNewPatternTable(bitmapPointer, true);
         }
 
-        
         /// <summary>
         /// This sets the Pattern table 1 stored between 0x100 and 0x1FF on its bitmap
         /// </summary>
@@ -371,36 +370,93 @@ namespace dotnetNES.Engine.Processors
         /// <param name="nameTableSelect">The nametable to select</param>
         internal unsafe void SetNameTable(byte* nameTablePointer, int nameTableSelect)
         {
+             
+
             // 32 Tiles Wide
             // 30 Rows Tall
             var currentPosition = 0;
+            var attributeTablePosition = 0;
             switch (nameTableSelect)
             {
                 case 0:
                     currentPosition = 0x2000;
+                    attributeTablePosition = 0x23bf;
                     break;
                 case 1:
                     currentPosition = 0x2400;
+                    attributeTablePosition = 0x27bf;
                     break;
                 case 2:
                     currentPosition = 0x2800;
+                    attributeTablePosition = 0x2Bbf;
                     break;
                 case 3:
                     currentPosition = 0x2C00;
+                    attributeTablePosition = 0x2Fbf;
                     break;
             }
            
             var offset = (ControlRegister & 0x10) == 0x10 ? 0x1000 : 0;
+            var attribute = 0;
+            bool useTopByte = true;
+
 
             for (var tableRow = 0; tableRow < 30; tableRow++)
             {
+                attributeTablePosition -= 8;
+
+                if ((tableRow % 4) == 0)
+                {
+                    attributeTablePosition += 8;
+                    useTopByte = true;
+                }
+                else if ((tableRow % 2) == 0)
+                {
+                    useTopByte = false;
+                }
+
+                //attribute = useTopByte ? _internalMemory[attributeTablePosition] & 0x03 : (_internalMemory[attributeTablePosition] >> 4) & 0x03;
+
                 for (var tableColumn = 0; tableColumn < 32; tableColumn++)
                 {
+                    if ((tableColumn % 4) == 0)
+                    {
+                        attributeTablePosition++;
+                        attribute = useTopByte ? _internalMemory[attributeTablePosition] & 0x03 : (_internalMemory[attributeTablePosition] >> 4) & 0x03;
+                    }
+                    else if ((tableColumn % 2) == 0)
+                    {
+                        attribute = useTopByte ? (_internalMemory[attributeTablePosition] >> 2) & 0x03 : (_internalMemory[attributeTablePosition] >> 6) & 0x03;
+                    }
+
                     var nameTableByte = _internalMemory[currentPosition];
-                    DrawTileToArray(nameTablePointer, 32, nameTableByte, offset, tableRow, tableColumn);
+                    DrawTileToArray(nameTablePointer, 32, nameTableByte, offset, tableRow, tableColumn, attribute);
                     currentPosition++;
                 }
             }
+
+
+            ////Iterate over each row and column
+            //for (var row = 0; row < 16; row++)
+            //{
+            //     for (var column = 0; column < 16; column++)
+            //     {
+            //         DrawTileToArray(bitmapBuffer, 16, (row * 16) + column, tileOffset, row, column);
+
+            //         if ((column % 4) == 0)
+            //         {
+            //             attributeTablePosition++;
+            //         }
+            //     }
+
+            //    if ((row % 4) == 0)
+            //    {
+            //        attributeTablePosition++;
+            //    }
+            //    else
+            //    {
+            //        attributeTablePosition -= 7;
+            //    }
         }
         
         #endregion
@@ -1115,12 +1171,12 @@ namespace dotnetNES.Engine.Processors
             {
                  for (var column = 0; column < 16; column++)
                  {
-                     DrawTileToArray(bitmapBuffer, 16, (row * 16) + column, tileOffset, row, column);
+                     DrawTileToArray(bitmapBuffer, 16, (row * 16) + column, tileOffset, row, column, 0);
                  }
             }
         }
 
-        private unsafe void DrawTileToArray(byte* bitmapPointer, int totalColumns, int tileAddress, int tileOffset, int row, int column)
+        private unsafe void DrawTileToArray(byte* bitmapPointer, int totalColumns, int tileAddress, int tileOffset, int row, int column, int paletteOffset)
         {
             //Calculate the starting place in memory of the tile. 
             var tileMemoryIndex = (16 * tileAddress) + tileOffset;
@@ -1132,12 +1188,12 @@ namespace dotnetNES.Engine.Processors
             //Iterate of each row of the tile and fill the array
             for (var pixelColumn = 0; pixelColumn < 8; pixelColumn++)
             {
-                ConvertTileToPixels(bitmapPointer, tileMemoryIndex, pixelArrayStartPosition, pixelRowOffset);
+                ConvertTileToPixels(bitmapPointer, tileMemoryIndex, pixelArrayStartPosition, pixelRowOffset, paletteOffset);
                 tileMemoryIndex++;
             }
         }
 
-        private unsafe void ConvertTileToPixels(byte* bitmapPointer, int tileStartPosition, int pixelArrayIndex, int pixelRowOffset)
+        private unsafe void ConvertTileToPixels(byte* bitmapPointer, int tileStartPosition, int pixelArrayIndex, int pixelRowOffset, int paletteOffset)
         {
                 byte lowBit = _internalMemory[tileStartPosition];
                 byte highBit = _internalMemory[tileStartPosition + 8];
@@ -1162,14 +1218,14 @@ namespace dotnetNES.Engine.Processors
                 //$0xxE=$42  01000010
                 //$0xxF=$87  10000111
 
-                var bit0 = _internalMemory[0x3F00 + (lowBit & 0x1) | ((highBit & 0x01) << 1)];
-                var bit1 = _internalMemory[0x3F00 + ((lowBit & 0x2) >> 1) | (highBit & 0x02)];
-                var bit2 = _internalMemory[0x3F00 + ((lowBit & 0x04) >> 2) | ((highBit & 0x04) >> 1)];
-                var bit3 = _internalMemory[0x3F00 + ((lowBit & 0x08) >> 3) | ((highBit & 0x08) >> 2)];
-                var bit4 = _internalMemory[0x3F00 + ((lowBit & 0x10) >> 4) | ((highBit & 0x10) >> 3)];
-                var bit5 = _internalMemory[0x3F00 + ((lowBit & 0x20) >> 5) | ((highBit & 0x20) >> 4)];
-                var bit6 = _internalMemory[0x3F00 + ((lowBit & 0x40) >> 6) | ((highBit & 0x40) >> 5)];
-                var bit7 = _internalMemory[0x3F00 + (lowBit >> 7) | (((highBit & 0x80) >> 6))];
+                var bit0 = _internalMemory[0x3F00 + (lowBit & 0x1) | ((highBit & 0x01) << 1) | (paletteOffset << 2)];
+                var bit1 = _internalMemory[0x3F00 + ((lowBit & 0x2) >> 1) | (highBit & 0x02) | (paletteOffset << 2)];
+                var bit2 = _internalMemory[0x3F00 + ((lowBit & 0x04) >> 2) | ((highBit & 0x04) >> 1) | (paletteOffset << 2)];
+                var bit3 = _internalMemory[0x3F00 + ((lowBit & 0x08) >> 3) | ((highBit & 0x08) >> 2) | (paletteOffset << 2)];
+                var bit4 = _internalMemory[0x3F00 + ((lowBit & 0x10) >> 4) | ((highBit & 0x10) >> 3) | (paletteOffset << 2)];
+                var bit5 = _internalMemory[0x3F00 + ((lowBit & 0x20) >> 5) | ((highBit & 0x20) >> 4) | (paletteOffset << 2)];
+                var bit6 = _internalMemory[0x3F00 + ((lowBit & 0x40) >> 6) | ((highBit & 0x40) >> 5) | (paletteOffset << 2)];
+                var bit7 = _internalMemory[0x3F00 + (lowBit >> 7) | (((highBit & 0x80) >> 6)) | (paletteOffset << 2)];
 
                 switch (tileStartPosition & 0x7)
                 {
@@ -1306,7 +1362,7 @@ namespace dotnetNES.Engine.Processors
             }
         }
 
-        private static unsafe void SetColor(byte* bits, int pixelArrayIndex, byte paletteLookup)
+        private static unsafe void SetColor(byte* bits, int pixelArrayIndex, int paletteLookup)
         {
             bits[pixelArrayIndex] = _pallet[paletteLookup * 3 + 2];
             bits[pixelArrayIndex + 1] = _pallet[paletteLookup * 3 + 1];
