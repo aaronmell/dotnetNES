@@ -73,6 +73,9 @@ namespace dotnetNES.Tests.Processors
             Assert.AreEqual(0x33, engine.PictureProcessingUnit.ReadPPUMemory(0x3f0f), "0X3F0f");
         }
 
+        /// <summary>
+        /// You will need the valid rom in order to run this test!
+        /// </summary>
         [Test]
         public void PPU_Palette_LoadedCorrectly_DK_Rom()
         {
@@ -124,6 +127,9 @@ namespace dotnetNES.Tests.Processors
         }
     
     
+        /// <summary>
+        /// You will need the valid rom in order to run this test!
+        /// </summary>
         [Test]
         public void PPU_NameTables_LoadedCorrectly_DK_Rom()
         {
