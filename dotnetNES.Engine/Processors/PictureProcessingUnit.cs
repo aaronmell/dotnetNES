@@ -351,7 +351,7 @@ namespace dotnetNES.Engine.Processors
         /// <returns>a byte of memory</returns>
         internal byte ReadPPUMemory(int address)
         {
-            return _internalMemory[address];
+            return ReadInternalMemory(address);
         }
 
         /// <summary>
@@ -379,8 +379,6 @@ namespace dotnetNES.Engine.Processors
         /// <param name="nameTableSelect">The nametable to select</param>
         internal unsafe void DrawNametable(byte* nameTablePointer, int nameTableSelect)
         {
-
-
             // 32 Tiles Wide
             // 30 Rows Tall
             var currentPosition = 0;
@@ -462,7 +460,7 @@ namespace dotnetNES.Engine.Processors
         {
             if (!_internalResetFlag)
             {
-                WriteLog("Stepping PPU");
+                //WriteLog("Stepping PPU");
 
                 if (_nmiOccurred && _nmiOutput)
                 {
@@ -945,7 +943,9 @@ namespace dotnetNES.Engine.Processors
                     }
                 case 257:
                     {
+                        WriteLog("Setting Hori(V) = Hori(T)");
                         //_currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
+
                         _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
                        
                         ObjectAttributeMemoryRegister = 0;
@@ -961,6 +961,7 @@ namespace dotnetNES.Engine.Processors
 
             if (ScanLine == 261 && CycleCount > 279 && CycleCount < 305)
             {
+                WriteLog("Setting Vert(V) = Vert(T)");
                 //_currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
             }
         }
@@ -975,12 +976,12 @@ namespace dotnetNES.Engine.Processors
             //if ((_currentAddress & 0x001F) == 0x001F)
             //{
             //    _currentAddress ^= 0x041F;
-            //    WriteLog(string.Format("IncrementV: Wrapping Occurred, _currentAddress is now {0}", _currentAddress));
+            //    WriteLog("IncrementH: Wrapping Occurred");
             //}
             //else
             //{
             //    _currentAddress++;
-            //    WriteLog(string.Format("IncrementV: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
+            //    WriteLog("IncrementH: Current Address Incremented");
             //}
                
         }
@@ -991,7 +992,7 @@ namespace dotnetNES.Engine.Processors
             if ((_currentAddress & 0x7000) != 0x7000)
             {
                 //_currentAddress += 0x1000; // increment fine Y
-                //WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
+                WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
             }
             else
             {
@@ -1042,16 +1043,19 @@ namespace dotnetNES.Engine.Processors
                     {
                         //If the _crrent address is not a palette read, it goes into a buffer. Otherwise
                         //It is ready directly
-                        if (_currentAddress < 0x3F00)
+                        if (_currentAddress  < 0x3F00)
                         {
                             DataRegister = _ppuDataReadBuffer;
-                            _ppuDataReadBuffer = _internalMemory[_currentAddress];
+                            _ppuDataReadBuffer = ReadInternalMemory(_currentAddress);
                         }
                         else
                         {
-                            DataRegister = _internalMemory[_currentAddress];
-                            //PPU Memory Mirror fix
-                            _ppuDataReadBuffer = _internalMemory[_currentAddress];
+
+                            DataRegister = ReadInternalMemory(_currentAddress);
+
+                            //When the PPU returns a palette byte, it sets the buffer differently
+                            var tempAddress = _currentAddress & 0x2FFF;
+                            _ppuDataReadBuffer = ReadInternalMemory(tempAddress);
                         }
 
                         _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
@@ -1125,24 +1129,49 @@ namespace dotnetNES.Engine.Processors
                 }
                 case 0x2007:
                 {
-                    //Mirroring
-                    int mirrorAddress;
-                    
-                    if (_currentAddress > 0x3F1F)
-                    {
-                        mirrorAddress = (_currentAddress - 0x20) & 0x3FFF;
-                    }
-                    else
-                        mirrorAddress = _currentAddress & 0x3FFF;
-
-                    _internalMemory[mirrorAddress] = DataRegister;
-
+                    WriteInternalMemory(_currentAddress, DataRegister);
                     _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
-
-                    WriteLog(string.Format("Memory: 0x2007 write, value {0} written to address {1}  Current Address Incremented to {2}", DataRegister, mirrorAddress, _currentAddress));
                     break;
                 }
             }
+        }
+
+       
+        private byte ReadInternalMemory(int originalAddress)
+        {
+            var tempAddress = originalAddress & 0x3FFF;
+
+            //Handling Wrapping in the Palette memory
+            if (tempAddress > 0x3f1f)
+            {
+                tempAddress -= 0x20;
+            }
+            //Handling wrapping in the nametable memory
+            else if (tempAddress > 0x2fff && tempAddress < 0x3f00)
+            {
+                tempAddress -= 0x1000;
+            }
+
+            return _internalMemory[tempAddress];
+        }
+
+        private void WriteInternalMemory(int originalAddress, byte value)
+        {
+            var tempAddress = originalAddress & 0x3FFF;
+
+            //Handling Wrapping in the Palette memory
+            if (tempAddress > 0x3f1f)
+            {
+                tempAddress -= 0x20;
+            }
+            //Handling wrapping in the nametable memory
+            else if (tempAddress > 0x2fff && tempAddress < 0x3f00)
+            {
+                tempAddress -= 0x1000;
+            }
+
+            WriteLog(string.Format("Memory: write, value {0} written to address {1}", value, _temporaryAddress));
+            _internalMemory[tempAddress] = value;
         }
         #endregion
 
@@ -1359,7 +1388,7 @@ namespace dotnetNES.Engine.Processors
         [Conditional("DEBUG")]
         private void WriteLog(string log)
         {
-            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress, log);
+            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress.ToString("X"), log);
         }
         #endregion
     }
