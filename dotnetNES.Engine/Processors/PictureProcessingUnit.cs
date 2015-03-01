@@ -1069,7 +1069,7 @@ namespace dotnetNES.Engine.Processors
                     if (_internalResetFlag)
                         return;
 
-                    _temporaryAddress |= (value & 0x3) << 10;
+                    _temporaryAddress |= (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
 
                     _nmiOutput = (ControlRegister & 0x80) != 0;
 
@@ -1089,12 +1089,12 @@ namespace dotnetNES.Engine.Processors
                     if (!_tempAddressHasBeenWrittenTo)
                     {
                         _fineXScroll = value & 0x07;
-                        _temporaryAddress = (value >> 3) & 0x1F;
+                        _temporaryAddress = (_temporaryAddress & 0x7FE0) | ((value & 0xF8) >> 3);
                         WriteLog(string.Format("Memory: 0x2005 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
                     }
                     else
                     {
-                        _temporaryAddress = (value & 7) << 12 | (value & 0x1f8) << 2;
+                        _temporaryAddress = (_temporaryAddress & 0x0C1F) | ((value & 0x7) << 12) | ((value & 0xF8) << 2);
                         WriteLog(string.Format("Memory: 0x2005 write x2, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
                     }
                     _tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
@@ -1108,12 +1108,12 @@ namespace dotnetNES.Engine.Processors
 
                     if (!_tempAddressHasBeenWrittenTo)
                     {
-                        _temporaryAddress = ((value & 0x3F) << 8);
+                        _temporaryAddress = (_temporaryAddress & 0x00FF) | ((value & 0x3F) << 8);
                         WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
                     }
                     else
                     {
-                        _temporaryAddress |= (value & 0xFF);
+                        _temporaryAddress = (_temporaryAddress & 0x7F00) | value;
                         _currentAddress = _temporaryAddress;
                         WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}, _currentAddress is now {2} ", value, _temporaryAddress, _currentAddress));
                     }
@@ -1129,10 +1129,10 @@ namespace dotnetNES.Engine.Processors
                     
                     if (_currentAddress > 0x3F1F)
                     {
-                        mirrorAddress = _currentAddress - 0x20;
+                        mirrorAddress = (_currentAddress - 0x20) & 0x3FFF;
                     }
                     else
-                        mirrorAddress = _currentAddress;
+                        mirrorAddress = _currentAddress & 0x3FFF;
 
                     _internalMemory[mirrorAddress] = DataRegister;
 
