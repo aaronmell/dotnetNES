@@ -67,7 +67,7 @@ namespace dotnetNES.Client.ViewModel
             PatternTable0.Lock();
             var bufferPtr = PatternTable0.BackBuffer;
            
-            Engine.SetPatternTable0((byte*)bufferPtr.ToPointer());
+            Engine.DrawPatternTable0((byte*)bufferPtr.ToPointer());
            
             PatternTable0.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable0.Unlock();
@@ -79,7 +79,7 @@ namespace dotnetNES.Client.ViewModel
 
             PatternTable1.Lock();
             bufferPtr = PatternTable1.BackBuffer;
-            Engine.SetPatternTable1((byte*)bufferPtr.ToPointer());
+            Engine.DrawPatternTable1((byte*)bufferPtr.ToPointer());
            
             PatternTable1.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable1.Unlock();
@@ -91,7 +91,7 @@ namespace dotnetNES.Client.ViewModel
 
             BackgroundPalettes.Lock();
             bufferPtr = BackgroundPalettes.BackBuffer;
-            Engine.SetBackgroundPalette((byte*)bufferPtr.ToPointer());
+            Engine.DrawBackgroundPalette((byte*)bufferPtr.ToPointer());
             
             BackgroundPalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
             BackgroundPalettes.Unlock();
@@ -102,7 +102,7 @@ namespace dotnetNES.Client.ViewModel
             
             SpritePalettes.Lock();
             bufferPtr = SpritePalettes.BackBuffer;
-            Engine.SetSpritePalette((byte*)bufferPtr.ToPointer());
+            Engine.DrawSpritePalette((byte*)bufferPtr.ToPointer());
             
             SpritePalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
             SpritePalettes.Unlock();

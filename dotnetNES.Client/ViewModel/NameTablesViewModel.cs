@@ -68,10 +68,10 @@ namespace dotnetNES.Client.ViewModel
             NameTable0.Lock();
             var nameTable0Ptr = NameTable0.BackBuffer;
 
-            Engine.SetNameTables((byte*)nameTable0Ptr.ToPointer(),0);
+            Engine.DrawNameTable((byte*)nameTable0Ptr.ToPointer(),0);
            
-            NameTable1.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
-            NameTable1.Unlock();
+            NameTable0.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
+            NameTable0.Unlock();
            
 
             if (Engine.IsVerticalMirroringEnabled)
@@ -80,7 +80,7 @@ namespace dotnetNES.Client.ViewModel
                 NameTable1.Lock();
                 var nameTable1Ptr = NameTable1.BackBuffer;
 
-                Engine.SetNameTables((byte*)nameTable1Ptr.ToPointer(), 1);
+                Engine.DrawNameTable((byte*)nameTable1Ptr.ToPointer(), 1);
 
                 NameTable1.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
                 NameTable1.Unlock();
@@ -91,7 +91,7 @@ namespace dotnetNES.Client.ViewModel
                 NameTable2.Lock();
                 var nameTable2Ptr = NameTable2.BackBuffer;
 
-                Engine.SetNameTables((byte*)nameTable2Ptr.ToPointer(), 2);
+                Engine.DrawNameTable((byte*)nameTable2Ptr.ToPointer(), 2);
 
                 NameTable2.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
                 NameTable2.Unlock();

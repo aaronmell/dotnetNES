@@ -155,7 +155,7 @@ namespace dotnetNES.Engine.Processors
         /// This is the current address. The PPU uses this address to get the data it needs to render a pixel.
         /// </summary>
         private int _currentAddress;
-       
+
 
         /// <summary>
         /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bitmapPointer of the value are copied here
@@ -204,17 +204,17 @@ namespace dotnetNES.Engine.Processors
         #endregion
 
         #region Internal Status
-        
+
         /// <summary>
         /// The number of cycles that have currently elapsed
         /// </summary>
         internal int CycleCount;
-        
+
         /// <summary>
         /// The current scanLine of the PPU
         /// </summary>
         internal int ScanLine;
-        
+
         /// <summary>
         /// Odd frames skip a cycle on the first cycle and scanline
         /// </summary>
@@ -280,6 +280,12 @@ namespace dotnetNES.Engine.Processors
         /// This action is fired each time a new frame is available
         /// </summary>
         internal Action OnNewFrameAction { get; set; }
+
+        /// <summary>
+        /// The current frame being rendered
+        /// </summary>
+        internal byte[] CurrentFrame { get; set; }
+
         #region Constructor
         /// <summary>
         /// Constructor for the PPU
@@ -299,6 +305,7 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
+            CurrentFrame = new byte[184320];
         }
         #endregion
 
@@ -316,13 +323,14 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
+            CurrentFrame = new byte[184320];
         }
 
         /// <summary>
         /// This sets the Pattern table 1 stored between 0x00 and 0x0FF on its bitmap
         /// </summary>
         /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
-        internal unsafe void GetPatternTable0(byte* bitmapPointer)
+        internal unsafe void DrawPatternTable0(byte* bitmapPointer)
         {
             GetNewPatternTable(bitmapPointer, true);
         }
@@ -331,7 +339,7 @@ namespace dotnetNES.Engine.Processors
         /// This sets the Pattern table 1 stored between 0x100 and 0x1FF on its bitmap
         /// </summary>
         /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
-        internal unsafe void SetPatternTable1(byte* bitmapPointer)
+        internal unsafe void DrawPatternTable1(byte* bitmapPointer)
         {
             GetNewPatternTable(bitmapPointer, false);
         }
@@ -350,7 +358,7 @@ namespace dotnetNES.Engine.Processors
         /// Draws the background palette on its bitmap
         /// </summary>
         /// <param name="palettePointer">A pointer that points to the sprite bitmap</param>
-        internal unsafe void SetBackgroundPalette(byte* palettePointer)
+        internal unsafe void DrawBackgroundPalette(byte* palettePointer)
         {
             GetPalette(palettePointer, true);
         }
@@ -359,7 +367,7 @@ namespace dotnetNES.Engine.Processors
         /// Draws the sprites palette on its bitmap
         /// </summary>
         /// <param name="palettePointer">A pointer that points to the sprite bitmap</param>
-        internal unsafe void SetSpritePalette(byte* palettePointer)
+        internal unsafe void DrawSpritePalette(byte* palettePointer)
         {
             GetPalette(palettePointer, false);
         }
@@ -369,9 +377,9 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         /// <param name="nameTablePointer">A pointer that points to the nametable bitmap</param>
         /// <param name="nameTableSelect">The nametable to select</param>
-        internal unsafe void SetNameTable(byte* nameTablePointer, int nameTableSelect)
+        internal unsafe void DrawNametable(byte* nameTablePointer, int nameTableSelect)
         {
-             
+
 
             // 32 Tiles Wide
             // 30 Rows Tall
@@ -396,7 +404,7 @@ namespace dotnetNES.Engine.Processors
                     attributeTablePosition = 0x2Fbf;
                     break;
             }
-           
+
             var offset = (ControlRegister & 0x10) == 0x10 ? 0x1000 : 0;
             var attribute = 0;
             bool useTopByte = true;
@@ -416,8 +424,6 @@ namespace dotnetNES.Engine.Processors
                     useTopByte = false;
                 }
 
-                //attribute = useTopByte ? _internalMemory[attributeTablePosition] & 0x03 : (_internalMemory[attributeTablePosition] >> 4) & 0x03;
-
                 for (var tableColumn = 0; tableColumn < 32; tableColumn++)
                 {
                     if ((tableColumn % 4) == 0)
@@ -435,29 +441,6 @@ namespace dotnetNES.Engine.Processors
                     currentPosition++;
                 }
             }
-
-
-            ////Iterate over each row and column
-            //for (var row = 0; row < 16; row++)
-            //{
-            //     for (var column = 0; column < 16; column++)
-            //     {
-            //         DrawTileToArray(bitmapBuffer, 16, (row * 16) + column, tileOffset, row, column);
-
-            //         if ((column % 4) == 0)
-            //         {
-            //             attributeTablePosition++;
-            //         }
-            //     }
-
-            //    if ((row % 4) == 0)
-            //    {
-            //        attributeTablePosition++;
-            //    }
-            //    else
-            //    {
-            //        attributeTablePosition -= 7;
-            //    }
         }
         
         #endregion

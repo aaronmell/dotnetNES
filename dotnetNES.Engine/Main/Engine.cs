@@ -69,49 +69,54 @@ namespace dotnetNES.Engine.Main
 
 
         /// <summary>
-        /// This sets PatternTable0 on its bitmap.
+        /// This draws PatternTable0 on its bitmap.
         /// </summary>
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws PatternTable0</param>
-        public unsafe void SetPatternTable0(byte* bitmapPointer)
+        public unsafe void DrawPatternTable0(byte* bitmapPointer)
         {
-            PictureProcessingUnit.GetPatternTable0(bitmapPointer);
+            PictureProcessingUnit.DrawPatternTable0(bitmapPointer);
         }
 
         /// <summary>
-        /// This sets PatternTable1 on its bitmap.
+        /// This draws PatternTable1 on its bitmap.
         /// </summary>
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws PatternTable1</param>
-        public unsafe void SetPatternTable1(byte* bitmapPointer)
+        public unsafe void DrawPatternTable1(byte* bitmapPointer)
         {
-            PictureProcessingUnit.SetPatternTable1(bitmapPointer);
+            PictureProcessingUnit.DrawPatternTable1(bitmapPointer);
         }
 
         /// <summary>
-        /// This sets the background palette on its bitmap.
+        /// This draws the background palette on its bitmap.
         /// </summary>
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the background palette</param>
-        public unsafe void SetBackgroundPalette(byte* bitmapPointer)
+        public unsafe void DrawBackgroundPalette(byte* bitmapPointer)
         {
-            PictureProcessingUnit.SetBackgroundPalette(bitmapPointer);
+            PictureProcessingUnit.DrawBackgroundPalette(bitmapPointer);
         }
 
         /// <summary>
-        /// This sets the sprite palette on its bitmap.
+        /// This draws the sprite palette on its bitmap.
         /// </summary>
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the sprite palette</param>
-        public unsafe void SetSpritePalette(byte* bitmapPointer)
+        public unsafe void DrawSpritePalette(byte* bitmapPointer)
         {
-            PictureProcessingUnit.SetSpritePalette(bitmapPointer);
+            PictureProcessingUnit.DrawSpritePalette(bitmapPointer);
         }
 
         /// <summary>
-        /// This sets the nametable on its bitmap.
+        /// This draws the nametable on its bitmap
         /// </summary>
         /// <param name="bitmapPointer">A pointer to the bitmap object that draws the nametable</param>
         /// <param name="nameTableSelect">The nametable to fetch from</param>
-        public unsafe void SetNameTables(byte* bitmapPointer, int nameTableSelect)
+        public unsafe void DrawNameTable(byte* bitmapPointer, int nameTableSelect)
         {
-            PictureProcessingUnit.SetNameTable(bitmapPointer, nameTableSelect);
+            PictureProcessingUnit.DrawNametable(bitmapPointer, nameTableSelect);
+        }
+
+        public byte[] GetScreen()
+        {
+            return PictureProcessingUnit.CurrentFrame;
         }
     }
 }

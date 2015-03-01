@@ -1,4 +1,8 @@
+using System;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
@@ -25,6 +29,8 @@ namespace dotnetNES.Client.ViewModel
         private int _frameCount;
 
         public Engine.Main.Engine Engine { get; set; }
+
+        public WriteableBitmap Screen { get; set; }
 
         public RelayCommand LoadFileCommand { get; set; }
 
@@ -125,6 +131,20 @@ namespace dotnetNES.Client.ViewModel
             {
                 Messenger.Default.Send(new NotificationMessage(MessageNames.UpdateDebugScreens));
             }
+
+            if (Application.Current != null)
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(Refresh));
+        }
+
+        private unsafe void Refresh()
+        {
+            //Screen.Lock();
+            //var nameTable0Ptr = Screen.BackBuffer;
+
+            //Engine.GetScreen((byte*)nameTable0Ptr.ToPointer(), 0);
+
+            //Screen.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
+            //Screen.Unlock();
         }
 
         private void PauseEngine()
