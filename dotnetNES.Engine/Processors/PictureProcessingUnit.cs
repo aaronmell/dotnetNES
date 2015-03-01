@@ -534,7 +534,7 @@ namespace dotnetNES.Engine.Processors
                     }
                 }
 
-            if (!_isRenderingDisabled)
+            if (!_isRenderingDisabled && (ScanLine < 240 || ScanLine == 261))
             {
                 InnerCycleAction();
             }
@@ -945,8 +945,9 @@ namespace dotnetNES.Engine.Processors
                     }
                 case 257:
                     {
-                        _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
                         //_currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
+                        _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
+                       
                         ObjectAttributeMemoryRegister = 0;
                         break;
                     }
@@ -958,7 +959,7 @@ namespace dotnetNES.Engine.Processors
             ObjectAttributeMemoryRegister = 0;
 
 
-            if (CycleCount > 279 && CycleCount < 305)
+            if (ScanLine == 261 && CycleCount > 279 && CycleCount < 305)
             {
                 //_currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
             }
