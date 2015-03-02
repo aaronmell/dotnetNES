@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using Common.Logging;
 using dotnetNES.Engine.Models;
 using dotnetNES.Engine.Processors;
 using dotnetNES.Engine.Utilities;
@@ -11,6 +13,8 @@ namespace dotnetNES.Engine.Main
     /// </summary>
     public class Engine
     {
+        private static readonly ILog _logger = LogManager.GetLogger("Engine");
+
         internal readonly CPU Processor;
         internal readonly PPU PictureProcessingUnit;
         private readonly CartridgeModel _cartridgeModel;
@@ -48,7 +52,34 @@ namespace dotnetNES.Engine.Main
         /// </summary>
         public void Step()
         {
-           Processor.NextStep();
+            Processor.NextStep();
+
+            WriteLog();
+        }
+
+        [Conditional("DEBUG")]
+        private void WriteLog()
+        {
+            if (_logger.IsDebugEnabled)
+            {
+                _logger.Debug(string.Format("{0}  {1} {2} {3} {4} {5} A:{6} X:{7} Y:{8} P:{9} SP:{10} CYC:{11} SL:{12}",
+               Processor.ProgramCounter.ToString("X").PadLeft(4, '0'),
+               Processor.CurrentOpCode.ToString("X"),
+               Processor.CurrentDisassembly.LowAddress.PadRight(2),
+               Processor.CurrentDisassembly.HighAddress.PadRight(2),
+               Processor.CurrentDisassembly.OpCodeString.PadRight(2),
+               Processor.CurrentDisassembly.DisassemblyOutput.PadRight(16, ' '),
+               Processor.Accumulator.ToString("X").PadLeft(2, '0'),
+               Processor.XRegister.ToString("X").PadLeft(2, '0'),
+               Processor.YRegister.ToString("X").PadLeft(2, '0'),
+               (byte)
+                   ((Processor.CarryFlag ? 0x01 : 0) + (Processor.ZeroFlag ? 0x02 : 0) +
+                    (Processor.DisableInterruptFlag ? 0x04 : 0) +
+                    (Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (Processor.OverflowFlag ? 0x40 : 0) +
+                    (Processor.NegativeFlag ? 0x80 : 0)),
+               Processor.StackPointer.ToString("X").PadLeft(2, '0'), PictureProcessingUnit.CycleCount,
+               PictureProcessingUnit.ScanLine));
+            }
         }
 
         /// <summary>

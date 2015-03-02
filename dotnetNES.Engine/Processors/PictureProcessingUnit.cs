@@ -448,7 +448,7 @@ namespace dotnetNES.Engine.Processors
         #region Main Loop
         private void CPUCycleCountIncremented()
         {
-            if (_internalResetFlag && _cpu.GetCycleCount() > 33132 & ScanLine == 240)
+            //if (_internalResetFlag && _cpu.GetCycleCount() > 33132) //& ScanLine == 240)
                 _internalResetFlag = false;
            
             StepPPU();
@@ -461,6 +461,8 @@ namespace dotnetNES.Engine.Processors
             if (!_internalResetFlag)
             {
                 //WriteLog("Stepping PPU");
+                
+                OuterCycleAction();
 
                 if (_nmiOccurred && _nmiOutput)
                 {
@@ -468,8 +470,6 @@ namespace dotnetNES.Engine.Processors
                     _cpu.NonMaskableInterrupt();
                     WriteLog("NMI Occurred!");
                 }
-
-                OuterCycleAction();   
             }
 
             if (CycleCount < 340)
@@ -499,7 +499,7 @@ namespace dotnetNES.Engine.Processors
                         //Copy Temporary to Current at the beginning of each Frame
                         //_currentAddress = _temporaryAddress;
 
-                        if (CycleCount == 0 && _isOddFrame && (StatusRegister & 8) == 8)
+                        if (CycleCount == 0 && _isOddFrame && !_isRenderingDisabled)
                         {
                             WriteLog("Odd Frame, skipping first cycle");
                             CycleCount++;
@@ -523,9 +523,9 @@ namespace dotnetNES.Engine.Processors
                     {
                         //TODO: FIX these
                         //Clear Sprite 0 Hit
-                        //StatusRegister &= byte.MaxValue ^ (1 << 6);
+                        StatusRegister &= byte.MaxValue ^ (1 << 6);
                         //Clear Sprite Overflow
-                        //StatusRegister &= byte.MaxValue ^ (1 << 5);
+                        StatusRegister &= byte.MaxValue ^ (1 << 5);
                         _nmiOccurred = false;
 
                         WriteLog("Clearing _nmiOccurred");
@@ -983,7 +983,6 @@ namespace dotnetNES.Engine.Processors
             //    _currentAddress++;
             //    WriteLog("IncrementH: Current Address Incremented");
             //}
-               
         }
 
         //This method increments the Vertical Coordinate on Cycle 256 of the scanline
@@ -996,7 +995,7 @@ namespace dotnetNES.Engine.Processors
             }
             else
             {
-                _currentAddress &= ~0x7000;                    // fine Y = 0
+                _currentAddress ^= 0x7000;
 
                 switch (_currentAddress & 0x3E0)
                 {
@@ -1040,28 +1039,28 @@ namespace dotnetNES.Engine.Processors
                 
                 //Reading from the PPUData Register
                 case 0x2007:
+                {
+                    //If the _crrent address is not a palette read, it goes into a buffer. Otherwise
+                    //It is ready directly
+                    if (_currentAddress  < 0x3F00)
                     {
-                        //If the _crrent address is not a palette read, it goes into a buffer. Otherwise
-                        //It is ready directly
-                        if (_currentAddress  < 0x3F00)
-                        {
-                            DataRegister = _ppuDataReadBuffer;
-                            _ppuDataReadBuffer = ReadInternalMemory(_currentAddress);
-                        }
-                        else
-                        {
-
-                            DataRegister = ReadInternalMemory(_currentAddress);
-
-                            //When the PPU returns a palette byte, it sets the buffer differently
-                            var tempAddress = _currentAddress & 0x2FFF;
-                            _ppuDataReadBuffer = ReadInternalMemory(tempAddress);
-                        }
-
-                        _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
-                        WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", _currentAddress));
+                        DataRegister = _ppuDataReadBuffer;
+                        _ppuDataReadBuffer = ReadInternalMemory(_currentAddress);
                     }
+                    else
+                    {
+
+                        DataRegister = ReadInternalMemory(_currentAddress);
+
+                        //When the PPU returns a palette byte, it sets the buffer differently
+                        var tempAddress = _currentAddress & 0x2FFF;
+                        _ppuDataReadBuffer = ReadInternalMemory(tempAddress);
+                    }
+
+                    _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
+                    WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", _currentAddress));
                     break;
+                }
             }
         }
 
@@ -1074,7 +1073,7 @@ namespace dotnetNES.Engine.Processors
                     if (_internalResetFlag)
                         return;
 
-                    _temporaryAddress |= (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
+                    _temporaryAddress = (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
 
                     _nmiOutput = (ControlRegister & 0x80) != 0;
 
@@ -1135,8 +1134,7 @@ namespace dotnetNES.Engine.Processors
                 }
             }
         }
-
-       
+        
         private byte ReadInternalMemory(int originalAddress)
         {
             var tempAddress = originalAddress & 0x3FFF;
