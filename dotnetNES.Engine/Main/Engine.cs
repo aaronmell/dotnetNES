@@ -72,11 +72,11 @@ namespace dotnetNES.Engine.Main
                Processor.Accumulator.ToString("X").PadLeft(2, '0'),
                Processor.XRegister.ToString("X").PadLeft(2, '0'),
                Processor.YRegister.ToString("X").PadLeft(2, '0'),
-               (byte)
+               ((byte)
                    ((Processor.CarryFlag ? 0x01 : 0) + (Processor.ZeroFlag ? 0x02 : 0) +
                     (Processor.DisableInterruptFlag ? 0x04 : 0) +
                     (Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (Processor.OverflowFlag ? 0x40 : 0) +
-                    (Processor.NegativeFlag ? 0x80 : 0)),
+                    (Processor.NegativeFlag ? 0x80 : 0))).ToString("X"),
                Processor.StackPointer.ToString("X").PadLeft(2, '0'), PictureProcessingUnit.CycleCount,
                PictureProcessingUnit.ScanLine));
             }

@@ -59,10 +59,11 @@ namespace dotnetNES.Engine.Processors
                 address = (address & 0x7) + 0x2000;
             }
 
-            ReadMemoryAction(address);
-
-            var value = Memory[address];
             IncrementCycleCount();
+
+            ReadMemoryAction(address);
+            var value = Memory[address];
+           
             return value;
         }
 

@@ -510,7 +510,7 @@ namespace dotnetNES.Engine.Processors
                     _upperShiftRegister >>= 1;
                     _lowerShiftRegister >>= 1;
                 }
-                else if (ScanLine == 241 && CycleCount == 2)
+                else if (ScanLine == 240 && CycleCount == 340)
                 {
                     WriteLog("Setting _nmiOccurred");
                     //StatusRegister |= 0x80;
@@ -1022,8 +1022,8 @@ namespace dotnetNES.Engine.Processors
                 //Reading from the Status Register
                 case 0x2002:
                 {
-                   
-                    if (_nmiOccurred)
+
+                    if (_nmiOccurred && (ScanLine != 241 || CycleCount != 0))
                     {
                         StatusRegister |= 0x80;
                     }
@@ -1033,6 +1033,7 @@ namespace dotnetNES.Engine.Processors
                     }
 
                     _tempAddressHasBeenWrittenTo = false;
+    
                     _nmiOccurred = false;
                     break;
                 }
