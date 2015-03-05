@@ -64,11 +64,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Processors\CPUTests.cs" />
-    <Compile Include="NesTestData.cs" />
+    <Compile Include="TestData.cs" />
     <Compile Include="Processors\PPUTests.cs" />
     <Compile Include="UtilityTests\CPUUtilityTests.cs" />
     <Compile Include="UtilityTests\LoaderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilties.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -151,6 +152,36 @@
     <Content Include="TestRoms\nestest\nestest.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\01-vbl_basics.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\02-vbl_set_time.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\03-vbl_clear_time.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\04-nmi_control.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\05-nmi_timing.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\06-suppression.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\07-nmi_on_timing.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\08-nmi_off_timing.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\09-even_odd_frames.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\ppu_vbl_nmi\10-even_odd_timing.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="TestRoms\vbl_nmi_timing\1.frame_basics.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -172,6 +203,9 @@
     <None Include="TestRoms\vbl_nmi_timing\7.nmi_timing.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestRoms\vbl_nmi_timing\vbl_timing.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\dotnetNES.Engine\dotnetNES.Engine.csproj">

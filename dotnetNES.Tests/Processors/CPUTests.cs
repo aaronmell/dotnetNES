@@ -25,7 +25,7 @@ namespace dotnetNES.Tests.Processors
         [TestCase("16-special.nes", "\n16-special\n\nPassed\n\0")]
         public void CPU_Instruction_Test_No_Errors(string fileName, string expectedString)
         {
-            var output = RunTest(fileName, "instr_test-v5");
+            var output = Utilties.RunTest(fileName, "instr_test-v5");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -35,7 +35,7 @@ namespace dotnetNES.Tests.Processors
         //[TestCase("03-dummy_reads.nes", "\n02-branch_wrap\n\nPassed\n\0")]
         public void CPU_Instruction_Misc_No_Errors(string fileName, string expectedString)
         {
-            var output = RunTest(fileName, "instr_misc");
+            var output = Utilties.RunTest(fileName, "instr_misc");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -47,15 +47,7 @@ namespace dotnetNES.Tests.Processors
         //[TestCase("5-branch_delays_irq.nes", "")]
         public void CPU_Interrupts_No_Errors(string fileName, string expectedString)
         {
-            var output = RunTest(fileName, "cpu_int_v2");
-
-            Assert.AreEqual(expectedString, output);
-        }
-
-        //[TestCase("1.frame_basics.nes", "")] //I have no way to pass this test yet, because I am not rendering anything!
-        public void VBlank_NMI_Timing_Test_No_Errors(string fileName, string expectedString)
-        {
-            var output = RunTest(fileName, "vbl_nmi_timing");
+            var output = Utilties.RunTest(fileName, "cpu_int_v2");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -64,48 +56,60 @@ namespace dotnetNES.Tests.Processors
         public void Nestest_Matches()
         {
             var engine =
-               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
-                   "nestest.nes"));
+                new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
+                    "nestest.nes"));
             //Changing the Initial PC to 0xC000
             engine.Processor.WriteMemoryValueWithoutCycle(65532, 0);
             engine.Processor.Reset();
 
-            var testData = LoadNesTestData();
-
-
+            var testData = LoadTestData("nestest", "nestest.csv");
 
             var steps = 1;
             while (steps < 5002) //Can't run the full test, since past this point unofficial op codes show up.
             {
-               engine.Step();
+                engine.Step();
 
-               Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter, string.Format("Step {0} PC: ", steps));
-               Assert.AreEqual(testData[steps].Accumulator, engine.Processor.Accumulator, string.Format("Step {0} Accumulator: ", steps));
-               Assert.AreEqual(testData[steps].XRegister, engine.Processor.XRegister, string.Format("Step {0} XRegister: ", steps));
-               Assert.AreEqual(testData[steps].YRegister, engine.Processor.YRegister, string.Format("Step {0} YRegister: ", steps));
-               Assert.AreEqual(testData[steps].Flags, (byte)((engine.Processor.CarryFlag ? 0x01 : 0) + (engine.Processor.ZeroFlag ? 0x02 : 0) + (engine.Processor.DisableInterruptFlag ? 0x04 : 0) +
-                         (engine.Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (engine.Processor.OverflowFlag ? 0x40 : 0) + (engine.Processor.NegativeFlag ? 0x80 : 0)), string.Format("Step {0} Flag:", steps));
-               Assert.AreEqual(testData[steps].StackPointer, engine.Processor.StackPointer, string.Format("Step {0} StackPointer: ", steps));
+                Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter,
+                    string.Format("Step {0} PC: ", steps));
+                Assert.AreEqual(testData[steps].Accumulator, engine.Processor.Accumulator,
+                    string.Format("Step {0} Accumulator: ", steps));
+                Assert.AreEqual(testData[steps].XRegister, engine.Processor.XRegister,
+                    string.Format("Step {0} XRegister: ", steps));
+                Assert.AreEqual(testData[steps].YRegister, engine.Processor.YRegister,
+                    string.Format("Step {0} YRegister: ", steps));
+                Assert.AreEqual(testData[steps].Flags,
+                    (byte)
+                        ((engine.Processor.CarryFlag ? 0x01 : 0) + (engine.Processor.ZeroFlag ? 0x02 : 0) +
+                         (engine.Processor.DisableInterruptFlag ? 0x04 : 0) +
+                         (engine.Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 +
+                         (engine.Processor.OverflowFlag ? 0x40 : 0) + (engine.Processor.NegativeFlag ? 0x80 : 0)),
+                    string.Format("Step {0} Flag:", steps));
+                Assert.AreEqual(testData[steps].StackPointer, engine.Processor.StackPointer,
+                    string.Format("Step {0} StackPointer: ", steps));
 
-               Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount, string.Format("Step {0} CycleCount: ", steps));
-               Assert.AreEqual(testData[steps].ScanLine, engine.PictureProcessingUnit.ScanLine, string.Format("Step {0} ScanLine: ", steps));
+                Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount,
+                    string.Format("Step {0} CycleCount: ", steps));
+                Assert.AreEqual(testData[steps].ScanLine, engine.PictureProcessingUnit.ScanLine,
+                    string.Format("Step {0} ScanLine: ", steps));
                 steps++;
             }
         }
 
-        private List<NesTestData> LoadNesTestData()
-        {
-            var reader = new StreamReader(File.OpenRead(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
-                   "nestest.csv")));
 
-            var data = new List<NesTestData>();
+
+        private List<TestData> LoadTestData(string folder, string filename)
+        {
+            var reader =
+                new StreamReader(File.OpenRead(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder, filename)));
+
+            var data = new List<TestData>();
 
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
                 var values = line.Split(',');
 
-                data.Add(new NesTestData
+                data.Add(new TestData
                 {
                     ProgramCounter = Int32.Parse(values[0], System.Globalization.NumberStyles.HexNumber),
                     Accumulator = Int32.Parse(values[1], System.Globalization.NumberStyles.HexNumber),
@@ -119,40 +123,6 @@ namespace dotnetNES.Tests.Processors
             }
 
             return data;
-        }
-
-        private string RunTest(string fileName, string folder)
-        {
-            var engine =
-               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder,
-                   fileName));
-
-            var steps = 0;
-            while (steps < 31000 || engine.Processor.ReadMemoryValueWithoutCycle(0x6000) >= 0x80)
-            {
-                engine.Step();
-                steps++;
-
-                if (engine.Processor.ReadMemoryValueWithoutCycle(0x6000) > 0x00 &&
-                    engine.Processor.ReadMemoryValueWithoutCycle(0x6000) < 0x80)
-                    break;
-            }
-
-            var testOutput = new List<byte>();
-            var startAddress = 0x6004;
-
-            while (true)
-            {
-                testOutput.Add(engine.Processor.ReadMemoryValueWithoutCycle(startAddress));
-
-                if (System.Text.Encoding.ASCII.GetString(testOutput.ToArray()).Contains("\n\0"))
-                {
-                    break;
-                }
-               
-                startAddress++;
-            }
-            return System.Text.Encoding.ASCII.GetString(testOutput.ToArray());
         }
     }
 }

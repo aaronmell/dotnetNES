@@ -229,6 +229,11 @@ namespace dotnetNES.Engine.Processors
         /// This register is set to bit 7 of the Controller Register when it is written to.
         /// </summary>
         private bool _nmiOutput;
+        
+        /// <summary>
+        /// This register is set when an _nmi has been triggered
+        /// </summary>
+        private bool _triggerNmi;
         #endregion
 
         /// <summary>
@@ -266,11 +271,6 @@ namespace dotnetNES.Engine.Processors
         };
 
         /// <summary>
-        /// This flag is set after a reset or power event. Any writes to 0x2000, 0x2001, 0x2005, or 0x2006 are ignored until the flag is cleared.
-        /// </summary>
-        private bool _internalResetFlag;
-
-        /// <summary>
         /// This is set by <see cref="ControlRegister"/> bit 2
         /// </summary>
         private int _currentAddressIncrement;
@@ -301,7 +301,6 @@ namespace dotnetNES.Engine.Processors
 
             LoadInitialMemory(cartridgeModel);
             OnNewFrameAction = () => { };
-            _internalResetFlag = true;
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
@@ -319,7 +318,6 @@ namespace dotnetNES.Engine.Processors
             DataRegister = 0;
             ControlRegister = 0;
             MaskRegister = 0;
-            _internalResetFlag = true;
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
@@ -448,29 +446,27 @@ namespace dotnetNES.Engine.Processors
         #region Main Loop
         private void CPUCycleCountIncremented()
         {
-            //if (_internalResetFlag && _cpu.GetCycleCount() > 33132) //& ScanLine == 240)
-                _internalResetFlag = false;
-           
             StepPPU();
+
+            if (_triggerNmi && (ScanLine != 241 || CycleCount > 3))
+            {
+                _triggerNmi = false;
+                _cpu.NonMaskableInterrupt();
+                WriteLog("NMI Occurred!");
+            }
+
             StepPPU();
             StepPPU();
         }
 
         private void StepPPU()
         {
-            if (!_internalResetFlag)
-            {
-                //WriteLog("Stepping PPU");
+            //WriteLog("Stepping PPU");
                 
-                OuterCycleAction();
+            OuterCycleAction();
 
-                if (_nmiOccurred && _nmiOutput)
-                {
-                    _nmiOccurred = false;
-                    _cpu.NonMaskableInterrupt();
-                    WriteLog("NMI Occurred!");
-                }
-            }
+           if ((ScanLine == 241) && (CycleCount < 2))
+                _triggerNmi = (_nmiOccurred & _nmiOutput);
 
             if (CycleCount < 340)
                 CycleCount++;
@@ -513,13 +509,12 @@ namespace dotnetNES.Engine.Processors
                 else if (ScanLine == 240 && CycleCount == 340)
                 {
                     WriteLog("Setting _nmiOccurred");
-                    //StatusRegister |= 0x80;
                     _nmiOccurred = true;
 
                 }
                 else if (ScanLine == 261)
                 {
-                    if (CycleCount == 1)
+                    if (CycleCount == 0)
                     {
                         //TODO: FIX these
                         //Clear Sprite 0 Hit
@@ -1022,7 +1017,6 @@ namespace dotnetNES.Engine.Processors
                 //Reading from the Status Register
                 case 0x2002:
                 {
-
                     if (_nmiOccurred && (ScanLine != 241 || CycleCount != 0))
                     {
                         StatusRegister |= 0x80;
@@ -1035,6 +1029,10 @@ namespace dotnetNES.Engine.Processors
                     _tempAddressHasBeenWrittenTo = false;
     
                     _nmiOccurred = false;
+
+                   if ((ScanLine == 241) && (CycleCount < 3))
+                        _triggerNmi = (_nmiOccurred & _nmiOutput);
+
                     break;
                 }
                 
@@ -1071,12 +1069,18 @@ namespace dotnetNES.Engine.Processors
             {
                 case 0x2000:
                 {
-                    if (_internalResetFlag)
-                        return;
-
                     _temporaryAddress = (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
 
+                    var previousNmiOutput = _nmiOutput;
                     _nmiOutput = (ControlRegister & 0x80) != 0;
+
+                    if (!_nmiOutput)
+                    {
+                       if ((ScanLine == 241) && (CycleCount < 3))
+                            _triggerNmi = (_nmiOccurred & _nmiOutput);
+                    }
+                    else if (_nmiOccurred & !previousNmiOutput)
+                        _triggerNmi = true;
 
                     _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
                     break;
@@ -1088,9 +1092,7 @@ namespace dotnetNES.Engine.Processors
                 }
                 case 0x2005:
                 {
-                    if (_internalResetFlag)
-                        return;
-
+                   
                     if (!_tempAddressHasBeenWrittenTo)
                     {
                         _fineXScroll = value & 0x07;
@@ -1108,9 +1110,6 @@ namespace dotnetNES.Engine.Processors
                 }
                 case 0x2006:
                 {
-                    if (_internalResetFlag)
-                        return;
-
                     if (!_tempAddressHasBeenWrittenTo)
                     {
                         _temporaryAddress = (_temporaryAddress & 0x00FF) | ((value & 0x3F) << 8);
