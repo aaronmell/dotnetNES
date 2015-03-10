@@ -35,9 +35,10 @@ namespace dotnetNES.Engine.Processors
             }
             
             Memory[address] = data;
-            IncrementCycleCount();
             //Not sure if this is in the right place
             WriteMemoryAction(address, data);
+
+			IncrementCycleCount();
             
         }
 
@@ -59,9 +60,11 @@ namespace dotnetNES.Engine.Processors
                 address = (address & 0x7) + 0x2000;
             }
 
+
+			ReadMemoryAction(address);
             IncrementCycleCount();
 
-            ReadMemoryAction(address);
+            
             var value = Memory[address];
            
             return value;
