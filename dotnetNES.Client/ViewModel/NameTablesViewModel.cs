@@ -47,6 +47,7 @@ namespace dotnetNES.Client.ViewModel
                 NameTable1 = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
                 NameTable3 = NameTable1;
             }
+			else
             {
                 NameTable1 = NameTable0;
                 NameTable2 = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
