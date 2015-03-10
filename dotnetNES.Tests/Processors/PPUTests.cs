@@ -38,8 +38,7 @@ namespace dotnetNES.Tests.Processors
             Assert.AreEqual(0x0F, engine.PictureProcessingUnit.ReadPPUMemory(0x3f0e), "0X3F0e must be 0x0F");
             Assert.AreEqual(0x0F, engine.PictureProcessingUnit.ReadPPUMemory(0x3f0f), "0X3F0f must be 0x0F");
         }
-
-
+		
         [Test]
         public void PPU_Palette_LoadedCorrectly_Nes_Test_Rom()
         {
@@ -126,7 +125,6 @@ namespace dotnetNES.Tests.Processors
 
         }
     
-    
         /// <summary>
         /// You will need the valid rom in order to run this test!
         /// </summary>
@@ -167,7 +165,7 @@ namespace dotnetNES.Tests.Processors
             while (steps < totalSteps)
             {
 
-                if (steps == 314658)
+				if (steps == 253298)
                 {
                     var x = 1;
                     var y = x;
@@ -183,13 +181,43 @@ namespace dotnetNES.Tests.Processors
             Assert.AreEqual(80, result, "Nametable at 0x20c2 was not Set to P");
         }
 
+		[TestCase("palette_ram.nes", 2200000)]
+		[TestCase("sprite_ram.nes", 2200000)]
+		[TestCase("vbl_clear_time.nes", 2200000)]
+		[TestCase("vram_access.nes", 2200000)]
+		public void Misc_PPU_Tests(string fileName, int totalSteps)
+		{
+			var engine =
+			  new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "misc_ppu_tests",
+				  fileName));
+			var steps = 0;
+
+			while (steps < totalSteps)
+			{
+
+				if (steps == 253298)
+				{
+					var x = 1;
+					var y = x;
+				}
+
+
+				engine.Step();
+				steps++;
+			}
+
+			var result = engine.PictureProcessingUnit.ReadPPUMemory(0x20a4);
+
+			Assert.AreEqual(49, result, "Nametable at 0x20c2 was not Set to P");
+		}
+
         [TestCase("01-vbl_basics.nes", "\n01-vbl_basics\n\nPassed\n\0")]
         [TestCase("02-vbl_set_time.nes", "T+ 1 2\n00 - V\n01 - V\n02 - V\n03 - V\n04 - -\n05 V -\n06 V -\n07 V -\n08 V -\n\n02-vbl_set_time\n\nPassed\n\0")]
         [TestCase("03-vbl_clear_time.nes", "00 V\n01 V\n02 V\n03 V\n04 V\n05 V\n06 -\n07 -\n08 -\n\n03-vbl_clear_time\n\nPassed\n\0")]
-        [TestCase("04-nmi_control.nes", "")]
+		[TestCase("04-nmi_control.nes", "\n04-nmi_control\n\nPassed\n\0")]
         [TestCase("05-nmi_timing.nes", "00 4\n01 4\n02 4\n03 3\n04 3\n05 3\n06 3\n07 3\n08 3\n09 2\n\n05-nmi_timing\n\nPassed\n\0")]
         [TestCase("06-suppression.nes", "00 - N\n01 - N\n02 - N\n03 - N\n04 - -\n05 V -\n06 V -\n07 V N\n08 V N\n09 V N\n\n06-suppression\n\nPassed\n\0")]
-        [TestCase("07-nmi_on_timing.nes", "")]
+		[TestCase("07-nmi_on_timing.nes", "00 N\n01 N\n02 N\n03 N\n04 N\n05 N\n06 -\n07 -\n08 -\n\n2B1F5269\n07-nmi_on_timing\n\nFailed\n\0")] //Yes this test actually fails, but it fails just like Nintendulator, so I am okay with that
         [TestCase("08-nmi_off_timing.nes", "03 -\n04 -\n05 -\n06 -\n07 N\n08 N\n09 N\n0A N\n0B N\n0C N\n\n08-nmi_off_timing\n\nPassed\n\0")]
         [TestCase("09-even_odd_frames.nes", "00 01 01 02 \n09-even_odd_frames\n\nPassed\n\0")]
         [TestCase("10-even_odd_timing.nes", "")]

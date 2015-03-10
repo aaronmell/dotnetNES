@@ -95,8 +95,6 @@ namespace dotnetNES.Tests.Processors
             }
         }
 
-
-
         private List<TestData> LoadTestData(string folder, string filename)
         {
             var reader =

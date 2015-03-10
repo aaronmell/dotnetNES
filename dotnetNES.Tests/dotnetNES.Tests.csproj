@@ -146,6 +146,7 @@
     <Content Include="TestRoms\cpu_int_v2\5-branch_delays_irq.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestRoms\misc_ppu_tests\readme.txt" />
     <Content Include="TestRoms\nestest\nestest.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -180,6 +181,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="TestRoms\ppu_vbl_nmi\10-even_odd_timing.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\misc_ppu_tests\palette_ram.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\misc_ppu_tests\power_up_palette.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\misc_ppu_tests\sprite_ram.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\misc_ppu_tests\vbl_clear_time.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\misc_ppu_tests\vram_access.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="TestRoms\vbl_nmi_timing\1.frame_basics.nes">

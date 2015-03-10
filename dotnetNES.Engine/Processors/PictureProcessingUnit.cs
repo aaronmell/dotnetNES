@@ -161,25 +161,7 @@ namespace dotnetNES.Engine.Processors
         /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bitmapPointer of the value are copied here
         /// </summary>
         private int _fineXScroll;
-
-        /// <summary>
-        /// This is the register that the <see cref="_highBackgroundTileByte"/> gets loaded into at the end of every 8 clock cycles.
-        /// It is always loaded into the 8 high bitmapPointer.
-        /// This register is shifted each clock cycle to the right 1 bit
-        /// </summary>
-        private int _upperShiftRegister;
-
-        /// <summary>
-        /// This is the register that the <see cref="_lowBackgroundTileByte"/> gets loaded into at the end of every 8 clock cycles.
-        /// It is always loaded into the 8 high bitmapPointer.
-        /// This register is shifted each clock cycle to the right 1 bit
-        /// </summary>
-        private int _lowerShiftRegister;
-
-
-        //private int _attributeShiftRegister1;
-
-        //private int _attributeShiftRegister2;
+       
         #endregion
 
         #region Background Latches
@@ -237,7 +219,7 @@ namespace dotnetNES.Engine.Processors
         #endregion
 
         /// <summary>
-        /// A Buffer for reads form ppu memory when the address is in the 0x0 to 0x3EFF range.
+        /// A Buffer for reads from ppu memory when the address is in the 0x0 to 0x3EFF range.
         /// </summary>
         private byte _ppuDataReadBuffer;
 
@@ -286,6 +268,7 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         internal byte[] CurrentFrame { get; set; }
 
+		internal byte[] NewFrame { get; set; }
         #region Constructor
         /// <summary>
         /// Constructor for the PPU
@@ -448,7 +431,7 @@ namespace dotnetNES.Engine.Processors
         {
             StepPPU();
 
-            if (_triggerNmi && (ScanLine != 241 || CycleCount > 3))
+            if (_triggerNmi)
             {
                 _triggerNmi = false;
                 _cpu.NonMaskableInterrupt();
@@ -465,7 +448,7 @@ namespace dotnetNES.Engine.Processors
                 
             OuterCycleAction();
 
-           if ((ScanLine == 241) && (CycleCount < 2))
+           if ((ScanLine == 241) && (CycleCount < 1))
                 _triggerNmi = (_nmiOccurred & _nmiOutput);
 
             if (CycleCount < 340)
@@ -480,36 +463,18 @@ namespace dotnetNES.Engine.Processors
                 {
                     ScanLine = 0;
                     _isOddFrame = !_isOddFrame;
-                    OnNewFrameAction();
                 }
             }
         }
 
         private void OuterCycleAction()
         {           
-                if (ScanLine < 240)
-                {
-                    //Skip the first cycle on the first scanline if an odd frame
-                    if (ScanLine == 0)
-                    {
-                        //Copy Temporary to Current at the beginning of each Frame
-                        //_currentAddress = _temporaryAddress;
-
-                        if (CycleCount == 0 && _isOddFrame && !_isRenderingDisabled)
-                        {
-                            WriteLog("Odd Frame, skipping first cycle");
-                            CycleCount++;
-                        }
-                    }
-
-                    //Shift the Registers right one
-                    _upperShiftRegister >>= 1;
-                    _lowerShiftRegister >>= 1;
-                }
-                else if (ScanLine == 240 && CycleCount == 340)
+                if (ScanLine == 240 && CycleCount == 340)
                 {
                     WriteLog("Setting _nmiOccurred");
                     _nmiOccurred = true;
+	                _isRenderingDisabled = true;
+					OnNewFrameAction();
 
                 }
                 else if (ScanLine == 261)
@@ -523,8 +488,15 @@ namespace dotnetNES.Engine.Processors
                         StatusRegister &= byte.MaxValue ^ (1 << 5);
                         _nmiOccurred = false;
 
+						_isRenderingDisabled = (MaskRegister & 0x18) == 0;
+
                         WriteLog("Clearing _nmiOccurred");
                     }
+					else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
+					{
+						WriteLog("Odd Frame, skipping first cycle");
+						CycleCount++;
+					}
                 }
 
             if (!_isRenderingDisabled && (ScanLine < 240 || ScanLine == 261))
@@ -538,389 +510,324 @@ namespace dotnetNES.Engine.Processors
             switch (CycleCount)
             {
                 //NameTable Address Fetch
-                case 1:
-                case 9:
-                case 17:
-                case 25:
-                case 33:
-                case 41:
-                case 49:
-                case 57:
-                case 65:
-                case 73:
-                case 81:
-                case 89:
-                case 97:
-                case 105:
-                case 113:
-                case 121:
-                case 129:
-                case 137:
-                case 145:
-                case 153:
-                case 161:
-                case 169:
-                case 177:
-                case 185:
-                case 193:
-                case 201:
-                case 209:
-                case 217:
-                case 225:
-                case 233:
-                case 241:
-                case 249:
-                case 265:
-                case 273:
-                case 281:
-                case 289:
-                case 297:
-                case 305:
-                case 313:
-                case 321:
-                case 329:
+				case 0:
+				case 8:
+				case 16:
+				case 24:
+				case 32:
+				case 40:
+				case 48:
+				case 56:
+				case 64:
+				case 72:
+				case 80:
+				case 88:
+				case 96:
+				case 104:
+				case 112:
+				case 120:
+				case 128:
+				case 136:
+				case 144:
+				case 152:
+				case 160:
+				case 168:
+				case 176:
+				case 184:
+				case 192:
+				case 200:
+				case 208:
+				case 216:
+				case 224:
+				case 232:
+				case 240:
+				case 248:
+				case 320:
+				case 328: 
                 {
                     _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
                     break;
                 }
 
                 //NameTable Byte Store
-                case 2:
-                case 10:
-                case 18:
-                case 26:
-                case 34:
-                case 42:
-                case 50:
-                case 58:
-                case 66:
-                case 74:
-                case 82:
-                case 90:
-                case 98:
-                case 106:
-                case 114:
-                case 122:
-                case 130:
-                case 138:
-                case 146:
-                case 154:
-                case 162:
-                case 170:
-                case 178:
-                case 186:
-                case 194:
-                case 202:
-                case 210:
-                case 218:
-                case 226:
-                case 234:
-                case 242:
-                case 250:
-                case 258:
-                case 266:
-                case 274:
-                case 282:
-                case 290:
-                case 298:
-                case 306:
-                case 314:
-                case 322:
-                case 330:
-                case 338:
-                case 340:
+				case 1:
+				case 9:
+				case 17:
+				case 25:
+				case 33:
+				case 41:
+				case 49:
+				case 57:
+				case 65:
+				case 73:
+				case 81:
+				case 89:
+				case 97:
+				case 105:
+				case 113:
+				case 121:
+				case 129:
+				case 137:
+				case 145:
+				case 153:
+				case 161:
+				case 169:
+				case 177:
+				case 185:
+				case 193:
+				case 201:
+				case 209:
+				case 217:
+				case 225:
+				case 233:
+				case 241:
+				case 249:
+				case 321:
+				case 329: 
                     {
-                        _nameTableByte = _internalMemory[_nameTableAddress];
+                        _nameTableByte = ReadInternalMemory(_nameTableAddress);
                         break;
                     }
                 //Attribute table Address Fetch
-                case 3:
-                case 11:
-                case 19:
-                case 27:
-                case 35:
-                case 43:
-                case 51:
-                case 59:
-                case 67:
-                case 75:
-                case 83:
-                case 91:
-                case 99:
-                case 107:
-                case 115:
-                case 123:
-                case 131:
-                case 139:
-                case 147:
-                case 155:
-                case 163:
-                case 171:
-                case 179:
-                case 187:
-                case 195:
-                case 203:
-                case 211:
-                case 219:
-                case 227:
-                case 235:
-                case 243:
-                case 251:
-                case 259:
-                case 267:
-                case 275:
-                case 283:
-                case 291:
-                case 299:
-                case 307:
-                case 315:
-                case 323:
-                case 331:
+				case 2:
+				case 10:
+				case 18:
+				case 26:
+				case 34:
+				case 42:
+				case 50:
+				case 58:
+				case 66:
+				case 74:
+				case 82:
+				case 90:
+				case 98:
+				case 106:
+				case 114:
+				case 122:
+				case 130:
+				case 138:
+				case 146:
+				case 154:
+				case 162:
+				case 170:
+				case 178:
+				case 186:
+				case 194:
+				case 202:
+				case 210:
+				case 218:
+				case 226:
+				case 234:
+				case 242:
+				case 250:
+				case 322:
+				case 330: 
                 {
-                    _attributeTableAddress = 0x23C0 | (_currentAddress & 0x0C00) | ((_currentAddress >> 4) & 0x38) |
+                    _attributeTableAddress = 0x23C0 | (_currentAddress & 0xC00) | ((_currentAddress >> 4) & 0x38) |
                                              ((_currentAddress >> 2) & 0x07);
                     break;
                 }
                 //Attribute Table Store
-                case 4:
-                case 12:
-                case 20:
-                case 28:
-                case 36:
-                case 44:
-                case 52:
-                case 60:
-                case 68:
-                case 76:
-                case 84:
-                case 92:
-                case 100:
-                case 108:
-                case 116:
-                case 124:
-                case 132:
-                case 140:
-                case 148:
-                case 156:
-                case 164:
-                case 172:
-                case 180:
-                case 188:
-                case 196:
-                case 204:
-                case 212:
-                case 220:
-                case 228:
-                case 236:
-                case 244:
-                case 252:
-                case 260:
-                case 268:
-                case 276:
-                case 284:
-                case 292:
-                case 300:
-                case 308:
-                case 316:
-                case 324:
-                case 332:
+				case 3:
+				case 11:
+				case 19:
+				case 27:
+				case 35:
+				case 43:
+				case 51:
+				case 59:
+				case 67:
+				case 75:
+				case 83:
+				case 91:
+				case 99:
+				case 107:
+				case 115:
+				case 123:
+				case 131:
+				case 139:
+				case 147:
+				case 155:
+				case 163:
+				case 171:
+				case 179:
+				case 187:
+				case 195:
+				case 203:
+				case 211:
+				case 219:
+				case 227:
+				case 235:
+				case 243:
+				case 251:
+				case 323:
+				case 331: 
                     {
-                        _attributeByte = _internalMemory[_attributeTableAddress];
+						_attributeByte = ReadInternalMemory(_attributeTableAddress);
                         break;
                     }
                 //LowBackground Tile Address Fetch
-                case 5:
-                case 13:
-                case 21:
-                case 29:
-                case 37:
-                case 45:
-                case 53:
-                case 61:
-                case 69:
-                case 77:
-                case 85:
-                case 93:
-                case 101:
-                case 109:
-                case 117:
-                case 125:
-                case 133:
-                case 141:
-                case 149:
-                case 157:
-                case 165:
-                case 173:
-                case 181:
-                case 189:
-                case 197:
-                case 205:
-                case 213:
-                case 221:
-                case 229:
-                case 237:
-                case 245:
-                case 253:
-                case 261:
-                case 269:
-                case 277:
-                case 285:
-                case 293:
-                case 301:
-                case 309:
-                case 317:
-                case 325:
-                case 333:
+				case 4:
+				case 12:
+				case 20:
+				case 28:
+				case 36:
+				case 44:
+				case 52:
+				case 60:
+				case 68:
+				case 76:
+				case 84:
+				case 92:
+				case 100:
+				case 108:
+				case 116:
+				case 124:
+				case 132:
+				case 140:
+				case 148:
+				case 156:
+				case 164:
+				case 172:
+				case 180:
+				case 188:
+				case 196:
+				case 204:
+				case 212:
+				case 220:
+				case 228:
+				case 236:
+				case 244:
+				case 252:
+				case 324:
+				case 332: 
                 {
-                    _lowBackgroundTileAddress = (_nameTableByte << 4) | (_currentAddress >> 12) |
-                                               ((ControlRegister & 0x10) << 8);
+                    _lowBackgroundTileAddress = (_nameTableByte << 4) | (_currentAddress >> 12 & 7);
                     break;
                 }
                 //LowBackground Tile Byte Store
-                case 6:
-                case 14:
-                case 22:
-                case 30:
-                case 38:
-                case 46:
-                case 54:
-                case 62:
-                case 70:
-                case 78:
-                case 86:
-                case 94:
-                case 102:
-                case 110:
-                case 118:
-                case 126:
-                case 134:
-                case 142:
-                case 150:
-                case 158:
-                case 166:
-                case 174:
-                case 182:
-                case 190:
-                case 198:
-                case 206:
-                case 214:
-                case 222:
-                case 230:
-                case 238:
-                case 246:
-                case 254:
-                case 262:
-                case 270:
-                case 278:
-                case 286:
-                case 294:
-                case 302:
-                case 310:
-                case 318:
-                case 326:
-                case 334:
+				case 5:
+				case 13:
+				case 21:
+				case 29:
+				case 37:
+				case 45:
+				case 53:
+				case 61:
+				case 69:
+				case 77:
+				case 85:
+				case 93:
+				case 101:
+				case 109:
+				case 117:
+				case 125:
+				case 133:
+				case 141:
+				case 149:
+				case 157:
+				case 165:
+				case 173:
+				case 181:
+				case 189:
+				case 197:
+				case 205:
+				case 213:
+				case 221:
+				case 229:
+				case 237:
+				case 245:
+				case 253:
+				case 325:
+				case 333:
                     {
                         _lowBackgroundTileByte = _internalMemory[_lowBackgroundTileAddress];
                         break;
                     }
                 //HighBackground Tile Address Fetch
-                case 7:
-                case 15:
-                case 23:
-                case 31:
-                case 39:
-                case 47:
-                case 55:
-                case 63:
-                case 71:
-                case 79:
-                case 87:
-                case 95:
-                case 103:
-                case 111:
-                case 119:
-                case 127:
-                case 135:
-                case 143:
-                case 151:
-                case 159:
-                case 167:
-                case 175:
-                case 183:
-                case 191:
-                case 199:
-                case 207:
-                case 215:
-                case 223:
-                case 231:
-                case 239:
-                case 247:
-                case 255:
-                case 263:
-                case 271:
-                case 279:
-                case 287:
-                case 295:
-                case 303:
-                case 311:
-                case 319:
-                case 327:
-                case 335:
+				case 6:
+				case 14:
+				case 22:
+				case 30:
+				case 38:
+				case 46:
+				case 54:
+				case 62:
+				case 70:
+				case 78:
+				case 86:
+				case 94:
+				case 102:
+				case 110:
+				case 118:
+				case 126:
+				case 134:
+				case 142:
+				case 150:
+				case 158:
+				case 166:
+				case 174:
+				case 182:
+				case 190:
+				case 198:
+				case 206:
+				case 214:
+				case 222:
+				case 230:
+				case 238:
+				case 246:
+				case 254:
+				case 326:
+				case 334: 
                 {
-                    _highBackgroundTileAddress = _lowBackgroundTileAddress | 8;
+                    _highBackgroundTileAddress = _lowBackgroundTileAddress | 8 | (_currentAddress >> 12 & 7);
                     break;
                 }
                 //HighBackground Tile Byte Store
-                case 8:
-                case 16:
-                case 24:
-                case 32:
-                case 40:
-                case 48:
-                case 56:
-                case 64:
-                case 72:
-                case 80:
-                case 88:
-                case 96:
-                case 104:
-                case 112:
-                case 120:
-                case 128:
-                case 136:
-                case 144:
-                case 152:
-                case 160:
-                case 168:
-                case 176:
-                case 184:
-                case 192:
-                case 200:
-                case 208:
-                case 216:
-                case 224:
-                case 232:
-                case 240:
-                case 248:
-                case 264:
-                case 272:
-                case 280:
-                case 288:
-                case 296:
-                case 304:
-                case 312:
-                case 320:
-                case 328:
-                case 336:
+				case 7:
+				case 15:
+				case 23:
+				case 31:
+				case 39:
+				case 47:
+				case 55:
+				case 63:
+				case 71:
+				case 79:
+				case 87:
+				case 95:
+				case 103:
+				case 111:
+				case 119:
+				case 127:
+				case 135:
+				case 143:
+				case 151:
+				case 159:
+				case 167:
+				case 175:
+				case 183:
+				case 191:
+				case 199:
+				case 207:
+				case 215:
+				case 223:
+				case 231:
+				case 239:
+				case 247:
+				case 255:
+				case 327:
+				case 335:
                     {
                         _highBackgroundTileByte = _internalMemory[_highBackgroundTileAddress];
-                        _upperShiftRegister |= _highBackgroundTileByte << 8;
-                        _lowerShiftRegister |= _lowBackgroundTileByte << 8;
-
                         if (CycleCount < 256 || CycleCount > 327)
                         {
                             IncrementHorizontalCoordinate();
                         }
+
+						//RenderBackground tile
+	                    DrawBackgroundToScreen();
 
                         break;
                     }
@@ -928,10 +835,6 @@ namespace dotnetNES.Engine.Processors
                 case 256:
                     {
                         _highBackgroundTileByte = _internalMemory[_lowBackgroundTileAddress | 8];
-                        _upperShiftRegister |= _highBackgroundTileByte << 8;
-                        _lowerShiftRegister |= _lowBackgroundTileByte << 8;
-
-                        
                         IncrementVerticalCoordinate();
                         
                         break;
@@ -939,7 +842,7 @@ namespace dotnetNES.Engine.Processors
                 case 257:
                     {
                         WriteLog("Setting Hori(V) = Hori(T)");
-                        //_currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
+                        _currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
 
                         _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
                        
@@ -957,27 +860,26 @@ namespace dotnetNES.Engine.Processors
             if (ScanLine == 261 && CycleCount > 279 && CycleCount < 305)
             {
                 WriteLog("Setting Vert(V) = Vert(T)");
-                //_currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
+                _currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
             }
         }
-
-        #endregion
+		#endregion
 
         #region Background Methods
         //This method increments the Horizonal Coordinate
         private void IncrementHorizontalCoordinate()
         {
             //Perform the Coarse X Increment
-            //if ((_currentAddress & 0x001F) == 0x001F)
-            //{
-            //    _currentAddress ^= 0x041F;
-            //    WriteLog("IncrementH: Wrapping Occurred");
-            //}
-            //else
-            //{
-            //    _currentAddress++;
-            //    WriteLog("IncrementH: Current Address Incremented");
-            //}
+			if ((_currentAddress & 0x001F) == 0x001F)
+			{
+				_currentAddress ^= 0x041F;
+				WriteLog("IncrementH: Wrapping Occurred");
+			}
+			else
+			{
+				_currentAddress++;
+				WriteLog("IncrementH: Current Address Incremented");
+			}
         }
 
         //This method increments the Vertical Coordinate on Cycle 256 of the scanline
@@ -985,7 +887,7 @@ namespace dotnetNES.Engine.Processors
         {
             if ((_currentAddress & 0x7000) != 0x7000)
             {
-                //_currentAddress += 0x1000; // increment fine Y
+                _currentAddress += 0x1000; // increment fine Y
                 WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
             }
             else
@@ -1035,7 +937,6 @@ namespace dotnetNES.Engine.Processors
 
                     break;
                 }
-                
                 //Reading from the PPUData Register
                 case 0x2007:
                 {
@@ -1087,7 +988,7 @@ namespace dotnetNES.Engine.Processors
                 }
                 case 0x2001:
                 {
-                    _isRenderingDisabled = (MaskRegister & 0x1E) == 0;
+                    _isRenderingDisabled = (MaskRegister & 0x18) == 0 && ScanLine < 240;
                     break;
                 }
                 case 0x2005:
@@ -1140,9 +1041,10 @@ namespace dotnetNES.Engine.Processors
             var tempAddress = originalAddress & 0x3FFF;
 
             //Handling Wrapping in the Palette memory
-            if (tempAddress > 0x3f1f)
-            {
-                tempAddress -= 0x20;
+			if (tempAddress > 0x2FFF)
+			{
+				tempAddress &= 0x3f1f;
+				
             }
             //Handling wrapping in the nametable memory
             else if (tempAddress > 0x2fff && tempAddress < 0x3f00)
@@ -1158,12 +1060,22 @@ namespace dotnetNES.Engine.Processors
             var tempAddress = originalAddress & 0x3FFF;
 
             //Handling Wrapping in the Palette memory
-            if (tempAddress > 0x3f1f)
+            if (tempAddress > 0x2FFF)
             {
-                tempAddress -= 0x20;
+				tempAddress &= 0x3f1f;
+	            value &= 0x3f;
+				_internalMemory[tempAddress] = value;
+
+				//Handling Writing to the palette
+				if ((tempAddress & 0x3) == 0x00)
+	            {
+		            _internalMemory[tempAddress ^ 0x10] = value;
+	            }
+
+	            return;
             }
             //Handling wrapping in the nametable memory
-            else if (tempAddress > 0x2fff && tempAddress < 0x3f00)
+            else if (tempAddress > 0x2fff)
             {
                 tempAddress -= 0x1000;
             }
@@ -1174,6 +1086,17 @@ namespace dotnetNES.Engine.Processors
         #endregion
 
         #region Palette Methods
+		private unsafe void DrawBackgroundToScreen()
+		{
+			var pixelIndex = 0;
+			fixed (byte* framePointer = NewFrame)
+			{
+				ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, pixelIndex, _attributeByte);
+				pixelIndex += 24;
+			}
+			
+		}
+
         private unsafe void GetNewPatternTable(byte* bitmapBuffer, bool fetchPattern0)
         {
             var tileOffset = (fetchPattern0 ? 0 : 0x1000);
@@ -1192,159 +1115,72 @@ namespace dotnetNES.Engine.Processors
         {
             //Calculate the starting place in memory of the tile. 
             var tileMemoryIndex = (16 * tileAddress) + tileOffset;
-            var pixelRowOffset = totalColumns*24;
+           
 
             //Calculate the StartPosition of the first pixel in the array;
-            var pixelArrayStartPosition = (row * totalColumns * 192) + (column * 24);
+            var pixelArrayInitialPosition = (row * totalColumns * 192) + (column * 24);
+			var pixelArrayOffsetPosition = pixelArrayInitialPosition;
 
             //Iterate of each row of the tile and fill the array
-            for (var pixelColumn = 0; pixelColumn < 8; pixelColumn++)
+            for (var pixelRow = 0; pixelRow < 8; pixelRow++)
             {
-                ConvertTileToPixels(bitmapPointer, tileMemoryIndex, pixelArrayStartPosition, pixelRowOffset, paletteOffset);
+				if ((tileMemoryIndex & 0x07) != 0)
+					pixelArrayOffsetPosition = pixelArrayInitialPosition + (totalColumns*24 * (tileMemoryIndex & 0x07));
+
+				ConvertTileToPixels(bitmapPointer, _internalMemory[tileMemoryIndex], _internalMemory[tileMemoryIndex + 8], pixelArrayOffsetPosition, paletteOffset);
                 tileMemoryIndex++;
             }
         }
 
-        private unsafe void ConvertTileToPixels(byte* bitmapPointer, int tileStartPosition, int pixelArrayIndex, int pixelRowOffset, int paletteOffset)
+        private unsafe void ConvertTileToPixels(byte* bitmapPointer, byte lowTileByte, byte highTileByte, int pixelArrayIndex, int paletteOffset)
         {
-                byte lowBit = _internalMemory[tileStartPosition];
-                byte highBit = _internalMemory[tileStartPosition + 8];
+            //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
+            //Each tile is 16 bytes.
+            //$0xx0=$41  01000001
+            //$0xx1=$C2  11000010
+            //$0xx2=$44  01000100
+            //$0xx3=$48  01001000
+            //$0xx4=$10  00010000
+            //$0xx5=$20  00100000         .1.....3
+            //$0xx6=$40  01000000         11....3.
+            //$0xx7=$80  10000000  =====  .1...3..
+            //                            .1..3...
+            //$0xx8=$01  00000001  =====  ...3.22.
+            //$0xx9=$02  00000010         ..3....2
+            //$0xxA=$04  00000100         .3....2.
+            //$0xxB=$08  00001000         3....222
+            //$0xxC=$16  00010110
+            //$0xxD=$21  00100001
+            //$0xxE=$42  01000010
+            //$0xxF=$87  10000111
 
-                //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
-                //Each tile is 16 bytes.
-                //$0xx0=$41  01000001
-                //$0xx1=$C2  11000010
-                //$0xx2=$44  01000100
-                //$0xx3=$48  01001000
-                //$0xx4=$10  00010000
-                //$0xx5=$20  00100000         .1.....3
-                //$0xx6=$40  01000000         11....3.
-                //$0xx7=$80  10000000  =====  .1...3..
-                //                            .1..3...
-                //$0xx8=$01  00000001  =====  ...3.22.
-                //$0xx9=$02  00000010         ..3....2
-                //$0xxA=$04  00000100         .3....2.
-                //$0xxB=$08  00001000         3....222
-                //$0xxC=$16  00010110
-                //$0xxD=$21  00100001
-                //$0xxE=$42  01000010
-                //$0xxF=$87  10000111
+			var bit0 = (0x3F00 + (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1) | (paletteOffset << 2));
+			var bit1 = (0x3F00 + ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02) | (paletteOffset << 2));
+			var bit2 = (0x3F00 + ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1) | (paletteOffset << 2));
+			var bit3 = (0x3F00 + ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2) | (paletteOffset << 2));
+			var bit4 = (0x3F00 + ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3) | (paletteOffset << 2));
+			var bit5 = (0x3F00 + ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4) | (paletteOffset << 2));
+			var bit6 = (0x3F00 + ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5) | (paletteOffset << 2));
+			var bit7 = (0x3F00 + (lowTileByte >> 7) | (((highTileByte & 0x80) >> 6)) | (paletteOffset << 2));
 
-                var bit0 = _internalMemory[0x3F00 + (lowBit & 0x1) | ((highBit & 0x01) << 1) | (paletteOffset << 2)];
-                var bit1 = _internalMemory[0x3F00 + ((lowBit & 0x2) >> 1) | (highBit & 0x02) | (paletteOffset << 2)];
-                var bit2 = _internalMemory[0x3F00 + ((lowBit & 0x04) >> 2) | ((highBit & 0x04) >> 1) | (paletteOffset << 2)];
-                var bit3 = _internalMemory[0x3F00 + ((lowBit & 0x08) >> 3) | ((highBit & 0x08) >> 2) | (paletteOffset << 2)];
-                var bit4 = _internalMemory[0x3F00 + ((lowBit & 0x10) >> 4) | ((highBit & 0x10) >> 3) | (paletteOffset << 2)];
-                var bit5 = _internalMemory[0x3F00 + ((lowBit & 0x20) >> 5) | ((highBit & 0x20) >> 4) | (paletteOffset << 2)];
-                var bit6 = _internalMemory[0x3F00 + ((lowBit & 0x40) >> 6) | ((highBit & 0x40) >> 5) | (paletteOffset << 2)];
-                var bit7 = _internalMemory[0x3F00 + (lowBit >> 7) | (((highBit & 0x80) >> 6)) | (paletteOffset << 2)];
+			//This fixed the palette we read from, it ensures that we select the correct background palette
+			bit0 = ReadInternalMemory(((bit0 & 0x3) != 0X0) ? bit0 : 0x3f00);
+			bit1 = ReadInternalMemory(((bit1 & 0x3) != 0X0) ? bit1 : 0x3f00);
+			bit2 = ReadInternalMemory(((bit2 & 0x3) != 0X0) ? bit2 : 0x3f00);
+			bit3 = ReadInternalMemory(((bit3 & 0x3) != 0X0) ? bit3 : 0x3f00);
+			bit4 = ReadInternalMemory(((bit4 & 0x3) != 0X0) ? bit4 : 0x3f00);
+			bit5 = ReadInternalMemory(((bit5 & 0x3) != 0X0) ? bit5 : 0x3f00);
+			bit6 = ReadInternalMemory(((bit6 & 0x3) != 0X0) ? bit6 : 0x3f00);
+			bit7 = ReadInternalMemory(((bit7 & 0x3) != 0X0) ? bit7 : 0x3f00);
 
-                switch (tileStartPosition & 0x7)
-                {
-                    case 0:
-                        {
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 1:
-                        {
-                            pixelArrayIndex += pixelRowOffset;
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 2:
-                        {
-                            pixelArrayIndex += (pixelRowOffset * 2);
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 3:
-                        {
-                            pixelArrayIndex += (pixelRowOffset * 3);
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 4:
-                        {
-                            pixelArrayIndex += (pixelRowOffset * 4);
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 5:
-                        {
-                            pixelArrayIndex += (pixelRowOffset * 5);
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 6:
-                        {
-                            pixelArrayIndex += (pixelRowOffset * 6);
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                    case 7:
-                        {
-                            pixelArrayIndex += (pixelRowOffset * 7);
-                            SetColor(bitmapPointer, pixelArrayIndex, bit7);
-                            SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-                            SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-                            SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-                            SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-                            SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-                            SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-                            SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
-                            break;
-                        }
-                }
+			SetColor(bitmapPointer, pixelArrayIndex, bit7);
+			SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
+			SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
+			SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
+			SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
+			SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
+			SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
+			SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
         }
 
         private unsafe void GetPalette(byte* palette, bool background)
