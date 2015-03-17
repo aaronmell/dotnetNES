@@ -256,6 +256,8 @@ namespace dotnetNES.Engine.Processors
         /// This is set by <see cref="ControlRegister"/> bit 2
         /// </summary>
         private int _currentAddressIncrement;
+
+        private int _pixelIndex;
         #endregion
 
         /// <summary>
@@ -266,9 +268,11 @@ namespace dotnetNES.Engine.Processors
         /// <summary>
         /// The current frame being rendered
         /// </summary>
-        internal byte[] CurrentFrame { get; set; }
+        internal static byte[] CurrentFrame { get; set; }
 
-		internal byte[] NewFrame { get; set; }
+		internal static byte[] NewFrame { get; set; }
+
+        internal static byte[] TempFrame { get; set; }
         #region Constructor
         /// <summary>
         /// Constructor for the PPU
@@ -287,7 +291,9 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
-            CurrentFrame = new byte[184320];
+            CurrentFrame = new byte[195840];
+            NewFrame = new byte[195840];
+            TempFrame = new byte[195840];
         }
         #endregion
 
@@ -304,7 +310,10 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
-            CurrentFrame = new byte[184320];
+            Array.Clear(CurrentFrame, 0, CurrentFrame.Length);
+            Array.Clear(NewFrame, 0, NewFrame.Length);
+            Array.Clear(TempFrame, 0, TempFrame.Length);
+            
         }
 
         /// <summary>
@@ -384,6 +393,7 @@ namespace dotnetNES.Engine.Processors
                     break;
             }
 
+            //Background pattern table address
             var offset = (ControlRegister & 0x10) == 0x10 ? 0x1000 : 0;
             var attribute = 0;
             bool useTopByte = true;
@@ -474,13 +484,15 @@ namespace dotnetNES.Engine.Processors
                     WriteLog("Setting _nmiOccurred");
                     _nmiOccurred = true;
 	                _isRenderingDisabled = true;
-					OnNewFrameAction();
-
+                    OnNewFrameAction();
+                    SwapFrames();
                 }
                 else if (ScanLine == 261)
                 {
                     if (CycleCount == 0)
                     {
+                        _pixelIndex = 0;
+
                         //TODO: FIX these
                         //Clear Sprite 0 Hit
                         StatusRegister &= byte.MaxValue ^ (1 << 6);
@@ -491,6 +503,10 @@ namespace dotnetNES.Engine.Processors
 						_isRenderingDisabled = (MaskRegister & 0x18) == 0;
 
                         WriteLog("Clearing _nmiOccurred");
+                    }
+                    else if (CycleCount == 320)
+                    {
+                        _pixelIndex = 0;
                     }
 					else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
 					{
@@ -503,6 +519,11 @@ namespace dotnetNES.Engine.Processors
             {
                 InnerCycleAction();
             }
+        }
+
+        private void SwapFrames()
+        {
+            NewFrame.CopyTo(CurrentFrame, 0);
         }
 
         private void InnerCycleAction()
@@ -624,8 +645,7 @@ namespace dotnetNES.Engine.Processors
 				case 322:
 				case 330: 
                 {
-                    _attributeTableAddress = 0x23C0 | (_currentAddress & 0xC00) | ((_currentAddress >> 4) & 0x38) |
-                                             ((_currentAddress >> 2) & 0x07);
+                    _attributeTableAddress = 0x23C0 | (_currentAddress & 0xC00) | ((_currentAddress & 0x380) >> 4) | ((_currentAddress & 0x1C) >> 2);
                     break;
                 }
                 //Attribute Table Store
@@ -703,7 +723,7 @@ namespace dotnetNES.Engine.Processors
 				case 324:
 				case 332: 
                 {
-                    _lowBackgroundTileAddress = (_nameTableByte << 4) | (_currentAddress >> 12 & 7);
+                    _lowBackgroundTileAddress = (_nameTableByte << 4) | (_currentAddress >> 12) | ((ControlRegister & 0x10) << 8);
                     break;
                 }
                 //LowBackground Tile Byte Store
@@ -781,7 +801,7 @@ namespace dotnetNES.Engine.Processors
 				case 326:
 				case 334: 
                 {
-                    _highBackgroundTileAddress = _lowBackgroundTileAddress | 8 | (_currentAddress >> 12 & 7);
+                    _highBackgroundTileAddress = _lowBackgroundTileAddress | 8;
                     break;
                 }
                 //HighBackground Tile Byte Store
@@ -1088,13 +1108,16 @@ namespace dotnetNES.Engine.Processors
         #region Palette Methods
 		private unsafe void DrawBackgroundToScreen()
 		{
-			var pixelIndex = 0;
+		    if (NewFrame == null)
+		    {
+		        throw new Exception();
+		    }
+
 			fixed (byte* framePointer = NewFrame)
 			{
-				ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, pixelIndex, _attributeByte);
-				pixelIndex += 24;
+			    ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, _attributeByte);
+				_pixelIndex += 24;
 			}
-			
 		}
 
         private unsafe void GetNewPatternTable(byte* bitmapBuffer, bool fetchPattern0)
@@ -1215,7 +1238,7 @@ namespace dotnetNES.Engine.Processors
             bits[pixelArrayIndex] = _pallet[paletteLookup * 3 + 2];
             bits[pixelArrayIndex + 1] = _pallet[paletteLookup * 3 + 1];
             bits[pixelArrayIndex + 2] = _pallet[paletteLookup * 3];
-
+            
         }
         #endregion
 

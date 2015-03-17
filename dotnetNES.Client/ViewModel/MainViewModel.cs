@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight;
@@ -68,6 +69,9 @@ namespace dotnetNES.Client.ViewModel
 
             _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
             _backgroundWorker.DoWork += BackgroundWorkerDoWork;
+
+            Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
+            RaisePropertyChanged("Screen");
         }
 
         private void OpenDebugWindowWithEngine(string windowName)
@@ -138,13 +142,28 @@ namespace dotnetNES.Client.ViewModel
 
         private unsafe void Refresh()
         {
-            //Screen.Lock();
-            //var nameTable0Ptr = Screen.BackBuffer;
+            Screen.Lock();
+            var nameTable0Ptr = Screen.BackBuffer;
+            var locking = new object();
+            lock (locking)
+            {
 
-            //Engine.GetScreen((byte*)nameTable0Ptr.ToPointer(), 0);
+                var screen = Engine.GetScreen();
+                //var ptr = (byte*) nameTable0Ptr.ToPointer();
 
-            //Screen.AddDirtyRect(new Int32Rect(0, 0, 256, 240));
-            //Screen.Unlock();
+               
+                var pbuff = (byte*) nameTable0Ptr.ToPointer();
+
+                for (var i = 0; i < screen.Length; i++)
+                {
+                    pbuff[i] = screen[i];
+                }
+                
+            }
+
+            Screen.AddDirtyRect(new Int32Rect(0, 0, 272, 240));
+            Screen.Unlock();
+            RaisePropertyChanged("Screen");
         }
 
         private void PauseEngine()

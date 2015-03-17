@@ -146,7 +146,7 @@ namespace dotnetNES.Engine.Main
         }
 
         public byte[] GetScreen()
-        {
+        {   
             return PictureProcessingUnit.CurrentFrame;
         }
     }
