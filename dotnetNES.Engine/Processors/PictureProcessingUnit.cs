@@ -1108,16 +1108,17 @@ namespace dotnetNES.Engine.Processors
         #region Palette Methods
 		private unsafe void DrawBackgroundToScreen()
 		{
-		    if (NewFrame == null)
-		    {
-		        throw new Exception();
-		    }
+		    var attributeOffset = (_nameTableAddress & 0x40) == 0x40 ? 4 : 0;
 
-			fixed (byte* framePointer = NewFrame)
+		    if ((_nameTableAddress & 0x3) > 1)
+		        attributeOffset += 2; 
+
+		    fixed (byte* framePointer = NewFrame)
 			{
-			    ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, _attributeByte);
-				_pixelIndex += 24;
+			    ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, (_attributeByte >> attributeOffset) & 0x3);
 			}
+
+            _pixelIndex += 24;
 		}
 
         private unsafe void GetNewPatternTable(byte* bitmapBuffer, bool fetchPattern0)
