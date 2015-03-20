@@ -28,6 +28,7 @@ namespace dotnetNES.Client.ViewModel
         private string _fileName;
         private readonly BackgroundWorker _backgroundWorker;
         private int _frameCount;
+        private bool _resetRaised;
 
         public Engine.Main.Engine Engine { get; set; }
 
@@ -54,7 +55,12 @@ namespace dotnetNES.Client.ViewModel
         public MainViewModel()
         {
             LoadFileCommand = new RelayCommand(LoadFile);
-            ResetNesCommand = new RelayCommand(() => Engine.Reset());
+            ResetNesCommand = new RelayCommand(() =>
+            {
+                _resetRaised = true;
+                _backgroundWorker.CancelAsync();
+
+            });
             PowerNesCommand = new RelayCommand(() =>
             {
                 Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
@@ -69,9 +75,21 @@ namespace dotnetNES.Client.ViewModel
 
             _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
             _backgroundWorker.DoWork += BackgroundWorkerDoWork;
+            _backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
 
             Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
             RaisePropertyChanged("Screen");
+        }
+
+        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (!_resetRaised) 
+                return;
+
+            _resetRaised = false;
+            Engine.Reset();
+
+            _backgroundWorker.RunWorkerAsync();
         }
 
         private void OpenDebugWindowWithEngine(string windowName)
@@ -88,7 +106,7 @@ namespace dotnetNES.Client.ViewModel
                 if (worker != null && worker.CancellationPending || IsEnginePaused)
                 {
                     e.Cancel = true;
-                    break;
+                    return;
                 }
                 Engine.Step();
             }

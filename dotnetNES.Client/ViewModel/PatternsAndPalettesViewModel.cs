@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -66,7 +67,7 @@ namespace dotnetNES.Client.ViewModel
 
             PatternTable0.Lock();
             var bufferPtr = PatternTable0.BackBuffer;
-           
+
             Engine.DrawPatternTable0((byte*)bufferPtr.ToPointer());
            
             PatternTable0.AddDirtyRect(new Int32Rect(0, 0, 128, 128));

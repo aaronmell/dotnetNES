@@ -270,9 +270,11 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         internal static byte[] CurrentFrame { get; set; }
 
+        /// <summary>
+        /// This is the buffer for the frame. We only draw directly to this frame.
+        /// </summary>
 		internal static byte[] NewFrame { get; set; }
-
-        internal static byte[] TempFrame { get; set; }
+        
         #region Constructor
         /// <summary>
         /// Constructor for the PPU
@@ -293,7 +295,6 @@ namespace dotnetNES.Engine.Processors
             _isRenderingDisabled = true;
             CurrentFrame = new byte[195840];
             NewFrame = new byte[195840];
-            TempFrame = new byte[195840];
         }
         #endregion
 
@@ -310,10 +311,6 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
-            Array.Clear(CurrentFrame, 0, CurrentFrame.Length);
-            Array.Clear(NewFrame, 0, NewFrame.Length);
-            Array.Clear(TempFrame, 0, TempFrame.Length);
-            
         }
 
         /// <summary>
@@ -1108,8 +1105,11 @@ namespace dotnetNES.Engine.Processors
         #region Palette Methods
 		private unsafe void DrawBackgroundToScreen()
 		{
+            //There are 4 offsets per attribute byte top left, top right, bottom left and bottom right. 
+            //The correct offset is calculated as follows. Every 63 bytes we flip from D0-D3 to D4-D7
+            //Every 2 bytes we flip between D0-D1 or D4-D5 to D2-D3 or D6-D7
 		    var attributeOffset = (_nameTableAddress & 0x40) == 0x40 ? 4 : 0;
-
+            
 		    if ((_nameTableAddress & 0x3) > 1)
 		        attributeOffset += 2; 
 
