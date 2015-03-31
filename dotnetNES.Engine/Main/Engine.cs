@@ -19,6 +19,10 @@ namespace dotnetNES.Engine.Main
         internal readonly PPU PictureProcessingUnit;
         private readonly CartridgeModel _cartridgeModel;
 
+        /// <summary>
+        /// The property is used to determine if vertical mirroring is used by the current cartridge.
+        /// If its set to true, it changes the drawing behavior of the Nametables screen.
+        /// </summary>
         public bool IsVerticalMirroringEnabled
         {
             get { return _cartridgeModel.IsVerticalMirroringEnabled; }
@@ -145,6 +149,10 @@ namespace dotnetNES.Engine.Main
             PictureProcessingUnit.DrawNametable(bitmapPointer, nameTableSelect);
         }
 
+        /// <summary>
+        /// This method gets the current Frame from the PPU
+        /// </summary>
+        /// <returns>A byte array of pixels</returns>
         public byte[] GetScreen()
         {   
             return PictureProcessingUnit.CurrentFrame;

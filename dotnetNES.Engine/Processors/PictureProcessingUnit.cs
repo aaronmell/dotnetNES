@@ -216,7 +216,6 @@ namespace dotnetNES.Engine.Processors
         /// This register is set when an _nmi has been triggered
         /// </summary>
         private bool _triggerNmi;
-        #endregion
 
         /// <summary>
         /// A Buffer for reads from ppu memory when the address is in the 0x0 to 0x3EFF range.
@@ -227,7 +226,8 @@ namespace dotnetNES.Engine.Processors
         /// this flag is set when 0x00 is written to the <see cref="MaskRegister"/>
         /// </summary>
         private bool _isRenderingDisabled;
-
+        #endregion
+       
         /// <summary>
         /// The CPU
         /// </summary>
@@ -257,23 +257,16 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         private int _currentAddressIncrement;
 
+        /// <summary>
+        /// This is used by the screen to draw to the correct location on the screen.
+        /// </summary>
         private int _pixelIndex;
-        #endregion
-
-        /// <summary>
-        /// This action is fired each time a new frame is available
-        /// </summary>
-        internal Action OnNewFrameAction { get; set; }
-
-        /// <summary>
-        /// The current frame being rendered
-        /// </summary>
-        internal static byte[] CurrentFrame { get; set; }
 
         /// <summary>
         /// This is the buffer for the frame. We only draw directly to this frame.
         /// </summary>
-		internal static byte[] NewFrame { get; set; }
+        private static byte[] _newFrame;
+        #endregion
         
         #region Constructor
         /// <summary>
@@ -293,9 +286,22 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
+             
             CurrentFrame = new byte[195840];
-            NewFrame = new byte[195840];
+            _newFrame = new byte[195840];
         }
+        #endregion
+
+        #region Internal Properties
+        /// <summary>
+        /// This action is fired each time a new frame is available
+        /// </summary>
+        internal Action OnNewFrameAction { get; set; }
+
+        /// <summary>
+        /// The current frame being rendered
+        /// </summary>
+        internal static byte[] CurrentFrame;
         #endregion
 
         #region Internal Methods
@@ -520,7 +526,7 @@ namespace dotnetNES.Engine.Processors
 
         private void SwapFrames()
         {
-            NewFrame.CopyTo(CurrentFrame, 0);
+            _newFrame.CopyTo(CurrentFrame, 0);
         }
 
         private void InnerCycleAction()
@@ -1092,7 +1098,7 @@ namespace dotnetNES.Engine.Processors
 	            return;
             }
             //Handling wrapping in the nametable memory
-            else if (tempAddress > 0x2fff)
+            if (tempAddress > 0x2fff)
             {
                 tempAddress -= 0x1000;
             }
@@ -1113,7 +1119,7 @@ namespace dotnetNES.Engine.Processors
 		    if ((_nameTableAddress & 0x3) > 1)
 		        attributeOffset += 2; 
 
-		    fixed (byte* framePointer = NewFrame)
+		    fixed (byte* framePointer = _newFrame)
 			{
 			    ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, (_attributeByte >> attributeOffset) & 0x3);
 			}

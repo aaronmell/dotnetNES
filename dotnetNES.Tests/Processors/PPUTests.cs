@@ -164,14 +164,6 @@ namespace dotnetNES.Tests.Processors
 
             while (steps < totalSteps)
             {
-
-				if (steps == 253298)
-                {
-                    var x = 1;
-                    var y = x;
-                }
-
-
                 engine.Step();
                 steps++;
             }

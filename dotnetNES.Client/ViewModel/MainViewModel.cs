@@ -25,14 +25,20 @@ namespace dotnetNES.Client.ViewModel
     /// </summary>
     public sealed class MainViewModel : ViewModelBase
     {
+        #region Private Fields
         private string _fileName;
         private readonly BackgroundWorker _backgroundWorker;
         private int _frameCount;
+        #endregion
 
+        #region Public Properties
         public Engine.Main.Engine Engine { get; set; }
-
+        public bool IsCartridgeLoaded { get; set; }
+        public bool IsEnginePaused { get; set; }
         public WriteableBitmap Screen { get; set; }
+        #endregion
 
+        #region Command Properties
         public RelayCommand LoadFileCommand { get; set; }
 
         public RelayCommand ResetNesCommand { get; set; }
@@ -44,10 +50,9 @@ namespace dotnetNES.Client.ViewModel
         public RelayCommand OpenNameTablesCommand { get; set; }
 
         public RelayCommand PauseCommand { get; set; }
+        #endregion
 
-        public bool IsCartridgeLoaded { get; set; }
-        public bool IsEnginePaused { get; set; }
-
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
@@ -62,13 +67,13 @@ namespace dotnetNES.Client.ViewModel
             });
             PowerNesCommand = new RelayCommand(() =>
             {
-                Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
+                Engine = new Engine.Main.Engine(_fileName) { OnNewFrameAction = OnNewFrameAction };
             });
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
             OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
 
             PauseCommand = new RelayCommand(PauseEngine);
-            
+
             IsEnginePaused = false;
             RaisePropertyChanged("IsEnginePaused");
 
@@ -78,7 +83,9 @@ namespace dotnetNES.Client.ViewModel
             Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
             RaisePropertyChanged("Screen");
         }
+        #endregion
 
+        #region Private Methods
         private void OpenDebugWindowWithEngine(string windowName)
         {
             Messenger.Default.Send(new NotificationMessage(windowName));
@@ -152,10 +159,7 @@ namespace dotnetNES.Client.ViewModel
             var locking = new object();
             lock (locking)
             {
-
                 var screen = Engine.GetScreen();
-                //var ptr = (byte*) nameTable0Ptr.ToPointer();
-
                
                 var pbuff = (byte*) nameTable0Ptr.ToPointer();
 
@@ -163,7 +167,6 @@ namespace dotnetNES.Client.ViewModel
                 {
                     pbuff[i] = screen[i];
                 }
-                
             }
 
             Screen.AddDirtyRect(new Int32Rect(0, 0, 272, 240));
@@ -183,5 +186,6 @@ namespace dotnetNES.Client.ViewModel
             IsEnginePaused = !IsEnginePaused;
             RaisePropertyChanged("IsEnginePaused");
         }
+        #endregion
     }
 }

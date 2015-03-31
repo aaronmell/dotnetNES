@@ -1,1 +1,2 @@
 V 0.0.1: Emulator now displays Donkey Kong Palettes, Background Tiles, and Nametables correctly.
+V 0.0.2: Emulator screen now generates the background correctly for most mapper 0 games.

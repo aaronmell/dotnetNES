@@ -2,6 +2,9 @@
 
 namespace dotnetNES.Client
 {
+    /// <summary>
+    /// Contains the Names of messages being passed around.
+    /// </summary>
     public static class MessageNames
     {
         public const string OpenPatternsAndPalettes = "OpenPatternsAndPalettes";

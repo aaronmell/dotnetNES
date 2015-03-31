@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,7 +11,7 @@ namespace dotnetNES.Client.ViewModel
 {
     public class PatternsAndPalettesViewModel : ViewModelBase
     {
-        
+        #region Public Properties
         public Engine.Main.Engine Engine { get; set; }
 
         public WriteableBitmap PatternTable0 { get; set; }
@@ -22,7 +21,9 @@ namespace dotnetNES.Client.ViewModel
         public WriteableBitmap BackgroundPalettes { get; set; }
 
         public WriteableBitmap SpritePalettes { get; set; }
-        
+        #endregion
+
+        #region Constructors
         public PatternsAndPalettesViewModel(Engine.Main.Engine engine)
             : this()
         {
@@ -35,7 +36,9 @@ namespace dotnetNES.Client.ViewModel
             Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
             Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
         }
+        #endregion
 
+        #region Private Methods
         private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
@@ -110,5 +113,6 @@ namespace dotnetNES.Client.ViewModel
             RaisePropertyChanged("SpritePalettes");
             #endregion
         }
+        #endregion
     }
 }

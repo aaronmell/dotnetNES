@@ -9,15 +9,21 @@ using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client.ViewModel
 {
-    public class NameTablesViewModel : ViewModelBase
+    /// <summary>
+    /// The view model for the NameTables View
+    /// </summary>
+    public sealed class NameTablesViewModel : ViewModelBase
     {
+        #region Public Properties
         public Engine.Main.Engine Engine { get; set; }
 
         public WriteableBitmap NameTable0 { get; set; }
         public WriteableBitmap NameTable1 { get; set; }
         public WriteableBitmap NameTable2 { get; set; }
         public WriteableBitmap NameTable3 { get; set; }
+        #endregion
 
+        #region Constructors
         public NameTablesViewModel(Engine.Main.Engine engine)
             : this()
         {
@@ -30,7 +36,9 @@ namespace dotnetNES.Client.ViewModel
             Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
             Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
         }
+        #endregion
 
+        #region Private Methods
         private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
@@ -103,5 +111,6 @@ namespace dotnetNES.Client.ViewModel
             RaisePropertyChanged("NameTable2");
             RaisePropertyChanged("NameTable3");
         }
+        #endregion
     }
 }
