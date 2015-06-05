@@ -481,42 +481,44 @@ namespace dotnetNES.Engine.Processors
         }
 
         private void OuterCycleAction()
-        {           
-                if (ScanLine == 240 && CycleCount == 340)
+        {          
+            if (ScanLine == 240 && CycleCount == 340)
+            {
+                WriteLog("Setting _nmiOccurred");
+                _nmiOccurred = true;
+	            _isRenderingDisabled = true;
+                OnNewFrameAction();
+                SwapFrames();
+            }
+            else if (ScanLine == 261)
+            {
+                if (CycleCount == 0)
                 {
-                    WriteLog("Setting _nmiOccurred");
-                    _nmiOccurred = true;
-	                _isRenderingDisabled = true;
-                    OnNewFrameAction();
-                    SwapFrames();
+                    //TODO: FIX these
+                    //Clear Sprite 0 Hit
+                    StatusRegister &= byte.MaxValue ^ (1 << 6);
+                    //Clear Sprite Overflow
+                    StatusRegister &= byte.MaxValue ^ (1 << 5);
+                    _nmiOccurred = false;
+
+					_isRenderingDisabled = (MaskRegister & 0x18) == 0;
+
+                    WriteLog("Clearing _nmiOccurred");
                 }
-                else if (ScanLine == 261)
+                else if (CycleCount == 320)
                 {
-                    if (CycleCount == 0)
-                    {
-                        _pixelIndex = 0;
-
-                        //TODO: FIX these
-                        //Clear Sprite 0 Hit
-                        StatusRegister &= byte.MaxValue ^ (1 << 6);
-                        //Clear Sprite Overflow
-                        StatusRegister &= byte.MaxValue ^ (1 << 5);
-                        _nmiOccurred = false;
-
-						_isRenderingDisabled = (MaskRegister & 0x18) == 0;
-
-                        WriteLog("Clearing _nmiOccurred");
-                    }
-                    else if (CycleCount == 320)
-                    {
-                        _pixelIndex = 0;
-                    }
-					else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
-					{
-						WriteLog("Odd Frame, skipping first cycle");
-						CycleCount++;
-					}
+                    _pixelIndex = 0;
                 }
+				else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
+				{
+					WriteLog("Odd Frame, skipping first cycle");
+					CycleCount++;
+				}
+            }
+            else if (ScanLine == 239 && CycleCount == 320)
+            {
+                _pixelIndex = 0;
+            }
 
             if (!_isRenderingDisabled && (ScanLine < 240 || ScanLine == 261))
             {
@@ -1242,6 +1244,13 @@ namespace dotnetNES.Engine.Processors
 
         private static unsafe void SetColor(byte* bits, int pixelArrayIndex, int paletteLookup)
         {
+            //Debug.Assert(_newFrame.Length > pixelArrayIndex + 2, string.Format("NewFrame.Length {0} PixelArrayIndex {1}", _newFrame.Length, pixelArrayIndex + 2));
+            if (pixelArrayIndex + 2 > _newFrame.Length)
+            {
+                
+            }
+
+
             bits[pixelArrayIndex] = _pallet[paletteLookup * 3 + 2];
             bits[pixelArrayIndex + 1] = _pallet[paletteLookup * 3 + 1];
             bits[pixelArrayIndex + 2] = _pallet[paletteLookup * 3];
