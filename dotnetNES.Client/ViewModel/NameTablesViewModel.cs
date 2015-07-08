@@ -1,10 +1,6 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client.ViewModel
@@ -12,10 +8,9 @@ namespace dotnetNES.Client.ViewModel
     /// <summary>
     /// The view model for the NameTables View
     /// </summary>
-    public sealed class NameTablesViewModel : ViewModelBase
+    public sealed class NameTablesViewModel : DebuggingBaseViewModel
     {
         #region Public Properties
-        public Engine.Main.Engine Engine { get; set; }
 
         public WriteableBitmap NameTable0 { get; set; }
         public WriteableBitmap NameTable1 { get; set; }
@@ -23,23 +18,8 @@ namespace dotnetNES.Client.ViewModel
         public WriteableBitmap NameTable3 { get; set; }
         #endregion
 
-        #region Constructors
-        public NameTablesViewModel(Engine.Main.Engine engine)
-            : this()
-        {
-            Engine = engine;
-        }
-
-        [PreferredConstructor]
-        public NameTablesViewModel()
-        {
-            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
-            Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
-        }
-        #endregion
-
         #region Private Methods
-        private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+        protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
@@ -62,17 +42,8 @@ namespace dotnetNES.Client.ViewModel
                 NameTable3 = NameTable2;
             }
         }
-
-        private void RefreshScreen(NotificationMessage obj)
-        {
-            if (obj.Notification != MessageNames.UpdateDebugScreens || Engine == null)
-                return;
-
-            if (Application.Current != null)
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(Refresh));
-        }
-
-        private unsafe void Refresh()
+        
+        protected unsafe override void Refresh()
         {
             NameTable0.Lock();
             var nameTable0Ptr = NameTable0.BackBuffer;

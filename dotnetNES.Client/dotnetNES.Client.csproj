@@ -109,12 +109,17 @@
     <Compile Include="NameTables.xaml.cs">
       <DependentUpon>NameTables.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Sprites.xaml.cs">
+      <DependentUpon>Sprites.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModel\DebuggingBaseViewModel.cs" />
     <Compile Include="ViewModel\NameTablesViewModel.cs" />
     <Compile Include="PatternsAndPalettes.xaml.cs">
       <DependentUpon>PatternsAndPalettes.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\PatternsAndPalettesViewModel.cs" />
+    <Compile Include="ViewModel\SpritesViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -131,6 +136,10 @@
     <Page Include="NameTables.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Sprites.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="PatternsAndPalettes.xaml">
       <SubType>Designer</SubType>

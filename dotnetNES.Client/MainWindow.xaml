@@ -18,6 +18,7 @@
             <MenuItem Header="Debug">
                 <MenuItem Header="Patterns and Palettes" Command="{Binding Path=OpenPatternsAndPalettesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"/>
                 <MenuItem Header="NameTables" Command="{Binding Path=OpenNameTablesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"/>
+                <MenuItem Header="Sprites" Command="{Binding Path=OpenSpritesCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"/>
             </MenuItem>
         </Menu>
         <Image HorizontalAlignment="Left" Height="240" Margin="-8,20,0,0" VerticalAlignment="Top" Width="272" Source="{Binding Screen }" RenderOptions.BitmapScalingMode="NearestNeighbor" />

@@ -30,6 +30,14 @@ namespace dotnetNES.Client
                 nameTables.Closing += (sender, args) => Messenger.Default.Unregister(nameTables);
                 nameTables.Show();
             }
+
+            if (notificationMessage.Notification == MessageNames.OpenSprites)
+            {
+                var sprites = new Sprites();
+
+                sprites.Closing += (sender, args) => Messenger.Default.Unregister(sprites);
+                sprites.Show();
+            }
         }
     }
 }

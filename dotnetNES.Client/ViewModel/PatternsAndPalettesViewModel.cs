@@ -1,18 +1,14 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client.ViewModel
 {
-    public class PatternsAndPalettesViewModel : ViewModelBase
+    public sealed class PatternsAndPalettesViewModel : DebuggingBaseViewModel
     {
         #region Public Properties
-        public Engine.Main.Engine Engine { get; set; }
+       
 
         public WriteableBitmap PatternTable0 { get; set; }
 
@@ -23,23 +19,9 @@ namespace dotnetNES.Client.ViewModel
         public WriteableBitmap SpritePalettes { get; set; }
         #endregion
 
-        #region Constructors
-        public PatternsAndPalettesViewModel(Engine.Main.Engine engine)
-            : this()
-        {
-            Engine = engine;
-        }
-
-        [PreferredConstructor]
-        public PatternsAndPalettesViewModel()
-        {
-            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
-            Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
-        }
-        #endregion
-
         #region Private Methods
-        private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+
+        protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
@@ -54,20 +36,9 @@ namespace dotnetNES.Client.ViewModel
             SpritePalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
         }
 
-        private void RefreshScreen(NotificationMessage obj)
-        {
-            if (obj.Notification != MessageNames.UpdateDebugScreens || Engine == null)
-                return;
-
-            if (Application.Current != null)
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,new Action(Refresh)); 
-        }
-
-        private unsafe void Refresh()
+        protected override unsafe void Refresh()
         {
             #region Left Pattern Table
-           
-
             PatternTable0.Lock();
             var bufferPtr = PatternTable0.BackBuffer;
 
