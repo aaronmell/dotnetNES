@@ -15,8 +15,8 @@ namespace dotnetNES.Engine.Main
     {
         private static readonly ILog _logger = LogManager.GetLogger("Engine");
 
-        internal readonly CPU Processor;
-        internal readonly PPU PictureProcessingUnit;
+        internal CPU Processor { get; private set; }
+        internal PPU PictureProcessingUnit { get; private set; }
         private readonly CartridgeModel _cartridgeModel;
 
         /// <summary>
@@ -93,6 +93,15 @@ namespace dotnetNES.Engine.Main
         {
             Processor.Reset();
             PictureProcessingUnit.Reset();
+        }
+
+        /// <summary>
+        /// Resets the Engine, mimics the behavior of pressing the power button on the console
+        /// </summary>
+        public void Power()
+        {
+            Processor.Reset();
+            PictureProcessingUnit.Power();
         }
 
         /// <summary>

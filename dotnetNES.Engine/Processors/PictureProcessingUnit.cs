@@ -324,7 +324,33 @@ namespace dotnetNES.Engine.Processors
             CycleCount = 0;
             _isRenderingDisabled = true;
             _objectAttributeMemoryAddress = 0;
+
+            CurrentFrame = new byte[195840];
+            _newFrame = new byte[195840];
+            _tempFrame = new byte[195840];
+            Array.Clear(_objectAttributeMemory, 0, _objectAttributeMemory.Length);
         }
+
+        internal void Power()
+        {
+            _isOddFrame = false;
+            _tempAddressHasBeenWrittenTo = false;
+            ScrollRegister = 0;
+            DataRegister = 0;
+            ControlRegister = 0;
+            MaskRegister = 0;
+            ScanLine = 241;
+            CycleCount = 0;
+            _isRenderingDisabled = true;
+            _objectAttributeMemoryAddress = 0;
+
+            CurrentFrame = new byte[195840];
+            _newFrame = new byte[195840];
+            _tempFrame = new byte[195840];
+            Array.Clear(_objectAttributeMemory,0, _objectAttributeMemory.Length);     
+        }
+
+
 
         /// <summary>
         /// This sets the Pattern table 1 stored between 0x00 and 0x0FF on its bitmap

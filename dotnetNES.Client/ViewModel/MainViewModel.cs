@@ -27,8 +27,10 @@ namespace dotnetNES.Client.ViewModel
     {
         #region Private Fields
         private string _fileName;
-        private readonly BackgroundWorker _backgroundWorker;
+        private BackgroundWorker _backgroundWorker;
         private int _frameCount;
+        private bool reset;
+        private bool power;
         #endregion
 
         #region Public Properties
@@ -63,13 +65,11 @@ namespace dotnetNES.Client.ViewModel
             LoadFileCommand = new RelayCommand(LoadFile);
             ResetNesCommand = new RelayCommand(() =>
             {
-                _backgroundWorker.CancelAsync();
-                Engine.Reset();
-                _backgroundWorker.RunWorkerAsync();
+                reset = true;
             });
             PowerNesCommand = new RelayCommand(() =>
             {
-                Engine = new Engine.Main.Engine(_fileName) { OnNewFrameAction = OnNewFrameAction };
+                power = true;
             });
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
             OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
@@ -80,11 +80,17 @@ namespace dotnetNES.Client.ViewModel
             IsEnginePaused = false;
             RaisePropertyChanged("IsEnginePaused");
 
+            CreateNewBackgroundWorker();
+            
+            Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
+            RaisePropertyChanged("Screen");
+        }
+
+        private void CreateNewBackgroundWorker()
+        {
             _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
             _backgroundWorker.DoWork += BackgroundWorkerDoWork;
 
-            Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
-            RaisePropertyChanged("Screen");
         }
         #endregion
 
@@ -105,6 +111,19 @@ namespace dotnetNES.Client.ViewModel
                     e.Cancel = true;
                     return;
                 }
+
+                if (reset)
+                {
+                    reset = false;
+                    Engine.Reset();
+                }
+
+                if (power)
+                {
+                    power = false;
+                    Engine.Power();
+                }
+
                 Engine.Step();
             }
          }
