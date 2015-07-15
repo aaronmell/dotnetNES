@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.CommandWpf;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 
@@ -11,18 +13,23 @@ namespace dotnetNES.Client.ViewModel
     public abstract class DebuggingBaseViewModel : ViewModelBase
     {
         public Engine.Main.Engine Engine { get; set; }
-
-        //protected DebuggingBaseViewModel(Engine.Main.Engine engine)
-        //    : this()
-        //{
-        //    Engine = engine;
-        //}
-
+        public RelayCommand<CancelEventArgs> WindowClosingCommand { get; private set; }
+        public RelayCommand<EventArgs> WindowOpeningCommand { get; private set; }
+        
         [PreferredConstructor]
         protected DebuggingBaseViewModel()
         {
-            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
-            Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
+            WindowClosingCommand = new RelayCommand<CancelEventArgs>((args) =>
+            {
+                Messenger.Default.Unregister(this);
+            });
+
+            WindowOpeningCommand = new RelayCommand<EventArgs>((args) =>
+            {
+                Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
+                Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
+            });
+
         }
 
         protected abstract void LoadView(NotificationMessage<Engine.Main.Engine> engine);
