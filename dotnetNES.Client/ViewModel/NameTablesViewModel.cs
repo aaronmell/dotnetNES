@@ -18,7 +18,7 @@ namespace dotnetNES.Client.ViewModel
         public WriteableBitmap NameTable3 { get; set; }
         #endregion
 
-        #region Private Methods
+        #region Protected Methods
         protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)

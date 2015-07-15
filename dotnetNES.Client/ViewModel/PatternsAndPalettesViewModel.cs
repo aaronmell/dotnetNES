@@ -19,7 +19,7 @@ namespace dotnetNES.Client.ViewModel
         public WriteableBitmap SpritePalettes { get; set; }
         #endregion
 
-        #region Private Methods
+        #region Protected Methods
 
         protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
         {

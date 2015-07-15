@@ -67,6 +67,11 @@ namespace dotnetNES.Tests.Processors
             var steps = 1;
             while (steps < 5002) //Can't run the full test, since past this point unofficial op codes show up.
             {
+                if (steps == 1106)
+                {
+                    
+                }
+
                 engine.Step();
 
                 Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter,
@@ -88,7 +93,7 @@ namespace dotnetNES.Tests.Processors
                     string.Format("Step {0} StackPointer: ", steps));
 
                 Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount,
-                    string.Format("Step {0} CycleCount: ", steps));
+                   string.Format("Step {0} CycleCount: ", steps));
                 Assert.AreEqual(testData[steps].ScanLine, engine.PictureProcessingUnit.ScanLine,
                     string.Format("Step {0} ScanLine: ", steps));
                 steps++;

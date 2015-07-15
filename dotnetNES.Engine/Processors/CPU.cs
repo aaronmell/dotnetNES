@@ -33,8 +33,16 @@ namespace dotnetNES.Engine.Processors
 
                 Memory[0x2002] = (byte)(Memory[0x2002] | data & 0x1F);
             }
+
+            //OAMDMA
+            if (address == 0x4014)
+            {
+                for (var i = 0; i < 0x100; i++)
+                    WriteMemoryAction(0x2004, (byte)(ReadMemoryValueWithoutCycle(data << 8 | i)));
+            }
             
             Memory[address] = data;
+            
             //Not sure if this is in the right place
             WriteMemoryAction(address, data);
 
@@ -63,11 +71,8 @@ namespace dotnetNES.Engine.Processors
 
 			ReadMemoryAction(address);
             IncrementCycleCount();
-
             
-            var value = Memory[address];
-           
-            return value;
+            return Memory[address];
         }
 
         /// <summary>
@@ -88,8 +93,7 @@ namespace dotnetNES.Engine.Processors
                 address = (address & 0x7) + 0x2000;
             }
 
-            var value = Memory[address];
-            return value;
+           return Memory[address];
         }
 
         /// <summary>

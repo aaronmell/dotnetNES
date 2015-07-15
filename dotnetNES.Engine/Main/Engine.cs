@@ -150,6 +150,16 @@ namespace dotnetNES.Engine.Main
         }
 
         /// <summary>
+        /// Draws the sprite on its bitmap
+        /// </summary>
+        /// <param name="spritePointer">A pointer that points to the sprite bitmap</param>
+        /// <param name="spriteSelect">The sprite to select</param>
+        public unsafe void DrawSprite(byte* spritePointer, int spriteSelect)
+        {
+            PictureProcessingUnit.DrawSprite(spritePointer, spriteSelect);
+        }
+
+        /// <summary>
         /// This method gets the current Frame from the PPU
         /// </summary>
         /// <returns>A byte array of pixels</returns>

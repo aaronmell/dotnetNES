@@ -156,7 +156,10 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         private int _currentAddress;
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        private int _objectAttributeMemoryAddress;
         /// <summary>
         /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bitmapPointer of the value are copied here
         /// </summary>
@@ -266,6 +269,8 @@ namespace dotnetNES.Engine.Processors
         /// This is the buffer for the frame. We only draw directly to this frame.
         /// </summary>
         private static byte[] _newFrame;
+
+        private static byte[] _tempFrame;
         #endregion
         
         #region Constructor
@@ -289,6 +294,7 @@ namespace dotnetNES.Engine.Processors
              
             CurrentFrame = new byte[195840];
             _newFrame = new byte[195840];
+            _tempFrame = new byte[195840];
         }
         #endregion
 
@@ -317,6 +323,7 @@ namespace dotnetNES.Engine.Processors
             ScanLine = 241;
             CycleCount = 0;
             _isRenderingDisabled = true;
+            _objectAttributeMemoryAddress = 0;
         }
 
         /// <summary>
@@ -325,7 +332,7 @@ namespace dotnetNES.Engine.Processors
         /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
         internal unsafe void DrawPatternTable0(byte* bitmapPointer)
         {
-            GetNewPatternTable(bitmapPointer, true);
+            DrawPatternTableToBitmapArray(bitmapPointer, true);
         }
 
         /// <summary>
@@ -334,7 +341,7 @@ namespace dotnetNES.Engine.Processors
         /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
         internal unsafe void DrawPatternTable1(byte* bitmapPointer)
         {
-            GetNewPatternTable(bitmapPointer, false);
+            DrawPatternTableToBitmapArray(bitmapPointer, false);
         }
 
         /// <summary>
@@ -353,7 +360,7 @@ namespace dotnetNES.Engine.Processors
         /// <param name="palettePointer">A pointer that points to the sprite bitmap</param>
         internal unsafe void DrawBackgroundPalette(byte* palettePointer)
         {
-            GetPalette(palettePointer, true);
+            WritePaletteToByteArray(palettePointer, true);
         }
 
         /// <summary>
@@ -362,7 +369,7 @@ namespace dotnetNES.Engine.Processors
         /// <param name="palettePointer">A pointer that points to the sprite bitmap</param>
         internal unsafe void DrawSpritePalette(byte* palettePointer)
         {
-            GetPalette(palettePointer, false);
+            WritePaletteToByteArray(palettePointer, false);
         }
 
         /// <summary>
@@ -397,7 +404,6 @@ namespace dotnetNES.Engine.Processors
             }
 
             //Background pattern table address
-            var offset = (ControlRegister & 0x10) == 0x10 ? 0x1000 : 0;
             var attribute = 0;
             bool useTopByte = true;
 
@@ -429,12 +435,38 @@ namespace dotnetNES.Engine.Processors
                     }
 
                     var nameTableByte = _internalMemory[currentPosition];
-                    DrawTileToArray(nameTablePointer, 32, nameTableByte, offset, tableRow, tableColumn, attribute);
+                    DrawTileToBitmapArray(nameTablePointer, 32, nameTableByte, (ControlRegister & 0x10) == 0x10, tableRow, tableColumn, attribute, false);
                     currentPosition++;
                 }
             }
         }
-        
+
+        /// <summary>
+        /// Draws the sprite on its bitmap
+        /// </summary>
+        /// <param name="spritePointer">A pointer that points to the sprite bitmap</param>
+        /// <param name="spriteIndex">The sprite to select</param>
+        internal unsafe void DrawSprite(byte* spritePointer, int spriteIndex)
+        {
+            var spriteOffset = spriteIndex*4;
+
+            //0 = Bank ($0000 or $1000) of tiles
+            //1-7 = Tile number of top of sprite (0 to 254; bottom half gets the next tile)
+            var byte0 = _objectAttributeMemory[spriteOffset++];
+            var byte1 = _objectAttributeMemory[spriteOffset++];
+            var byte2 = _objectAttributeMemory[spriteOffset++];
+            var byte3 = _objectAttributeMemory[spriteOffset];
+
+            //If bit 5 is set of the control register we use bit 0 of byte0 to select the base address. If its not set then we use bit 3 of the control register to get the base address
+            //var controlOffset = (ControlRegister & 0x20) == 0x20
+            //    ? ((byte0 & 0x01) == 1)
+            //    : ((ControlRegister & 0x04) == 0x04);
+
+            var tileIndex = (byte1 & 0xFE);
+            var paletteIndex = (byte2 & 0x3);
+
+            DrawTileToBitmapArray(spritePointer, 1, tileIndex, false, 0, 0, paletteIndex, true);
+        }
         #endregion
 
         #region Private Methods
@@ -458,8 +490,49 @@ namespace dotnetNES.Engine.Processors
         private void StepPPU()
         {
             //WriteLog("Stepping PPU");
-                
-            OuterCycleAction();
+
+            if (ScanLine == 240 && CycleCount == 340)
+            {
+                WriteLog("Setting _nmiOccurred");
+                _nmiOccurred = true;
+                _isRenderingDisabled = true;
+                OnNewFrameAction();
+                SwapFrames();
+            }
+            else if (ScanLine == 261)
+            {
+                if (CycleCount == 0)
+                {
+                    //TODO: FIX these
+                    //Clear Sprite 0 Hit
+                    StatusRegister &= byte.MaxValue ^ (1 << 6);
+                    //Clear Sprite Overflow
+                    StatusRegister &= byte.MaxValue ^ (1 << 5);
+                    _nmiOccurred = false;
+
+                    _isRenderingDisabled = (MaskRegister & 0x18) == 0;
+
+                    WriteLog("Clearing _nmiOccurred");
+                }
+                else if (CycleCount == 320)
+                {
+                    _pixelIndex = 0;
+                }
+                else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
+                {
+                    WriteLog("Odd Frame, skipping first cycle");
+                    CycleCount++;
+                }
+            }
+            else if (ScanLine == 239 && CycleCount == 320)
+            {
+                _pixelIndex = 0;
+            }
+
+            if (!_isRenderingDisabled && (ScanLine < 240 || ScanLine == 261))
+            {
+                InnerCycleAction();
+            }
 
            if ((ScanLine == 241) && (CycleCount < 1))
                 _triggerNmi = (_nmiOccurred & _nmiOutput);
@@ -480,55 +553,13 @@ namespace dotnetNES.Engine.Processors
             }
         }
 
-        private void OuterCycleAction()
-        {          
-            if (ScanLine == 240 && CycleCount == 340)
-            {
-                WriteLog("Setting _nmiOccurred");
-                _nmiOccurred = true;
-	            _isRenderingDisabled = true;
-                OnNewFrameAction();
-                SwapFrames();
-            }
-            else if (ScanLine == 261)
-            {
-                if (CycleCount == 0)
-                {
-                    //TODO: FIX these
-                    //Clear Sprite 0 Hit
-                    StatusRegister &= byte.MaxValue ^ (1 << 6);
-                    //Clear Sprite Overflow
-                    StatusRegister &= byte.MaxValue ^ (1 << 5);
-                    _nmiOccurred = false;
-
-					_isRenderingDisabled = (MaskRegister & 0x18) == 0;
-
-                    WriteLog("Clearing _nmiOccurred");
-                }
-                else if (CycleCount == 320)
-                {
-                    _pixelIndex = 0;
-                }
-				else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
-				{
-					WriteLog("Odd Frame, skipping first cycle");
-					CycleCount++;
-				}
-            }
-            else if (ScanLine == 239 && CycleCount == 320)
-            {
-                _pixelIndex = 0;
-            }
-
-            if (!_isRenderingDisabled && (ScanLine < 240 || ScanLine == 261))
-            {
-                InnerCycleAction();
-            }
-        }
-
-        private void SwapFrames()
+        static private void SwapFrames()
         {
-            _newFrame.CopyTo(CurrentFrame, 0);
+            _tempFrame = CurrentFrame;
+            CurrentFrame = _newFrame;
+            _newFrame = _tempFrame;
+
+            //_newFrame.CopyTo(CurrentFrame, 0);
         }
 
         private void InnerCycleAction()
@@ -880,8 +911,7 @@ namespace dotnetNES.Engine.Processors
                 return;
 
             ObjectAttributeMemoryRegister = 0;
-
-
+            
             if (ScanLine == 261 && CycleCount > 279 && CycleCount < 305)
             {
                 WriteLog("Setting Vert(V) = Vert(T)");
@@ -962,6 +992,40 @@ namespace dotnetNES.Engine.Processors
 
                     break;
                 }
+                case 0x2004:
+                {
+                    if (!_isRenderingDisabled)
+                    {
+                        if (CycleCount < 64)
+                        {
+                            _temporaryAddress = 0xff;
+                        }
+                        else if (CycleCount < 192)
+                        {
+                            _temporaryAddress = _objectAttributeMemory[((CycleCount - 64) << 1) & 0xFC];
+                        }
+                        else if (CycleCount < 256)
+                        {
+                            _temporaryAddress = ((CycleCount & 0x01) == 0x01)
+                                ? _objectAttributeMemory[0xFC]
+                                : _objectAttributeMemory[((CycleCount - 192) << 1) & 0xFC];
+                        }
+                        else if (CycleCount < 320)
+                        {
+                            _temporaryAddress = 0xFF;
+                        }
+                        else
+                        {
+                            _temporaryAddress = _objectAttributeMemory[0];
+                        }
+                    }
+                    else
+                    {
+                        _temporaryAddress = _objectAttributeMemory[_objectAttributeMemoryAddress];
+                    }
+
+                    break;
+                }
                 //Reading from the PPUData Register
                 case 0x2007:
                 {
@@ -993,6 +1057,7 @@ namespace dotnetNES.Engine.Processors
         {
             switch (address)
             {
+                #region Internal PPU Registers
                 case 0x2000:
                 {
                     _temporaryAddress = (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
@@ -1014,6 +1079,26 @@ namespace dotnetNES.Engine.Processors
                 case 0x2001:
                 {
                     _isRenderingDisabled = (MaskRegister & 0x18) == 0 && ScanLine < 240;
+                    break;
+                }
+                case 0x2003:// $2003
+                {
+                    _objectAttributeMemoryAddress = value;
+                    break;
+                }
+                case 0x2004:// $2004
+                {
+                    if (!_isRenderingDisabled)
+                    {
+                        value = 0xFF;
+                    }
+
+                    if ((_objectAttributeMemoryAddress & 0x03) == 0x02)
+                    {
+                        value &= 0xE3;
+                    }
+                    
+                    _objectAttributeMemory[_objectAttributeMemoryAddress++] = value;
                     break;
                 }
                 case 0x2005:
@@ -1058,6 +1143,7 @@ namespace dotnetNES.Engine.Processors
                     _currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
                     break;
                 }
+                #endregion
             }
         }
         
@@ -1110,7 +1196,11 @@ namespace dotnetNES.Engine.Processors
         }
         #endregion
 
-        #region Palette Methods
+        #region Drawing Methods
+
+        /// <summary>
+        /// This method is used during emulation to draw the current background row to the screen. 
+        /// </summary>
 		private unsafe void DrawBackgroundToScreen()
 		{
             //There are 4 offsets per attribute byte top left, top right, bottom left and bottom right. 
@@ -1123,48 +1213,71 @@ namespace dotnetNES.Engine.Processors
 
 		    fixed (byte* framePointer = _newFrame)
 			{
-			    ConvertTileToPixels(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, (_attributeByte >> attributeOffset) & 0x3);
+			    DrawTileRowToBitmapArray(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, (_attributeByte >> attributeOffset) & 0x3, false);
 			}
-
             _pixelIndex += 24;
 		}
 
-        private unsafe void GetNewPatternTable(byte* bitmapBuffer, bool fetchPattern0)
+        /// <summary>
+        /// Draws the entire pattern table to the bitmap array passed in
+        /// </summary>
+        /// <param name="bitmapArray">the bitmap to draw to</param>
+        /// <param name="fetchPattern0">Determines if pattern 0 or pattern 1 is drawn to</param>
+        private unsafe void DrawPatternTableToBitmapArray(byte* bitmapArray, bool fetchPattern0)
         {
-            var tileOffset = (fetchPattern0 ? 0 : 0x1000);
-
             //Iterate over each row and column
             for (var row = 0; row < 16; row++)
             {
                  for (var column = 0; column < 16; column++)
                  {
-                     DrawTileToArray(bitmapBuffer, 16, (row * 16) + column, tileOffset, row, column, 0);
+                     DrawTileToBitmapArray(bitmapArray, 16, (row * 16) + column, !fetchPattern0, row, column, 0, false);
                  }
             }
         }
 
-        private unsafe void DrawTileToArray(byte* bitmapPointer, int totalColumns, int tileAddress, int tileOffset, int row, int column, int paletteOffset)
+        /// <summary>
+        /// Draws a tile to a bitmap array. This is used to output the background tiles, sprits, and nametables to the debug windows.
+        /// </summary>
+        /// <param name="bitmapArray">The array being drawn to</param>
+        /// <param name="totalColumns">The total number of columns of tiles the bitmap array contains</param>
+        /// <param name="tileAddress">The address of the tile to draw</param>
+        /// <param name="useTileOffset">if set to true, use the offset and draw the tile at 0x1000 </param>
+        /// <param name="row">The row in the bitmap array this tile is being drawn on</param>
+        /// <param name="column">The column in the bitmap array this tile is being drawn on</param>
+        /// <param name="paletteOffset">The offset we are using when drawing. This determines which palette we are using</param>
+        /// <param name="useSpritePalette"></param>
+        private unsafe void DrawTileToBitmapArray(byte* bitmapArray, int totalColumns, int tileAddress, bool useTileOffset, int row, int column, int paletteOffset, bool useSpritePalette)
         {
             //Calculate the starting place in memory of the tile. 
-            var tileMemoryIndex = (16 * tileAddress) + tileOffset;
+            var tileMemoryIndex = (16 * tileAddress) + (useTileOffset ? 0x1000 : 0);
            
 
             //Calculate the StartPosition of the first pixel in the array;
             var pixelArrayInitialPosition = (row * totalColumns * 192) + (column * 24);
 			var pixelArrayOffsetPosition = pixelArrayInitialPosition;
 
-            //Iterate of each row of the tile and fill the array
+            //Iterate of each row of the tile and draw the array
             for (var pixelRow = 0; pixelRow < 8; pixelRow++)
             {
+                //offset the array
 				if ((tileMemoryIndex & 0x07) != 0)
 					pixelArrayOffsetPosition = pixelArrayInitialPosition + (totalColumns*24 * (tileMemoryIndex & 0x07));
 
-				ConvertTileToPixels(bitmapPointer, _internalMemory[tileMemoryIndex], _internalMemory[tileMemoryIndex + 8], pixelArrayOffsetPosition, paletteOffset);
+				DrawTileRowToBitmapArray(bitmapArray, _internalMemory[tileMemoryIndex], _internalMemory[tileMemoryIndex + 8], pixelArrayOffsetPosition, paletteOffset, useSpritePalette);
                 tileMemoryIndex++;
             }
         }
 
-        private unsafe void ConvertTileToPixels(byte* bitmapPointer, byte lowTileByte, byte highTileByte, int pixelArrayIndex, int paletteOffset)
+        /// <summary>
+        /// Draws a single row of the tile to the bitmap array
+        /// </summary>
+        /// <param name="bitmapArray">The bitmap array we are drawing the tile on</param>
+        /// <param name="lowTileByte">The low byte of the tile</param>
+        /// <param name="highTileByte">The high byte of the tile</param>
+        /// <param name="bitmapArrayStartIndex">The starting position of where we are drawing the tile on</param>
+        /// <param name="paletteIndex">The offset we are using when drawing. This determines which palette we are using</param>
+        /// <param name="useSpritePalette"></param>
+        private unsafe void DrawTileRowToBitmapArray(byte* bitmapArray, byte lowTileByte, byte highTileByte, int bitmapArrayStartIndex, int paletteIndex, bool useSpritePalette)
         {
             //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
             //Each tile is 16 bytes.
@@ -1186,17 +1299,20 @@ namespace dotnetNES.Engine.Processors
             //$0xxE=$42  01000010
             //$0xxF=$87  10000111
 
-			var bit0 = (0x3F00 + (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1) | (paletteOffset << 2));
-			var bit1 = (0x3F00 + ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02) | (paletteOffset << 2));
-			var bit2 = (0x3F00 + ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1) | (paletteOffset << 2));
-			var bit3 = (0x3F00 + ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2) | (paletteOffset << 2));
-			var bit4 = (0x3F00 + ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3) | (paletteOffset << 2));
-			var bit5 = (0x3F00 + ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4) | (paletteOffset << 2));
-			var bit6 = (0x3F00 + ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5) | (paletteOffset << 2));
-			var bit7 = (0x3F00 + (lowTileByte >> 7) | (((highTileByte & 0x80) >> 6)) | (paletteOffset << 2));
+            //Calculating each bit
+            var paletteShift = useSpritePalette ? 0x3f10 : 0x3f00;
+
+            var bit0 = (paletteShift + (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1) | (paletteIndex << 2));
+            var bit1 = (paletteShift + ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02) | (paletteIndex << 2));
+            var bit2 = (paletteShift + ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1) | (paletteIndex << 2));
+            var bit3 = (paletteShift + ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2) | (paletteIndex << 2));
+            var bit4 = (paletteShift + ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3) | (paletteIndex << 2));
+            var bit5 = (paletteShift + ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4) | (paletteIndex << 2));
+            var bit6 = (paletteShift + ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5) | (paletteIndex << 2));
+            var bit7 = (paletteShift + (lowTileByte >> 7) | (((highTileByte & 0x80) >> 6)) | (paletteIndex << 2));
 
 			//This fixed the palette we read from, it ensures that we select the correct background palette
-			bit0 = ReadInternalMemory(((bit0 & 0x3) != 0X0) ? bit0 : 0x3f00);
+            bit0 = ReadInternalMemory(((bit0 & 0x3) != 0X0) ? bit0 : 0x3f00);
 			bit1 = ReadInternalMemory(((bit1 & 0x3) != 0X0) ? bit1 : 0x3f00);
 			bit2 = ReadInternalMemory(((bit2 & 0x3) != 0X0) ? bit2 : 0x3f00);
 			bit3 = ReadInternalMemory(((bit3 & 0x3) != 0X0) ? bit3 : 0x3f00);
@@ -1205,17 +1321,23 @@ namespace dotnetNES.Engine.Processors
 			bit6 = ReadInternalMemory(((bit6 & 0x3) != 0X0) ? bit6 : 0x3f00);
 			bit7 = ReadInternalMemory(((bit7 & 0x3) != 0X0) ? bit7 : 0x3f00);
 
-			SetColor(bitmapPointer, pixelArrayIndex, bit7);
-			SetColor(bitmapPointer, pixelArrayIndex + 3, bit6);
-			SetColor(bitmapPointer, pixelArrayIndex + 6, bit5);
-			SetColor(bitmapPointer, pixelArrayIndex + 9, bit4);
-			SetColor(bitmapPointer, pixelArrayIndex + 12, bit3);
-			SetColor(bitmapPointer, pixelArrayIndex + 15, bit2);
-			SetColor(bitmapPointer, pixelArrayIndex + 18, bit1);
-			SetColor(bitmapPointer, pixelArrayIndex + 21, bit0);
+            //Draw each Pixel on the Array.
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1);
+			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0);
         }
 
-        private unsafe void GetPalette(byte* palette, bool background)
+        /// <summary>
+        /// Writes all of the palettes to its corresponding byteArray to be drawn on the screen. 
+        /// </summary>
+        /// <param name="paletteBitmapArray">The palette bitmap array that we are drawing the palette to</param>
+        /// <param name="background">A boolean that determines if we are drawing the palette for the backgroun images or the sprites</param>
+        private unsafe void WritePaletteToByteArray(byte* paletteBitmapArray, bool background)
         {
             var rowOffset = 0;
 
@@ -1224,44 +1346,37 @@ namespace dotnetNES.Engine.Processors
 
             for (var memoryLocation = startposition; memoryLocation < endposition; memoryLocation++)
             {
-                WritePalette(memoryLocation, palette, rowOffset);
+                var paletteLookup = _internalMemory[memoryLocation];
+
+                for (var offset = 0; offset < 32; offset++)
+                {
+                    for (var pixelOffset = 0; pixelOffset < 32; pixelOffset++)
+                    {
+                        DrawPixelToByteArray(paletteBitmapArray, rowOffset + (pixelOffset * 3) + (offset * 1536), paletteLookup);
+                    }
+                }
                 rowOffset += 96;
             }
         }
 
-        private unsafe void WritePalette(int palleteLocation, byte* backgroundPalette, int columnStartPosition)
+        /// <summary>
+        /// Draws the actual pixels to the byte array using the specific collor
+        /// </summary>
+        /// <param name="bitmapArray">The array we are drawing the pixels to</param>
+        /// <param name="pixelArrayIndex">The position in the array to draw the bits to</param>
+        /// <param name="paletteIndex">The index of the color to draw</param>
+        private static unsafe void DrawPixelToByteArray(byte* bitmapArray, int pixelArrayIndex, int paletteIndex)
         {
-            var paletteLookup = _internalMemory[palleteLocation];
-
-            for (var rowOffset = 0; rowOffset < 32; rowOffset++)
-            {
-                for (var pixelOffset = 0; pixelOffset < 32; pixelOffset++)
-                {
-                    SetColor(backgroundPalette, columnStartPosition + (pixelOffset * 3) + (rowOffset * 1536), paletteLookup);
-                }
-            }
-        }
-
-        private static unsafe void SetColor(byte* bits, int pixelArrayIndex, int paletteLookup)
-        {
-            //Debug.Assert(_newFrame.Length > pixelArrayIndex + 2, string.Format("NewFrame.Length {0} PixelArrayIndex {1}", _newFrame.Length, pixelArrayIndex + 2));
-            if (pixelArrayIndex + 2 > _newFrame.Length)
-            {
-                
-            }
-
-
-            bits[pixelArrayIndex] = _pallet[paletteLookup * 3 + 2];
-            bits[pixelArrayIndex + 1] = _pallet[paletteLookup * 3 + 1];
-            bits[pixelArrayIndex + 2] = _pallet[paletteLookup * 3];
-            
+            bitmapArray[pixelArrayIndex] = _pallet[paletteIndex * 3 + 2];
+            bitmapArray[pixelArrayIndex + 1] = _pallet[paletteIndex * 3 + 1];
+            bitmapArray[pixelArrayIndex + 2] = _pallet[paletteIndex * 3];
         }
         #endregion
 
         [Conditional("DEBUG")]
         private void WriteLog(string log)
         {
-            _logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress.ToString("X"), log);
+            //_logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress.ToString("X"), log);
         }
         #endregion
     }
