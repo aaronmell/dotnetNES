@@ -57,7 +57,6 @@ namespace dotnetNES.Engine.Main
         public void Step()
         {
             Processor.NextStep();
-
             WriteLog();
         }
 

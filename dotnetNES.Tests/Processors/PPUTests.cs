@@ -9,7 +9,6 @@ namespace dotnetNES.Tests.Processors
          [Test]
         public void PPU_Palette_LoadedCorrectly_Instr_Test_V5()
         {
-            
             var engine =
               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "instr_test-v5",
                   "01-basics.nes"));
@@ -42,7 +41,6 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_Palette_LoadedCorrectly_Nes_Test_Rom()
         {
-
             var engine =
               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
                   "nestest.nes"));
@@ -78,7 +76,6 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_Palette_LoadedCorrectly_DK_Rom()
         {
-
             var engine =
               new Engine.Main.Engine(Path.Combine("F:", "roms", "Games","Donkey Kong (JU).nes"));
 
@@ -186,14 +183,6 @@ namespace dotnetNES.Tests.Processors
 
 			while (steps < totalSteps)
 			{
-
-				if (steps == 253298)
-				{
-					var x = 1;
-					var y = x;
-				}
-
-
 				engine.Step();
 				steps++;
 			}
