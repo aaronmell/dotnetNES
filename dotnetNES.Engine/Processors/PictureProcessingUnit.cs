@@ -38,7 +38,15 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         private readonly byte[] _objectAttributeMemory = new byte[256];
         
-        private readonly byte[] _objectAttributeMemoryBuffer = new byte[32];
+        /// <summary>
+        /// This buffer holds the 8 sprites that will be drawn on the next scanline
+        /// </summary>
+        private readonly byte[] _objectAttributeMemoryBufferNextLine = new byte[32];
+
+        /// <summary>
+        /// This buffer holds the 8 sprites that will be drawn on the current scanline
+        /// </summary>
+        private readonly byte[] _objectAttributeMemoryBufferCurrentLine = new byte[32];
         #endregion
 
         #region Memory Mapped Registers
@@ -585,7 +593,10 @@ namespace dotnetNES.Engine.Processors
                 CycleCount = 0;
 
                 if (ScanLine < 261)
+                {
                     ScanLine++;
+                }
+                
                 else
                 {
                     ScanLine = 0;
@@ -614,7 +625,7 @@ namespace dotnetNES.Engine.Processors
             //Cylces 0-63 Initialize the Buffer to 0xFF
             if (CycleCount < 64)
             {
-                _objectAttributeMemoryBuffer[(CycleCount >> 1)] = 0xFF;
+                _objectAttributeMemoryBufferNextLine[(CycleCount >> 1)] = 0xFF;
                 WriteSpriteEvaluationLog(string.Format("Setting OAM Buffer at position {0} to 0xFF", (CycleCount >> 1)));
             }
             //Cycles 63 - 255 Sprite Evauation
@@ -645,7 +656,7 @@ namespace dotnetNES.Engine.Processors
                         case 0:
                         {
                             //_objectAttributeMemoryAddress = _spritePosition;
-                            _objectAttributeMemoryBuffer[_objectAttributeMemoryBufferIndex] = _tempSprite;
+                            _objectAttributeMemoryBufferNextLine[_objectAttributeMemoryBufferIndex] = _tempSprite;
 
                           
 
@@ -681,7 +692,7 @@ namespace dotnetNES.Engine.Processors
                         case 1:
                         {
                             //Copy the remaining Data to the Buffer
-                            _objectAttributeMemoryBuffer[_objectAttributeMemoryBufferIndex++] = _tempSprite;
+                            _objectAttributeMemoryBufferNextLine[_objectAttributeMemoryBufferIndex++] = _tempSprite;
                             _objectAttributeMemoryAddress++;
 
                             //All 4 bytes have been copied to the buffer
@@ -784,7 +795,7 @@ namespace dotnetNES.Engine.Processors
             CurrentFrame = _newFrame;
             _newFrame = _tempFrame;
 
-            //_newFrame.CopyTo(CurrentFrame, 0);
+           
         }
 
         private void InnerCycleAction()
@@ -1121,6 +1132,8 @@ namespace dotnetNES.Engine.Processors
 
                         //Garbage NT Fetch
                         _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
+
+                        Array.Copy(_objectAttributeMemoryBufferNextLine, _objectAttributeMemoryBufferCurrentLine, 32);
                         break;
                     }
                 case 257:
@@ -1200,8 +1213,8 @@ namespace dotnetNES.Engine.Processors
                 {
                     var address = (CycleCount >> 3 & 7) * 4;
 
-                    _lowSpriteTileAddress = ((ControlRegister & 0x8) == 0x8) ? 0x1000 : 0 | (_objectAttributeMemoryBuffer[address + 1] * 16);
-                    _lowSpriteTileAddress += (ScanLine - _objectAttributeMemoryBuffer[address]);
+                    _lowSpriteTileAddress = ((ControlRegister & 0x8) == 0x8) ? 0x1000 : 0 | (_objectAttributeMemoryBufferCurrentLine[address + 1] * 16);
+                    _lowSpriteTileAddress += (ScanLine - _objectAttributeMemoryBufferNextLine[address]);
                         break;
                 }
                 //Sprite Tile Fetch Low Byte
@@ -1215,7 +1228,7 @@ namespace dotnetNES.Engine.Processors
                 case 317:
                 {
                     //Get the low byte of the tile. We need to check the sprite to see if its been mirrored and apply the mirrored version if so.
-                    _lowSpriteTileByte = (_objectAttributeMemoryBuffer[((CycleCount >> 3 & 7)*4) + 2] & 0x40) == 0
+                    _lowSpriteTileByte = (_objectAttributeMemoryBufferCurrentLine[((CycleCount >> 3 & 7)*4) + 2] & 0x40) == 0
                         ? _internalMemory[_lowSpriteTileAddress]
                         : spriteMirror[_internalMemory[_lowSpriteTileAddress]];
                     break;
@@ -1244,7 +1257,7 @@ namespace dotnetNES.Engine.Processors
                 case 319:
                 {
                     //Get the high byte of the tile. We need to check the sprite to see if its been mirrored and apply the mirrored version if so.
-                    _highSpriteTileByte = (_objectAttributeMemoryBuffer[((CycleCount >> 3 & 7) * 4) + 2] & 0x40) == 0
+                    _highSpriteTileByte = (_objectAttributeMemoryBufferCurrentLine[((CycleCount >> 3 & 7) * 4) + 2] & 0x40) == 0
                         ? _internalMemory[_highSpriteTileAddress]
                         : spriteMirror[_internalMemory[_highSpriteTileAddress]];
 
@@ -1580,12 +1593,12 @@ namespace dotnetNES.Engine.Processors
             
 
             //X-Scroll values greater than F8 cause the sprite to be invisble
-            var xCoordinate = _objectAttributeMemoryBuffer[address + 3];
+            var xCoordinate = _objectAttributeMemoryBufferCurrentLine[address + 3];
 
             if (xCoordinate > 0xf8)
                 return;
 
-            var paletteIndex = _objectAttributeMemoryBuffer[address + 2] & 0x3;
+            var paletteIndex = _objectAttributeMemoryBufferCurrentLine[address + 2] & 0x3;
 
             var pixelStartPosition = ScanLine == 261 ? ((xCoordinate + 8) * 3) : ((ScanLine)*816) + ((xCoordinate + 8) * 3);
 
