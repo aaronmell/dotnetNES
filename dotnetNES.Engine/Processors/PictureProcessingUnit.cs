@@ -47,6 +47,8 @@ namespace dotnetNES.Engine.Processors
         /// This buffer holds the 8 sprites that will be drawn on the current scanline
         /// </summary>
         private readonly byte[] _objectAttributeMemoryBufferCurrentLine = new byte[32];
+
+        private readonly bool[] _spritePriorityMap = new bool[256];
         #endregion
 
         #region Memory Mapped Registers
@@ -1134,6 +1136,7 @@ namespace dotnetNES.Engine.Processors
                         _nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
 
                         Array.Copy(_objectAttributeMemoryBufferNextLine, _objectAttributeMemoryBufferCurrentLine, 32);
+                        Array.Clear(_spritePriorityMap, 0, 256);
                         break;
                     }
                 case 257:
@@ -1592,19 +1595,22 @@ namespace dotnetNES.Engine.Processors
             var address = (CycleCount >> 3 & 7) * 4;
             
 
+
             //X-Scroll values greater than F8 cause the sprite to be invisble
-            var xCoordinate = _objectAttributeMemoryBufferCurrentLine[address + 3];
+            var xCoordinate = _objectAttributeMemoryBufferCurrentLine[address + 3] + 8;
 
             if (xCoordinate > 0xf8)
                 return;
 
             var paletteIndex = _objectAttributeMemoryBufferCurrentLine[address + 2] & 0x3;
 
-            var pixelStartPosition = ScanLine == 261 ? ((xCoordinate + 8) * 3) : ((ScanLine)*816) + ((xCoordinate + 8) * 3);
+
+           
+            var pixelStartPosition = ScanLine == 261 ? ((xCoordinate) * 3) : ((ScanLine)*816) + ((xCoordinate) * 3);
 
             fixed (byte* framePointer = _newFrame)
             {
-                DrawSpriteTileRowToBitmapArray(framePointer, _lowSpriteTileByte, _highSpriteTileByte, pixelStartPosition, paletteIndex);
+                DrawSpriteTileRowToBitmapArray(framePointer, _lowSpriteTileByte, _highSpriteTileByte, pixelStartPosition, paletteIndex, (_objectAttributeMemoryBufferCurrentLine[address + 2] & 20) != 0x20, xCoordinate);
             }
         }
 
@@ -1675,7 +1681,7 @@ namespace dotnetNES.Engine.Processors
 
                 if (isSprite)
                 {
-                    DrawSpriteTileRowToBitmapArray(bitmapArray, _internalMemory[tileMemoryIndex], _internalMemory[tileMemoryIndex + 8], pixelArrayOffsetPosition, paletteOffset);
+                    DrawSpriteTileRowToBitmapArray(bitmapArray, _internalMemory[tileMemoryIndex], _internalMemory[tileMemoryIndex + 8], pixelArrayOffsetPosition, paletteOffset, true, 0);
                 }
                 else
                 {
@@ -1748,7 +1754,7 @@ namespace dotnetNES.Engine.Processors
         }
 
        
-         private unsafe void DrawSpriteTileRowToBitmapArray(byte* bitmapArray, byte lowTileByte, byte highTileByte, int bitmapArrayStartIndex, int paletteIndex)
+         private unsafe void DrawSpriteTileRowToBitmapArray(byte* bitmapArray, byte lowTileByte, byte highTileByte, int bitmapArrayStartIndex, int paletteIndex, bool isFrontSprite, int xCoordinate)
          {
             //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
             //Each tile is 16 bytes.
@@ -1770,61 +1776,119 @@ namespace dotnetNES.Engine.Processors
             //$0xxE=$42  01000010
             //$0xxF=$87  10000111
 
+             xCoordinate += 7;
+
             //Calculating each bit
-            if ((lowTileByte & 0x01) > 0 || ((highTileByte & 0x01) > 0))
+            if (((lowTileByte & 0x01) > 0 || ((highTileByte & 0x01) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit0 = 0x3f10 + (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1) | (paletteIndex << 2);
-                bit0 = ReadInternalMemory(((bit0 & 0x3) != 0X0) ? bit0 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0);
+                if (isFrontSprite)
+                {
+                    var bit0 = 0x3f10 + (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1) | (paletteIndex << 2);
+                    bit0 = ReadInternalMemory(((bit0 & 0x3) != 0X0) ? bit0 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
+
             }
 
-            if ((lowTileByte & 0x02) > 0 || ((highTileByte & 0x02) > 0))
+             xCoordinate--;
+
+            if (((lowTileByte & 0x02) > 0 || ((highTileByte & 0x02) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit1 = 0x3f10 + ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02) | (paletteIndex << 2);
-                bit1 = ReadInternalMemory(((bit1 & 0x3) != 0X0) ? bit1 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1);
+                if (isFrontSprite)
+                {
+                    var bit1 = 0x3f10 + ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02) | (paletteIndex << 2);
+                    bit1 = ReadInternalMemory(((bit1 & 0x3) != 0X0) ? bit1 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
 
-            if ((lowTileByte & 0x04) > 0 || ((highTileByte & 0x04) > 0))
+            xCoordinate--;
+
+            if (((lowTileByte & 0x04) > 0 || ((highTileByte & 0x04) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit2 = 0x3f10 + ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1) | (paletteIndex << 2);
-                bit2 = ReadInternalMemory(((bit2 & 0x3) != 0X0) ? bit2 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2);
+                if (isFrontSprite)
+                {
+                    var bit2 = 0x3f10 + ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1) | (paletteIndex << 2);
+                    bit2 = ReadInternalMemory(((bit2 & 0x3) != 0X0) ? bit2 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
 
-            if ((lowTileByte & 0x08) > 0 || ((highTileByte & 0x08) > 0))
+            xCoordinate--;
+
+            if (((lowTileByte & 0x08) > 0 || ((highTileByte & 0x08) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit3 = 0x3f10 + ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2) | (paletteIndex << 2);
-                bit3 = ReadInternalMemory(((bit3 & 0x3) != 0X0) ? bit3 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3);
+                if (isFrontSprite)
+                {
+                    var bit3 = 0x3f10 + ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2) | (paletteIndex << 2);
+                    bit3 = ReadInternalMemory(((bit3 & 0x3) != 0X0) ? bit3 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
 
-            if ((lowTileByte & 0x10) > 0 || ((highTileByte & 0x10) > 0))
+            xCoordinate--;
+
+            if (((lowTileByte & 0x10) > 0 || ((highTileByte & 0x10) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit4 = 0x3f10 + ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3) | (paletteIndex << 2);
-                bit4 = ReadInternalMemory(((bit4 & 0x3) != 0X0) ? bit4 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4);
+                if (isFrontSprite)
+                {
+                    var bit4 = 0x3f10 + ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3) | (paletteIndex << 2);
+                    bit4 = ReadInternalMemory(((bit4 & 0x3) != 0X0) ? bit4 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
 
-            if ((lowTileByte & 0x20) > 0 || ((highTileByte & 0x20) > 0))
+            xCoordinate--;
+
+            if (((lowTileByte & 0x20) > 0 || ((highTileByte & 0x20) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit5 = 0x3f10 + ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4) | (paletteIndex << 2);
-                bit5 = ReadInternalMemory(((bit5 & 0x3) != 0X0) ? bit5 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5);
+                if (isFrontSprite)
+                {
+                    var bit5 = 0x3f10 + ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4) | (paletteIndex << 2);
+                    bit5 = ReadInternalMemory(((bit5 & 0x3) != 0X0) ? bit5 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
 
-            if ((lowTileByte & 0x40) > 0 || ((highTileByte & 0x40) > 0))
+            xCoordinate--;
+
+            if (((lowTileByte & 0x40) > 0 || ((highTileByte & 0x40) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit6 = 0x3f10 + ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5) | (paletteIndex << 2);
-                bit6 = ReadInternalMemory(((bit6 & 0x3) != 0X0) ? bit6 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6);
+                if (isFrontSprite)
+                {
+                    var bit6 = 0x3f10 + ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5) | (paletteIndex << 2);
+                    bit6 = ReadInternalMemory(((bit6 & 0x3) != 0X0) ? bit6 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
 
-            if ((lowTileByte & 0x80) > 0 || ((highTileByte & 0x80) > 0))
+            xCoordinate--;
+
+            if (((lowTileByte & 0x80) > 0 || ((highTileByte & 0x80) > 0)) && !_spritePriorityMap[xCoordinate])
             {
-                var bit7 = 0x3f10 + ((lowTileByte & 0x80) >> 7) | (((highTileByte & 0x80) >> 6)) | (paletteIndex << 2);
-                bit7 = ReadInternalMemory(((bit7 & 0x3) != 0X0) ? bit7 : 0x3f00);
-                DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7);
+                if (isFrontSprite)
+                {
+                    var bit7 = 0x3f10 + ((lowTileByte & 0x80) >> 7) | (((highTileByte & 0x80) >> 6)) |
+                               (paletteIndex << 2);
+                    bit7 = ReadInternalMemory(((bit7 & 0x3) != 0X0) ? bit7 : 0x3f00);
+                    DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7);
+                }
+
+                _spritePriorityMap[xCoordinate] = true;
             }
         }
 
