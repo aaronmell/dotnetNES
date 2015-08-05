@@ -223,7 +223,14 @@ namespace dotnetNES.Client.ViewModel
             sprite.Lock();
             var bufferPtr = sprite.BackBuffer;
 
-            Engine.DrawSprite((byte*)bufferPtr.ToPointer(), spriteNumber);
+            var array = (byte*)bufferPtr.ToPointer();
+
+            for (var i = 0; i < 960; i++)
+            {
+                array[i] = 0;
+            }
+
+            Engine.DrawSprite(array, spriteNumber);
 
             sprite.AddDirtyRect(new Int32Rect(0, 0, 8, 8));
             sprite.Unlock();
