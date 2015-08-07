@@ -304,7 +304,7 @@ namespace dotnetNES.Engine.Processors
 		/// <summary>
 		/// This is used by the screen to draw to the correct location on the screen.
 		/// </summary>
-		private int _pixelIndex;
+		private int _backgroundFrameIndex;
 
 		/// <summary>
 		/// This is the buffer for the frame. We only draw directly to this frame.
@@ -358,15 +358,20 @@ namespace dotnetNES.Engine.Processors
 		/// The current index of the OAM buffer. <see cref="_objectAttributeMemoryBufferNextLine"/>
 		/// </summary>
 		private byte _objectAttributeMemoryBufferIndex;
-		#endregion
 
-		#region Constructor
-		/// <summary>
-		/// Constructor for the PPU
-		/// </summary>
-		/// <param name="cartridgeModel"></param>
-		/// <param name="cpu"></param>
-		internal PictureProcessingUnit(CartridgeModel cartridgeModel, CPU cpu)
+        /// <summary>
+        /// Holds the current pixel being drawn
+        /// </summary>
+        private int _pixelIndex;
+        #endregion
+
+        #region Constructor
+        /// <summary>
+        /// Constructor for the PPU
+        /// </summary>
+        /// <param name="cartridgeModel"></param>
+        /// <param name="cpu"></param>
+        internal PictureProcessingUnit(CartridgeModel cartridgeModel, CPU cpu)
 		{
 			_cpu = cpu;
 			_cpu.CycleCountIncrementedAction = CPUCycleCountIncremented;
@@ -395,7 +400,8 @@ namespace dotnetNES.Engine.Processors
 		/// The current frame being rendered
 		/// </summary>
 		internal static byte[] CurrentFrame;
-		#endregion
+
+	    #endregion
 
 		#region Internal Methods
 
@@ -600,7 +606,8 @@ namespace dotnetNES.Engine.Processors
                 }
                 else if (CycleCount == 320)
 				{
-					_pixelIndex = 0;
+					_backgroundFrameIndex = 0;
+                    Array.Clear(_backgroundPixelOpaqueMap, 0, 256);
 				}
 				else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
 				{
@@ -610,7 +617,7 @@ namespace dotnetNES.Engine.Processors
 			}
 			else if (ScanLine == 239 && CycleCount == 320)
 			{
-				_pixelIndex = 0;
+				_backgroundFrameIndex = 0;
 			}
 
 			if (!_isRenderingDisabled && (ScanLine < 240 || ScanLine == 261))
@@ -668,7 +675,7 @@ namespace dotnetNES.Engine.Processors
 				if ((CycleCount & 1) == 0)
 				{
 					_tempSprite = _objectAttributeMemory[_objectAttributeMemoryAddress];
-
+				    
 					WriteSpriteEvaluationLog(string.Format("Read Cycle TempSprite = {0} from Index {1}", _tempSprite, _objectAttributeMemoryAddress));
 				}
 				//Even Cycle: Write Data to OAM
@@ -678,8 +685,8 @@ namespace dotnetNES.Engine.Processors
 					{
 						case 0:
 						{
-							//_objectAttributeMemoryAddress = _spritePosition;
-							_objectAttributeMemoryBufferNextLine[_objectAttributeMemoryBufferIndex] = _tempSprite;
+                                //_objectAttributeMemoryAddress = _spritePosition;
+                                _objectAttributeMemoryBufferNextLine[_objectAttributeMemoryBufferIndex] = _tempSprite;
 
 						  
 
@@ -687,11 +694,6 @@ namespace dotnetNES.Engine.Processors
 							if ((ScanLine >= _tempSprite) &&
 								(ScanLine <= _tempSprite + (_use8x16Sprite ? 0xF : 0x7)))
 							{
-									if (_tempSprite == 0xCF)
-									{
-										_tempSprite = 0xCF;
-									}
-
 									//Y Coordinate is in range
 									_spriteEvaluationState = 1;
 								_totalSpritesFound++;
@@ -1173,6 +1175,7 @@ namespace dotnetNES.Engine.Processors
 						
 						//Garbage NT Byte
 						_nameTableByte = ReadInternalMemory(_nameTableAddress);
+					    _pixelIndex = 0;
 						break;
 					}
 				#endregion
@@ -1242,7 +1245,7 @@ namespace dotnetNES.Engine.Processors
 					var address = (CycleCount >> 3 & 7) * 4;
 
 					_lowSpriteTileAddress = ((ControlRegister & 0x8) == 0x8) ? 0x1000 : 0 | (_objectAttributeMemoryBufferCurrentLine[address + 1] * 16);
-					_lowSpriteTileAddress += (ScanLine - _objectAttributeMemoryBufferNextLine[address]);
+					_lowSpriteTileAddress += (ScanLine - _objectAttributeMemoryBufferCurrentLine[address]);
 						break;
 				}
 				//Sprite Tile Fetch Low Byte
@@ -1482,7 +1485,7 @@ namespace dotnetNES.Engine.Processors
 				{
 					if (!_isRenderingDisabled)
 					{
-						value = 0xFF;
+						//value = 0xFF;
 					}
 
 					if ((_objectAttributeMemoryAddress & 0x03) == 0x02)
@@ -1678,9 +1681,9 @@ namespace dotnetNES.Engine.Processors
 
 			fixed (byte* framePointer = _newFrame)
 			{
-				DrawBackgroundTileRowToBitmapArray(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _pixelIndex, (_attributeByte >> attributeOffset) & 0x3);
+				DrawBackgroundTileRowToBitmapArray(framePointer, _lowBackgroundTileByte, _highBackgroundTileByte, _backgroundFrameIndex, (_attributeByte >> attributeOffset) & 0x3);
 			}
-			_pixelIndex += 24;
+			_backgroundFrameIndex += 24;
 		}
 
 		/// <summary>
@@ -1744,107 +1747,120 @@ namespace dotnetNES.Engine.Processors
 		/// <param name="paletteIndex">The offset we are using when drawing. This determines which palette we are using</param>
 		private unsafe void DrawBackgroundTileRowToBitmapArray(byte* bitmapArray, byte lowTileByte, byte highTileByte, int bitmapArrayStartIndex, int paletteIndex)
 		{
-			//Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
-			//Each tile is 16 bytes.
-			//$0xx0=$41  01000001
-			//$0xx1=$C2  11000010
-			//$0xx2=$44  01000100
-			//$0xx3=$48  01001000
-			//$0xx4=$10  00010000
-			//$0xx5=$20  00100000         .1.....3
-			//$0xx6=$40  01000000         11....3.
-			//$0xx7=$80  10000000  =====  .1...3..
-			//                            .1..3...
-			//$0xx8=$01  00000001  =====  ...3.22.
-			//$0xx9=$02  00000010         ..3....2
-			//$0xxA=$04  00000100         .3....2.
-			//$0xxB=$08  00001000         3....222
-			//$0xxC=$16  00010110
-			//$0xxD=$21  00100001
-			//$0xxE=$42  01000010
-			//$0xxF=$87  10000111
+            //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
+            //Each tile is 16 bytes.
+            //$0xx0=$41  01000001
+            //$0xx1=$C2  11000010
+            //$0xx2=$44  01000100
+            //$0xx3=$48  01001000
+            //$0xx4=$10  00010000
+            //$0xx5=$20  00100000         .1.....3
+            //$0xx6=$40  01000000         11....3.
+            //$0xx7=$80  10000000  =====  .1...3..
+            //                            .1..3...
+            //$0xx8=$01  00000001  =====  ...3.22.
+            //$0xx9=$02  00000010         ..3....2
+            //$0xxA=$04  00000100         .3....2.
+            //$0xxB=$08  00001000         3....222
+            //$0xxC=$16  00010110
+            //$0xxD=$21  00100001
+            //$0xxE=$42  01000010
+            //$0xxF=$87  10000111
 
-			//Calculating each bit
-			var bit0 = (0x3f00 + (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1) | (paletteIndex << 2));
-			var bit1 = (0x3f00 + ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02) | (paletteIndex << 2));
-			var bit2 = (0x3f00 + ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1) | (paletteIndex << 2));
-			var bit3 = (0x3f00 + ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2) | (paletteIndex << 2));
-			var bit4 = (0x3f00 + ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3) | (paletteIndex << 2));
-			var bit5 = (0x3f00 + ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4) | (paletteIndex << 2));
-			var bit6 = (0x3f00 + ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5) | (paletteIndex << 2));
-			var bit7 = (0x3f00 + (lowTileByte >> 7) | (((highTileByte & 0x80) >> 6)) | (paletteIndex << 2));
+            //Calculating each bit
+		    //var xPixelCoordinate = bitmapArrayStartIndex + 7;
+		    //bitmapArrayStartIndex *= 3;
+		    _pixelIndex += 7;
 
-			//This fixed the palette we read from, it ensures that we select the correct background palette
-			bit0 = ReadInternalMemory(((bit0 & 0x3) != 0X0) ? bit0 : 0x3f00);
-			bit1 = ReadInternalMemory(((bit1 & 0x3) != 0X0) ? bit1 : 0x3f00);
-			bit2 = ReadInternalMemory(((bit2 & 0x3) != 0X0) ? bit2 : 0x3f00);
-			bit3 = ReadInternalMemory(((bit3 & 0x3) != 0X0) ? bit3 : 0x3f00);
-			bit4 = ReadInternalMemory(((bit4 & 0x3) != 0X0) ? bit4 : 0x3f00);
-			bit5 = ReadInternalMemory(((bit5 & 0x3) != 0X0) ? bit5 : 0x3f00);
-			bit6 = ReadInternalMemory(((bit6 & 0x3) != 0X0) ? bit6 : 0x3f00);
-			bit7 = ReadInternalMemory(((bit7 & 0x3) != 0X0) ? bit7 : 0x3f00);
+            var bit0 = (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0, paletteIndex << 2, _pixelIndex--);
 
-			//Draw each Pixel on the Array.
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1);
-			DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0);
-		}
-
-
-		private unsafe void DrawSpriteTileRowToBitmapArray(byte* bitmapArray, byte lowTileByte, byte highTileByte,
-			int bitmapArrayStartIndex, int paletteIndex, bool isFrontSprite, bool isSpriteZero, int xCoordinate, bool skipChecks)
-		{
-			//Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
-			//Each tile is 16 bytes.
-			//$0xx0=$41  01000001
-			//$0xx1=$C2  11000010
-			//$0xx2=$44  01000100
-			//$0xx3=$48  01001000
-			//$0xx4=$10  00010000
-			//$0xx5=$20  00100000         .1.....3
-			//$0xx6=$40  01000000         11....3.
-			//$0xx7=$80  10000000  =====  .1...3..
-			//                            .1..3...
-			//$0xx8=$01  00000001  =====  ...3.22.
-			//$0xx9=$02  00000010         ..3....2
-			//$0xxA=$04  00000100         .3....2.
-			//$0xxB=$08  00001000         3....222
-			//$0xxC=$16  00010110
-			//$0xxD=$21  00100001
-			//$0xxE=$42  01000010
-			//$0xxF=$87  10000111
-
-		   
-			//var spriteZeroHitFlag = (StatusRegister & 40) == 0x40;
-
-			var bit0 = (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
-			
-			var bit1 = ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+            var bit1 = ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1, paletteIndex << 2, _pixelIndex--);
 
             var bit2 = ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2, paletteIndex << 2, _pixelIndex--);
 
             var bit3 = ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3, paletteIndex << 2, _pixelIndex--);
 
             var bit4 = ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4, paletteIndex << 2, _pixelIndex--);
 
             var bit5 = ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5, paletteIndex << 2, _pixelIndex--);
 
             var bit6 = ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5);
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6, paletteIndex << 2, _pixelIndex--);
 
             var bit7 = ((lowTileByte & 0x80) >> 7) | (((highTileByte & 0x80) >> 6));
-			DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7, paletteIndex << 2, xCoordinate, isFrontSprite, isSpriteZero, skipChecks);
+            DrawBackgroundPixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7, paletteIndex << 2, _pixelIndex);
+
+		    _pixelIndex += 8;
+		}
+    
+
+        private unsafe void DrawBackgroundPixelToByteArray(byte* bitmapArray, int bitmapArrayStartIndex, int bit, int paletteIndex, int xPixelCoordinate)
+        {
+            if (bit > 0 && xPixelCoordinate < 256)
+            {
+               _backgroundPixelOpaqueMap[xPixelCoordinate] = true;
+            }
+
+            bit = 0x3f00 + bit | (paletteIndex);
+            bit = ReadInternalMemory(((bit & 0x3) != 0X0) ? bit : 0x3f00);
+            DrawPixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit);
+        }
+
+        private unsafe void DrawSpriteTileRowToBitmapArray(byte* bitmapArray, byte lowTileByte, byte highTileByte,
+			    int bitmapArrayStartIndex, int paletteIndex, bool isFrontSprite, bool isSpriteZero, int xCoordinate, bool skipChecks)
+		{
+			    //Each pixel has 2 bitmapPointer that control the color, a high bit and a low bit.
+			    //Each tile is 16 bytes.
+			    //$0xx0=$41  01000001
+			    //$0xx1=$C2  11000010
+			    //$0xx2=$44  01000100
+			    //$0xx3=$48  01001000
+			    //$0xx4=$10  00010000
+			    //$0xx5=$20  00100000         .1.....3
+			    //$0xx6=$40  01000000         11....3.
+			    //$0xx7=$80  10000000  =====  .1...3..
+			    //                            .1..3...
+			    //$0xx8=$01  00000001  =====  ...3.22.
+			    //$0xx9=$02  00000010         ..3....2
+			    //$0xxA=$04  00000100         .3....2.
+			    //$0xxB=$08  00001000         3....222
+			    //$0xxC=$16  00010110
+			    //$0xxD=$21  00100001
+			    //$0xxE=$42  01000010
+			    //$0xxF=$87  10000111
+
+		   
+			    //var spriteZeroHitFlag = (StatusRegister & 40) == 0x40;
+
+			    var bit0 = (lowTileByte & 0x1) | ((highTileByte & 0x01) << 1);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 21, bit0, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+			
+			    var bit1 = ((lowTileByte & 0x2) >> 1) | (highTileByte & 0x02);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 18, bit1, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+
+                var bit2 = ((lowTileByte & 0x04) >> 2) | ((highTileByte & 0x04) >> 1);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 15, bit2, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+
+                var bit3 = ((lowTileByte & 0x08) >> 3) | ((highTileByte & 0x08) >> 2);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 12, bit3, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+
+                var bit4 = ((lowTileByte & 0x10) >> 4) | ((highTileByte & 0x10) >> 3);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 9, bit4, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+
+                var bit5 = ((lowTileByte & 0x20) >> 5) | ((highTileByte & 0x20) >> 4);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 6, bit5, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+
+                var bit6 = ((lowTileByte & 0x40) >> 6) | ((highTileByte & 0x40) >> 5);
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex + 3, bit6, paletteIndex << 2, xCoordinate--, isFrontSprite, isSpriteZero, skipChecks);
+
+                var bit7 = ((lowTileByte & 0x80) >> 7) | (((highTileByte & 0x80) >> 6));
+			    DrawSpritePixelToByteArray(bitmapArray, bitmapArrayStartIndex, bit7, paletteIndex << 2, xCoordinate, isFrontSprite, isSpriteZero, skipChecks);
         }
 
 		private unsafe void DrawSpritePixelToByteArray(byte* bitmapArray, int bitmapArrayStartIndex, int bit, int paletteIndex, int xCoordinate, bool isFrontSprite, bool isSpriteZero, bool skipChecks)
@@ -1864,12 +1880,12 @@ namespace dotnetNES.Engine.Processors
 
 			if (!isSpriteZero) return;
 
-			//Sprite0 does not occur when x = 255, x - 0 to 7 if clipping is enabled, or if the background or sprite pixel is transparent.
-			//if (_backgroundPixelOpaqueMap[xCoordinate] && xCoordinate != 255 && (xCoordinate > 7 || ((MaskRegister & 0x3) ==0 || ((MaskRegister & 0x1) == 0))))
-			//{
-			//	StatusRegister &= 0x40;
-			//}
-		}
+            //Sprite0 does not occur when x = 255, x - 0 to 7 if clipping is enabled, or if the background or sprite pixel is transparent.
+            if (_backgroundPixelOpaqueMap[xCoordinate] && (!_isRenderingDisabled) && (MaskRegister & 0x18) == 0x18) //&& xCoordinate != 255 && (xCoordinate > 7 || ((MaskRegister & 0x3) == 0 || ((MaskRegister & 0x1) == 0))))
+            {
+                StatusRegister |= 0x40;
+            }
+        }
 
 		/// <summary>
 		/// Writes all of the palettes to its corresponding byteArray to be drawn on the screen. 

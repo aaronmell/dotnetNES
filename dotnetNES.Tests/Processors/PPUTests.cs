@@ -208,5 +208,25 @@ namespace dotnetNES.Tests.Processors
 
             Assert.AreEqual(expectedString, output);
         }
+
+        [TestCase("01.basics.nes")]
+        [TestCase("02.alignment.nes")]
+        public void PPU_Sprite_Hit_Tests(string fileName)
+        {
+            var engine =
+             new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "sprite_hit_tests_2005.10.05",
+                 fileName));
+            var steps = 0;
+
+            while (steps < 250000)
+            {
+                engine.Step();
+                steps++;
+            }
+
+            var result = engine.PictureProcessingUnit.ReadPPUMemory(0x20C2);
+
+            Assert.AreEqual(80, result, "Nametable at 0x20c2 was not Set to P");
+        }
     }
 }

@@ -199,6 +199,39 @@
     <Content Include="TestRoms\misc_ppu_tests\vram_access.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\01.basics.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\02.alignment.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\03.corners.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\04.flip.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\05.left_clip.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\06.right_edge.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\07.screen_bottom.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\08.double_height.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\09.timing_basics.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\10.timing_order.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\11.edge_timing.nes">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="TestRoms\vbl_nmi_timing\1.frame_basics.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -220,6 +253,7 @@
     <None Include="TestRoms\vbl_nmi_timing\7.nmi_timing.nes">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="TestRoms\sprite_hit_tests_2005.10.05\readme.txt" />
     <Content Include="TestRoms\vbl_nmi_timing\vbl_timing.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
