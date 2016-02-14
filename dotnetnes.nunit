@@ -1,0 +1,9 @@
+﻿<NUnitProject>
+  <Settings activeconfig="Debug" processModel="Default" domainUsage="Default" />
+  <Config name="Debug" binpathtype="Auto">
+    <assembly path="dotnetNES.Tests\bin\Debug\dotnetNES.Tests.dll" />
+  </Config>
+  <Config name="Release" binpathtype="Auto" >
+	<assembly path="dotnetNES.Tests\bin\Release\dotnetNES.Tests.dll" />
+  </Config>
+</NUnitProject>
