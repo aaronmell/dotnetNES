@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
-using Common.Logging;
 using dotnetNES.Engine.Models;
 using dotnetNES.Engine.Processors;
 using dotnetNES.Engine.Utilities;
 using PPU = dotnetNES.Engine.Processors.PictureProcessingUnit;
+using NLog;
 
 namespace dotnetNES.Engine.Main
 {
@@ -13,7 +13,7 @@ namespace dotnetNES.Engine.Main
     /// </summary>
     public class Engine
     {
-        private static readonly ILog _logger = LogManager.GetLogger("Engine");
+        private static readonly ILogger _logger = LogManager.GetLogger("Engine");
 
         internal CPU Processor { get; private set; }
         internal PPU PictureProcessingUnit { get; private set; }

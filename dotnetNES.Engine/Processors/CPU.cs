@@ -81,7 +81,7 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         /// <param name="address">The address to read from</param>
         /// <returns>the value from memory</returns>
-        public byte ReadMemoryValueWithoutCycle(int address)
+        public override byte ReadMemoryValueWithoutCycle(int address)
         {
             //Memory from 0x1000-0x17FF mirrors 0x0000-0x7FFF
             if (address < 0x1800)

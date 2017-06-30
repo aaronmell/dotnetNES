@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using Common.Logging;
 using dotnetNES.Engine.Models;
+using NLog;
 
 namespace dotnetNES.Engine.Processors
 {
@@ -239,7 +239,7 @@ namespace dotnetNES.Engine.Processors
 		/// </summary>
 		private readonly CPU _cpu = new CPU();
 
-		private static readonly ILog _logger = LogManager.GetLogger("PictureProcessingUnit");
+        private static readonly ILogger _logger = LogManager.GetLogger("PictureProcessingUnit");
 
 		//This contains all of the colors the NES can display converted into RGB format.
 		private static readonly byte[] _pallet =
@@ -612,8 +612,12 @@ namespace dotnetNES.Engine.Processors
 				else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
 				{
 					WriteLog("Odd Frame, skipping first cycle");
-					CycleCount++;
-				}
+					CycleCount = 0;
+                    ScanLine = 0;
+                    _isOddFrame = !_isOddFrame;
+
+
+                }
 			}
 			else if (ScanLine == 239 && CycleCount == 320)
 			{
@@ -638,8 +642,7 @@ namespace dotnetNES.Engine.Processors
 				if (ScanLine < 261)
 				{
 					ScanLine++;
-				}
-				
+				}				
 				else
 				{
 					ScanLine = 0;
@@ -1931,13 +1934,13 @@ namespace dotnetNES.Engine.Processors
 		[Conditional("DEBUG")]
 		private void WriteLog(string log)
 		{
-			_logger.DebugFormat("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress.ToString("X"), log);
+            _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress.ToString("X"), log);
 		}
 
 		[Conditional("DEBUG")]
 		private void WriteSpriteEvaluationLog(string log)
 		{
-			_logger.DebugFormat("SL: {0} CYC: {1} Rend:{2} OAM ADDR: {3} {4}", ScanLine, CycleCount, _isRenderingDisabled, _objectAttributeMemoryAddress, log);
+			_logger.Debug("SL: {0} CYC: {1} Rend:{2} OAM ADDR: {3} {4}", ScanLine, CycleCount, _isRenderingDisabled, _objectAttributeMemoryAddress, log);
 		}
 		#endregion
 	}
