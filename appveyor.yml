@@ -1,0 +1,8 @@
+version: 0.3.{build}
+configuration: Release
+platform: Any CPU
+before_build:
+  - nuget restore
+build:
+  project: dotnetNES.sln
+  verbosity: minimal
