@@ -80,8 +80,16 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_Palette_LoadedCorrectly_DK_Rom()
         {
-            var engine =
-               new Engine.Main.Engine(Path.Combine("C:\\", "temp", "NES Roms Unpacked", "Donkey Kong (JU).nes"));
+            var romName = "Donkey Kong (JU).nes";
+
+            var path = Utilities.GetTestPath("roms", romName);
+
+            if (!File.Exists(path))
+            {
+                Assert.Inconclusive($"Unable to find rom {romName}");
+            }
+
+            var engine = new Engine.Main.Engine(path);
 
             var steps = 0;
             while (steps < 40000)
@@ -132,8 +140,16 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_NameTables_LoadedCorrectly_DK_Rom()
         {
-            var engine =
-               new Engine.Main.Engine(Path.Combine("C:\\", "temp", "NES Roms Unpacked", "Donkey Kong (JU).nes"));
+            var romName = "Donkey Kong (JU).nes";
+
+            var path = Utilities.GetTestPath("roms", romName);
+
+            if (!File.Exists(path))
+            {
+                Assert.Inconclusive($"Unable to find rom {romName}");
+            }
+
+            var engine = new Engine.Main.Engine(path);
 
             var steps = 0;
             while (steps < 154262)
@@ -141,7 +157,6 @@ namespace dotnetNES.Tests.Processors
                 engine.Step();
                 steps++;
             }
-
 
             for (var i = 0x2000; i < 0x2083; i++)
             {
