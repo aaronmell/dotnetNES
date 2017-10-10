@@ -81,7 +81,10 @@ namespace dotnetNES.Client.ViewModel
                 return;
             }
 
-            Engine = obj.Content;
+            if (Engine == null)
+            {
+                Engine = obj.Content;
+            }
 
             Sprite0 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
             Sprite1 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);

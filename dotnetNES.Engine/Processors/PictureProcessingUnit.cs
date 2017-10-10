@@ -1819,10 +1819,10 @@ namespace dotnetNES.Engine.Processors
     
 
         private unsafe void DrawBackgroundPixelToByteArray(byte* bitmapArray, int bitmapArrayStartIndex, int bit, int paletteIndex, int xPixelCoordinate)
-        {
-            if (bit > 0 && xPixelCoordinate < 256)
+        {           
+            if (bit > 0 && xPixelCoordinate >= 0 && xPixelCoordinate < 256)
             {
-               _backgroundPixelOpaqueMap[xPixelCoordinate] = true;
+                _backgroundPixelOpaqueMap[xPixelCoordinate] = true;
             }
 
             bit = 0x3f00 + bit | (paletteIndex);
