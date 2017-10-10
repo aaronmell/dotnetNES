@@ -232,12 +232,16 @@ namespace dotnetNES.Engine.Processors
 		/// this flag is set when 0x00 is written to the <see cref="MaskRegister"/>
 		/// </summary>
 		private bool _isRenderingDisabled;
-		#endregion
-	   
-		/// <summary>
-		/// The CPU
-		/// </summary>
-		private readonly CPU _cpu = new CPU();
+
+        private long totalCycles;
+
+        private bool ppuInitalized;
+        #endregion
+
+        /// <summary>
+        /// The CPU
+        /// </summary>
+        private readonly CPU _cpu = new CPU();
 
         private static readonly ILogger _logger = LogManager.GetLogger("PictureProcessingUnit");
 
@@ -383,8 +387,10 @@ namespace dotnetNES.Engine.Processors
 			ScanLine = 241;
 			CycleCount = 0;
 			_isRenderingDisabled = true;
-			 
-			CurrentFrame = new byte[195840];
+            totalCycles = 0;
+            ppuInitalized = false;
+
+            CurrentFrame = new byte[195840];
 			_newFrame = new byte[195840];
 			_tempFrame = new byte[195840];
 		}
@@ -417,8 +423,10 @@ namespace dotnetNES.Engine.Processors
 			CycleCount = 0;
 			_isRenderingDisabled = true;
 			_objectAttributeMemoryAddress = 0;
+            totalCycles = 0;
+            ppuInitalized = false;
 
-			CurrentFrame = new byte[195840];
+            CurrentFrame = new byte[195840];
 			_newFrame = new byte[195840];
 			_tempFrame = new byte[195840];
 			Array.Clear(_objectAttributeMemory, 0, _objectAttributeMemory.Length);
@@ -436,8 +444,10 @@ namespace dotnetNES.Engine.Processors
 			CycleCount = 0;
 			_isRenderingDisabled = true;
 			_objectAttributeMemoryAddress = 0;
+            totalCycles = 0;
+            ppuInitalized = false;
 
-			CurrentFrame = new byte[195840];
+            CurrentFrame = new byte[195840];
 			_newFrame = new byte[195840];
 			_tempFrame = new byte[195840];
 			Array.Clear(_objectAttributeMemory,0, _objectAttributeMemory.Length);     
@@ -565,7 +575,8 @@ namespace dotnetNES.Engine.Processors
 
 		#region Main Loop
 		private void CPUCycleCountIncremented()
-		{
+		{           
+
 			StepPPU();
 
 			//We check the trigger here. Not 100% sure why this works, but if this is anywhere else a bunch of the nmi tests fail.
@@ -582,9 +593,19 @@ namespace dotnetNES.Engine.Processors
 
 		private void StepPPU()
 		{
-			//WriteLog("Stepping PPU");
-			
-			if (ScanLine == 240 && CycleCount == 340)
+            //WriteLog("Stepping PPU");
+            totalCycles++;
+
+            if (!ppuInitalized)
+            {
+                if (totalCycles > 82178)
+                {
+                    ppuInitalized = true;
+                    return;
+                }
+            }            
+
+            if (ScanLine == 240 && CycleCount == 340)
 			{
 				WriteLog("Setting _nmiOccurred");
 				_nmiOccurred = true;
@@ -630,8 +651,11 @@ namespace dotnetNES.Engine.Processors
 				InnerCycleAction();
 			}
 
-		   if ((ScanLine == 241) && (CycleCount < 1))
-				_triggerNmi = (_nmiOccurred & _nmiOutput);
+		   if ((ScanLine == 241) && (CycleCount == 1))
+            {
+                _triggerNmi = (_nmiOccurred & _nmiOutput);
+                StatusRegister |= 0x80;               
+            }				
 
 			if (CycleCount < 340)
 				CycleCount++;
@@ -688,21 +712,19 @@ namespace dotnetNES.Engine.Processors
 					{
 						case 0:
 						{
-                                //_objectAttributeMemoryAddress = _spritePosition;
-                                _objectAttributeMemoryBufferNextLine[_objectAttributeMemoryBufferIndex] = _tempSprite;
-
-						  
+                            //_objectAttributeMemoryAddress = _spritePosition;
+                            _objectAttributeMemoryBufferNextLine[_objectAttributeMemoryBufferIndex] = _tempSprite;						  
 
 							//Determine if current Y Coordinate is in range for this scanline
 							if ((ScanLine >= _tempSprite) &&
 								(ScanLine <= _tempSprite + (_use8x16Sprite ? 0xF : 0x7)))
 							{
-									//Y Coordinate is in range
-									_spriteEvaluationState = 1;
+								//Y Coordinate is in range
+								_spriteEvaluationState = 1;
 								_totalSpritesFound++;
 								_spriteSubIndex = 0;
 								_objectAttributeMemoryAddress++;
-								_objectAttributeMemoryBufferIndex++;
+							    _objectAttributeMemoryBufferIndex++;
 							}
 							else
 							{
@@ -777,7 +799,6 @@ namespace dotnetNES.Engine.Processors
 						}
 						case 3:
 						{
-
 							if (++_spriteSubIndex == 3)
 							{
 								_spriteSubIndex = 0;
@@ -814,20 +835,14 @@ namespace dotnetNES.Engine.Processors
 			else if (CycleCount < 320)
 			{
 				_objectAttributeMemoryAddress = 0;
-			}
-			else
-			{
-			   
-			}
+			}			
 		}
 
 		static private void SwapFrames()
 		{
 			_tempFrame = CurrentFrame;
 			CurrentFrame = _newFrame;
-			_newFrame = _tempFrame;
-
-		   
+			_newFrame = _tempFrame;		   
 		}
 
 		private void InnerCycleAction()
@@ -1940,7 +1955,7 @@ namespace dotnetNES.Engine.Processors
 		[Conditional("DEBUG")]
 		private void WriteSpriteEvaluationLog(string log)
 		{
-			_logger.Debug("SL: {0} CYC: {1} Rend:{2} OAM ADDR: {3} {4}", ScanLine, CycleCount, _isRenderingDisabled, _objectAttributeMemoryAddress, log);
+			_logger.Trace("SL: {0} CYC: {1} Rend:{2} OAM ADDR: {3} {4}", ScanLine, CycleCount, _isRenderingDisabled, _objectAttributeMemoryAddress, log);
 		}
 		#endregion
 	}

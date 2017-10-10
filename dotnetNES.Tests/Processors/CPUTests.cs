@@ -70,11 +70,7 @@ namespace dotnetNES.Tests.Processors
             var steps = 1;
             while (steps < 5002) //Can't run the full test, since past this point unofficial op codes show up.
             {
-                if (steps == 1106)
-                {
-                    
-                }
-
+               
                 engine.Step();
 
                 Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter,
