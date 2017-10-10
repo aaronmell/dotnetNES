@@ -84,7 +84,7 @@ namespace dotnetNES.Client.ViewModel
             RaisePropertyChanged("Screen");
         }
         #endregion
-
+        //change
         #region Private Methods
         private void OpenDebugWindowWithEngine(string windowName)
         {
