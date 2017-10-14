@@ -53,6 +53,8 @@ namespace dotnetNES.Client.ViewModel
 
         public RelayCommand OpenSpritesCommand { get; set; }
 
+        public RelayCommand OpenDebuggerCommand { get; set; }
+
         public RelayCommand PauseCommand { get; set; }
         #endregion
 
@@ -74,6 +76,7 @@ namespace dotnetNES.Client.ViewModel
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
             OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
             OpenSpritesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenSprites));
+            OpenDebuggerCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenDebugger));
 
             PauseCommand = new RelayCommand(PauseEngine);
 

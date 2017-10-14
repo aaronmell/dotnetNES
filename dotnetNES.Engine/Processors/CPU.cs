@@ -1,7 +1,10 @@
 ﻿using System;
 using Processor;
+using Disassembly = dotnetNES.Engine.Models.Disassembly;
+using System.Collections.Generic;
+using dotnetNES.Engine.Utilities;
 
-namespace dotnetNES.Engine.Processors
+namespace dotnetNES.Engine.Models
 {
     /// <summary>
     /// Overridden Processor. This was done so I can modify the behavior of several of the methods to work correctly in the NES, without breaking the emulator.
@@ -125,6 +128,8 @@ namespace dotnetNES.Engine.Processors
 
         internal Action<int, byte> WriteMemoryAction { get; set; }
 
+        internal Dictionary<string, Disassembly> DisassembledMemory { get; set; }
+
         /// <summary>
         /// Overriding the ADC Operation to remove decimal mode
         /// </summary>
@@ -171,5 +176,34 @@ namespace dotnetNES.Engine.Processors
 
             Accumulator = newValue;
         }
+
+        internal void GenerateDisassembledMemory()
+        {
+            DisassembledMemory = new Dictionary<string, Disassembly>();
+
+            var i = 0;
+            while (i < Memory.Length - 1)
+            {
+                if (!OpCodeLookup.OpCodes.ContainsKey(Memory[i]))
+                {
+                    i++;
+                    continue;
+                }
+
+
+                var originalAddress = i;
+                var opCode = OpCodeLookup.OpCodes[Memory[i++]];
+
+                var firstByte = opCode.Length > 1 ? Memory[i++].ToString("X").PadLeft(2,'0') : string.Empty;
+                var secondByte = opCode.Length > 2 ? Memory[i++].ToString("X").PadLeft(2, '0') : string.Empty;
+
+                DisassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
+                {
+                    Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
+                    InstructionAddress = $"{secondByte}{firstByte}",
+                    FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)                    
+                });
+            }
+        }        
     }
 }

@@ -12,7 +12,7 @@ namespace dotnetNES.Client.ViewModel
 {
     public abstract class DebuggingBaseViewModel : ViewModelBase
     {
-        public Engine.Main.Engine Engine { get; set; }
+        public static Engine.Main.Engine Engine { get; set; }
         public RelayCommand<CancelEventArgs> WindowClosingCommand { get; private set; }
         public RelayCommand<EventArgs> WindowOpeningCommand { get; private set; }
         

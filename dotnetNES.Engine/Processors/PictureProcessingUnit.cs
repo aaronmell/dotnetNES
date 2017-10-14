@@ -3,7 +3,7 @@ using System.Diagnostics;
 using dotnetNES.Engine.Models;
 using NLog;
 
-namespace dotnetNES.Engine.Processors
+namespace dotnetNES.Engine.Models
 {
 	/// <summary>
 	/// The Picture Processing Unit or PPU

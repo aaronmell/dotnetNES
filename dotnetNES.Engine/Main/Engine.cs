@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using dotnetNES.Engine.Models;
-using dotnetNES.Engine.Processors;
 using dotnetNES.Engine.Utilities;
-using PPU = dotnetNES.Engine.Processors.PictureProcessingUnit;
+using PPU = dotnetNES.Engine.Models.PictureProcessingUnit;
 using NLog;
+using System.Collections.Generic;
 
 namespace dotnetNES.Engine.Main
 {
@@ -38,6 +38,7 @@ namespace dotnetNES.Engine.Main
             _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(fileName);
             Processor = _cartridgeModel.GetProcessor();
             PictureProcessingUnit = new PPU(_cartridgeModel, Processor);
+            Processor.GenerateDisassembledMemory();
         }
 
         /// <summary>
@@ -49,6 +50,7 @@ namespace dotnetNES.Engine.Main
             _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(rawBytes);
             Processor = _cartridgeModel.GetProcessor();
             PictureProcessingUnit = new PPU(_cartridgeModel, Processor);
+            Processor.GenerateDisassembledMemory();
         }
         
         /// <summary>
@@ -174,6 +176,11 @@ namespace dotnetNES.Engine.Main
         public byte[] GetScreen()
         {   
             return PictureProcessingUnit.CurrentFrame;
+        }
+
+        public Dictionary<string, Disassembly> GetDisassembledMemory()
+        {
+            return Processor.DisassembledMemory;
         }
     }
 }

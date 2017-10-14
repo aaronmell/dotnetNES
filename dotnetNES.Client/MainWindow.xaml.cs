@@ -38,6 +38,14 @@ namespace dotnetNES.Client
                 sprites.Closing += (sender, args) => Messenger.Default.Unregister(sprites);
                 sprites.Show();
             }
+
+            if (notificationMessage.Notification == MessageNames.OpenDebugger)
+            {
+                var debugger = new Debugger();
+
+                debugger.Closing += (sender, args) => Messenger.Default.Unregister(debugger);
+                debugger.Show();
+            }
         }
     }
 }

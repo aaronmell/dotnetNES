@@ -30,7 +30,6 @@ namespace dotnetNES.Client.ViewModel
             {
                 Engine = obj.Content;
             }
-
             NameTable0 = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
 
             if (Engine.IsVerticalMirroringEnabled)
