@@ -17,7 +17,7 @@ namespace dotnetNES.Engine.Main
 
         internal CPU Processor { get; private set; }
         internal PPU PictureProcessingUnit { get; private set; }
-        private readonly CartridgeModel _cartridgeModel;
+        private readonly CartridgeModel _cartridgeModel;        
 
         /// <summary>
         /// The property is used to determine if vertical mirroring is used by the current cartridge.
@@ -38,7 +38,11 @@ namespace dotnetNES.Engine.Main
             _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(fileName);
             Processor = _cartridgeModel.GetProcessor();
             PictureProcessingUnit = new PPU(_cartridgeModel, Processor);
-            Processor.GenerateDisassembledMemory();
+
+            if (Processor.DisassemblyEnabled)
+            {
+                Processor.GenerateDisassembledMemory();
+            }
         }
 
         /// <summary>
@@ -50,7 +54,11 @@ namespace dotnetNES.Engine.Main
             _cartridgeModel = CartridgeLoaderUtility.LoadCartridge(rawBytes);
             Processor = _cartridgeModel.GetProcessor();
             PictureProcessingUnit = new PPU(_cartridgeModel, Processor);
-            Processor.GenerateDisassembledMemory();
+
+            if (Processor.DisassemblyEnabled)
+            {
+                Processor.GenerateDisassembledMemory();
+            }
         }
         
         /// <summary>
@@ -94,6 +102,11 @@ namespace dotnetNES.Engine.Main
         {
             Processor.Reset();
             PictureProcessingUnit.Reset();
+
+            if (Processor.DisassemblyEnabled)
+            {
+                Processor.GenerateDisassembledMemory();
+            }
         }
 
         /// <summary>
@@ -103,6 +116,11 @@ namespace dotnetNES.Engine.Main
         {
             Processor.Reset();
             PictureProcessingUnit.Power();
+
+            if (Processor.DisassemblyEnabled)
+            {
+                Processor.GenerateDisassembledMemory();
+            }
         }
 
         /// <summary>
@@ -110,7 +128,7 @@ namespace dotnetNES.Engine.Main
         /// </summary>
         public Action OnNewFrameAction {
             get { return PictureProcessingUnit.OnNewFrameAction; }
-            set { PictureProcessingUnit.OnNewFrameAction = value; } }
+            set { PictureProcessingUnit.OnNewFrameAction = value; } }     
 
 
         /// <summary>
@@ -178,9 +196,24 @@ namespace dotnetNES.Engine.Main
             return PictureProcessingUnit.CurrentFrame;
         }
 
-        public Dictionary<string, Disassembly> GetDisassembledMemory()
+        public ObservableConcurrentDictionary<string, Disassembly> GetDisassembledMemory()
         {
             return Processor.DisassembledMemory;
+        }
+
+        public void EnableDisassembly()
+        {
+            Processor.EnableDisassembly();
+        }
+
+        public void DisableDisassembly()
+        {
+            Processor.DisableDisassembly();
+        }
+
+        public object GetDisassemblyLock()
+        {
+            return Processor.DisassemblyLock;
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using System;
 using Processor;
-using Disassembly = dotnetNES.Engine.Models.Disassembly;
-using System.Collections.Generic;
 using dotnetNES.Engine.Utilities;
 
 namespace dotnetNES.Engine.Models
@@ -11,6 +9,8 @@ namespace dotnetNES.Engine.Models
     /// </summary>
     internal sealed class CPU : Processor.Processor
     {
+        internal bool DisassemblyEnabled;
+
         internal CPU()
         {
             ReadMemoryAction = x => { };
@@ -34,7 +34,7 @@ namespace dotnetNES.Engine.Models
             {
                 address = (address & 0x7) + 0x2000;
 
-                Memory[0x2002] = (byte)(Memory[0x2002] | data & 0x1F);
+                Memory[0x2002] = (byte)(Memory[0x2002] | data & 0x1F);               
             }
 
             //OAMDMA When a byte is written to 4014 this triggers the memory in location XX00-XXFF to be copied to 2004 in the PPU, where XX is the byte written.
@@ -42,7 +42,9 @@ namespace dotnetNES.Engine.Models
             {
                 
                 for (var i = 0; i < 0x100; i++)
+                {
                     WriteMemoryAction(0x2004, (byte)(ReadMemoryValueWithoutCycle(data << 8 | i)));
+                }                
             }
             
             Memory[address] = data;
@@ -50,9 +52,12 @@ namespace dotnetNES.Engine.Models
             //Not sure if this is in the right place
             WriteMemoryAction(address, data);
 
-			IncrementCycleCount();
-            
+            //Doing this here so the memory has already been updated
+            UpdateDisassemblerOnMemoryWrite(address);
+
+            IncrementCycleCount();            
         }
+             
 
         /// <summary>
         /// Returns the byte at the given address.
@@ -119,6 +124,8 @@ namespace dotnetNES.Engine.Models
             }
 
             Memory[address] = data;
+
+            UpdateDisassemblerOnMemoryWrite(address);
         }
 
         /// <summary>
@@ -128,7 +135,9 @@ namespace dotnetNES.Engine.Models
 
         internal Action<int, byte> WriteMemoryAction { get; set; }
 
-        internal Dictionary<string, Disassembly> DisassembledMemory { get; set; }
+        internal ObservableConcurrentDictionary<string, Disassembly> DisassembledMemory { get; private set; }
+
+        public object DisassemblyLock { get; set; } = new object();
 
         /// <summary>
         /// Overriding the ADC Operation to remove decimal mode
@@ -177,9 +186,21 @@ namespace dotnetNES.Engine.Models
             Accumulator = newValue;
         }
 
-        internal void GenerateDisassembledMemory()
+        internal void EnableDisassembly()
+        {           
+            GenerateDisassembledMemory();
+            ///Prevents concurrent writes to dictionary
+            DisassemblyEnabled = true;
+        }
+
+        internal void DisableDisassembly()
         {
-            DisassembledMemory = new Dictionary<string, Disassembly>();
+            DisassemblyEnabled = false;
+        }
+
+        internal void GenerateDisassembledMemory()
+        {            
+            DisassembledMemory = new ObservableConcurrentDictionary<string, Disassembly>();
 
             var i = 0;
             while (i < Memory.Length - 1)
@@ -189,21 +210,70 @@ namespace dotnetNES.Engine.Models
                     i++;
                     continue;
                 }
-
-
+                
                 var originalAddress = i;
                 var opCode = OpCodeLookup.OpCodes[Memory[i++]];
 
                 var firstByte = opCode.Length > 1 ? Memory[i++].ToString("X").PadLeft(2,'0') : string.Empty;
                 var secondByte = opCode.Length > 2 ? Memory[i++].ToString("X").PadLeft(2, '0') : string.Empty;
-
+                                   
                 DisassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
                 {
                     Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
                     InstructionAddress = $"{secondByte}{firstByte}",
-                    FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)                    
+                    FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)
+                });
+                                
+            }
+        }
+
+        private void UpdateDisassemblerOnMemoryWrite(int address)
+        {
+            if (!DisassemblyEnabled)
+            {
+                return;
+            }
+
+            var count = 0;
+
+            do
+            {
+                //If the data written is a valid instruction then do update the disassembly with the new instruction. 
+                if (OpCodeLookup.OpCodes.ContainsKey(Memory[address]))
+                {
+                    UpdateDisassembler(address - count);
+                    return;
+                }
+
+                count++;
+
+            } while (address > 0 && count < 3);            
+        }
+
+
+        private void UpdateDisassembler(int address)
+        {
+            var originalAddress = address.ToString("X").PadLeft(2, '0'); ;
+            var opCode = OpCodeLookup.OpCodes[Memory[address++]];
+
+            var firstByte = opCode.Length > 1 ? Memory[address++].ToString("X").PadLeft(2, '0') : string.Empty;
+            var secondByte = opCode.Length > 2 ? Memory[address++].ToString("X").PadLeft(2, '0') : string.Empty;           
+
+            if (DisassembledMemory.ContainsKey(originalAddress))
+            {
+                DisassembledMemory[originalAddress].Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0');
+                DisassembledMemory[originalAddress].InstructionAddress = $"{secondByte}{firstByte}";
+                DisassembledMemory[originalAddress].FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte);
+            }
+            else
+            {
+                DisassembledMemory.Add(originalAddress, new Disassembly
+                {
+                    Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
+                    InstructionAddress = $"{secondByte}{firstByte}",
+                    FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)
                 });
             }
-        }        
+        }
     }
 }
