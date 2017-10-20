@@ -233,7 +233,7 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private bool _isRenderingDisabled;
 
-        private long totalCycles;
+        internal long TotalCycles { get; private set; }
 
         private bool ppuInitalized;
         #endregion
@@ -387,7 +387,7 @@ namespace dotnetNES.Engine.Models
 			ScanLine = 241;
 			CycleCount = 0;
 			_isRenderingDisabled = true;
-            totalCycles = 0;
+            TotalCycles = 0;
             ppuInitalized = false;
 
             CurrentFrame = new byte[195840];
@@ -423,7 +423,7 @@ namespace dotnetNES.Engine.Models
 			CycleCount = 0;
 			_isRenderingDisabled = true;
 			_objectAttributeMemoryAddress = 0;
-            totalCycles = 0;
+            TotalCycles = 0;
             ppuInitalized = false;
 
             CurrentFrame = new byte[195840];
@@ -444,7 +444,7 @@ namespace dotnetNES.Engine.Models
 			CycleCount = 0;
 			_isRenderingDisabled = true;
 			_objectAttributeMemoryAddress = 0;
-            totalCycles = 0;
+            TotalCycles = 0;
             ppuInitalized = false;
 
             CurrentFrame = new byte[195840];
@@ -594,11 +594,11 @@ namespace dotnetNES.Engine.Models
 		private void StepPPU()
 		{
             //WriteLog("Stepping PPU");
-            totalCycles++;
+            TotalCycles++;
 
             if (!ppuInitalized)
             {
-                if (totalCycles > 82178)
+                if (TotalCycles > 82178)
                 {
                     ppuInitalized = true;
                     return;

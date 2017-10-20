@@ -74,18 +74,13 @@ namespace dotnetNES.Client.ViewModel
         #endregion
 
         #region Protected Methods
-        protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+        protected override void LoadView(NotificationMessage obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
             }
-
-            if (Engine == null)
-            {
-                Engine = obj.Content;
-            }
-
+            
             Sprite0 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
             Sprite1 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
             Sprite2 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);

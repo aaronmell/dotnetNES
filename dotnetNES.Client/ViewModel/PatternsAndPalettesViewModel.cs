@@ -21,17 +21,12 @@ namespace dotnetNES.Client.ViewModel
 
         #region Protected Methods
 
-        protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+        protected override void LoadView(NotificationMessage obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
-            }
-
-            if (Engine == null)
-            {
-                Engine = obj.Content;
-            }
+            }            
 
             PatternTable0 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
             PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);

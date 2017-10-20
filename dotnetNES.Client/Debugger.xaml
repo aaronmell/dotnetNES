@@ -15,6 +15,16 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
 
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding Path=ContinueCommand}" Key="F5" />
+        <KeyBinding Command="{Binding Path=BreakCommand}" Key="End" Modifiers="Ctrl" />
+        <KeyBinding Command="{Binding Path=StepCommand}" Key="F11" />
+
+        <KeyBinding Command="{Binding Path=RunOneScanlineCommand}" Key="F6" />
+        <KeyBinding Command="{Binding Path=RunOneFrameCommand}" Key="F7" />
+
+    </Window.InputBindings>
+    
     <Window.Resources>
         <Style x:Key="ColumnHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
             <Setter Property="FontSize" Value="12"/>
@@ -24,11 +34,19 @@
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="MinHeight" Value="20"/>
         </Style>
-    </Window.Resources>
-    
-
+    </Window.Resources> 
     <Grid>
-        <DataGrid Height="500" HorizontalAlignment="Left" Margin="10,10,0,0" Name="OutputLog" VerticalAlignment="Top" MaxWidth="500" Width="Auto" AutoGenerateColumns="False" 
+        <Menu HorizontalAlignment="Left" Height="20" Margin="10,0,0,0" VerticalAlignment="Top" Width="{Binding ElementName=MainGrid, Path=ActualWidth}">
+            <MenuItem Header="Debug">
+                <MenuItem Header="Continue" Command="{Binding Path=ContinueCommand}" InputGestureText="F5"></MenuItem>
+                <MenuItem Header="Break" Command="{Binding Path=BreakCommand}" InputGestureText="CTRL+End"></MenuItem>
+                <MenuItem Header="Step" Command="{Binding Path=StepCommand}" InputGestureText="F11"></MenuItem>
+                <Separator />
+                <MenuItem Header="Run One Scanline" Command="{Binding Path=RunOneScanlineCommand}" InputGestureText="F6"></MenuItem>
+                <MenuItem Header="Run One Frame" Command="{Binding Path=RunOneFrameCommand}" InputGestureText="F7"></MenuItem>
+            </MenuItem>            
+        </Menu>
+        <DataGrid Height="500" HorizontalAlignment="Left" Margin="10,25,0,0" Name="OutputLog" VerticalAlignment="Top" MaxWidth="500" Width="Auto" AutoGenerateColumns="False" 
 					CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserDeleteRows="False"
 					CanUserAddRows="False" ItemsSource="{Binding Disassembly}" CellStyle="{StaticResource CellStyle}" GridLinesVisibility="Horizontal">
             <DataGrid.Columns>

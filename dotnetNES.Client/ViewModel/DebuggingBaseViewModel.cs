@@ -26,13 +26,13 @@ namespace dotnetNES.Client.ViewModel
 
             WindowOpeningCommand = new RelayCommand<EventArgs>((args) =>
             {
-                Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
+                Messenger.Default.Register<NotificationMessage>(this, LoadView);
                 Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
             });
 
         }
 
-        protected abstract void LoadView(NotificationMessage<Engine.Main.Engine> engine);
+        protected abstract void LoadView(NotificationMessage notificationMessage);
         protected abstract unsafe void Refresh();
 
         private void RefreshScreen(NotificationMessage obj)

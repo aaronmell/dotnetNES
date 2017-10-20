@@ -19,17 +19,13 @@ namespace dotnetNES.Client.ViewModel
         #endregion
 
         #region Protected Methods
-        protected override void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+        protected override void LoadView(NotificationMessage obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
             }
-
-            if (Engine == null)
-            {
-                Engine = obj.Content;
-            }
+            
             NameTable0 = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
 
             if (Engine.IsVerticalMirroringEnabled)

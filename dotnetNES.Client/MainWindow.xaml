@@ -13,7 +13,7 @@
                 <MenuItem Header="Reset" Command="{Binding Path=ResetNesCommand}"></MenuItem>
                 <MenuItem Header="Power" Command="{Binding Path=PowerNesCommand}"></MenuItem>
                 <Separator></Separator>
-                <MenuItem Header="Pause" Command="{Binding Path=PauseCommand}" IsChecked="{Binding IsEnginePaused}"></MenuItem>
+                <MenuItem Header="Pause" Command="{Binding Path=PauseCommand}" IsChecked="{Binding IsEnginePaused, Mode=OneWay}"></MenuItem>
             </MenuItem>
             <MenuItem Header="Debug">
                 <MenuItem Header="Debugger" Command="{Binding Path=OpenDebuggerCommand}" IsEnabled="{Binding Path=IsCartridgeLoaded}"/>

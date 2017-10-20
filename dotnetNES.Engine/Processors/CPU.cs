@@ -136,8 +136,7 @@ namespace dotnetNES.Engine.Models
         internal Action<int, byte> WriteMemoryAction { get; set; }
 
         internal ObservableConcurrentDictionary<string, Disassembly> DisassembledMemory { get; private set; }
-
-        public object DisassemblyLock { get; set; } = new object();
+               
 
         /// <summary>
         /// Overriding the ADC Operation to remove decimal mode
