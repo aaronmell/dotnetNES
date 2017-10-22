@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Data;
+using System;
 
 namespace dotnetNES.Client.ViewModel
 {
@@ -13,18 +14,7 @@ namespace dotnetNES.Client.ViewModel
     {
         private object _disassemblyLock = new object();
 
-        public ObservableCollection<KeyValuePair<string,Disassembly>> Disassembly
-        {
-            get
-            {
-                if (Engine.GetDisassembledMemory() == null)
-                {
-                    Engine.EnableDisassembly();
-                }
-                return new ObservableCollection<KeyValuePair<string, Disassembly>>(Engine.GetDisassembledMemory().OrderBy(x => x.Key).ToList());
-            }
-        }
-
+        public Dictionary<string,Disassembly> Disassembly { get; set; }  
         public CPUFlags CPUFlags { get; set; }
 
         public RelayCommand ContinueCommand { get; set; }
@@ -40,12 +30,23 @@ namespace dotnetNES.Client.ViewModel
             StepCommand = new RelayCommand(() => 
             {
                 Engine.Step();
-                CPUFlags.UpdateFlags(Engine);
-                RaisePropertyChanged("CPUFlags");
+                UpdateAfterPause();
             });
 
             RunOneScanlineCommand = new RelayCommand(() => Engine.RuntoNextScanLine());
             RunOneFrameCommand = new RelayCommand(() => Engine.RuntoNextFrame());
+        }
+
+        private void UpdateAfterPause()
+        {
+            Disassembly = Engine.GetDisassembledMemory();
+            BindingOperations.EnableCollectionSynchronization(Disassembly, _disassemblyLock);
+
+            RaisePropertyChanged("Disassembly");
+
+            CPUFlags.UpdateFlags(Engine);
+            RaisePropertyChanged("CPUFlags");
+
         }
 
         protected override void LoadView(NotificationMessage notificationMessage)
@@ -53,38 +54,20 @@ namespace dotnetNES.Client.ViewModel
             if (notificationMessage.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
-            }           
-
-            if (Engine.GetDisassembledMemory() == null)
-            {
-                Engine.EnableDisassembly();
             }
 
             Engine.EnginePaused += Engine_EnginePaused;
-
-            BindingOperations.EnableCollectionSynchronization(Disassembly, _disassemblyLock);   
-            RaisePropertyChanged("Disassembly");
-
+                        
+            
             CPUFlags = new CPUFlags();
-            CPUFlags.UpdateFlags(Engine);
-            RaisePropertyChanged("CPUFlags");
+
+            UpdateAfterPause();           
         }
 
         private void Engine_EnginePaused(object sender, System.EventArgs e)
         {
-            CPUFlags.UpdateFlags(Engine);
-            RaisePropertyChanged("CPUFlags");
-        }
-
-        public override void Cleanup()
-        {
-            if (Engine != null)
-            {
-                Engine.DisableDisassembly();
-            }
-
-            base.Cleanup();
-        }
+            UpdateAfterPause();
+        }        
 
         protected override void Refresh()
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using Processor;
 using dotnetNES.Engine.Utilities;
+using System.Collections.Generic;
 
 namespace dotnetNES.Engine.Models
 {
@@ -53,7 +54,6 @@ namespace dotnetNES.Engine.Models
             WriteMemoryAction(address, data);
 
             //Doing this here so the memory has already been updated
-            UpdateDisassemblerOnMemoryWrite(address);
 
             IncrementCycleCount();            
         }
@@ -122,10 +122,7 @@ namespace dotnetNES.Engine.Models
             {
                 address = (address & 0x7) + 0x2000;
             }
-
             Memory[address] = data;
-
-            UpdateDisassemblerOnMemoryWrite(address);
         }
 
         /// <summary>
@@ -134,8 +131,6 @@ namespace dotnetNES.Engine.Models
         internal Action<int> ReadMemoryAction { get; set; }
 
         internal Action<int, byte> WriteMemoryAction { get; set; }
-
-        internal ObservableConcurrentDictionary<string, Disassembly> DisassembledMemory { get; private set; }
                
 
         /// <summary>
@@ -185,21 +180,9 @@ namespace dotnetNES.Engine.Models
             Accumulator = newValue;
         }
 
-        internal void EnableDisassembly()
-        {           
-            GenerateDisassembledMemory();
-            ///Prevents concurrent writes to dictionary
-            DisassemblyEnabled = true;
-        }
-
-        internal void DisableDisassembly()
-        {
-            DisassemblyEnabled = false;
-        }
-
-        internal void GenerateDisassembledMemory()
+        internal Dictionary<string, Disassembly> GenerateDisassembledMemory()
         {            
-            DisassembledMemory = new ObservableConcurrentDictionary<string, Disassembly>();
+            var disassembledMemory = new Dictionary<string, Disassembly>();
 
             var i = 0;
             while (i < Memory.Length - 1)
@@ -216,63 +199,15 @@ namespace dotnetNES.Engine.Models
                 var firstByte = opCode.Length > 1 ? Memory[i++].ToString("X").PadLeft(2,'0') : string.Empty;
                 var secondByte = opCode.Length > 2 ? Memory[i++].ToString("X").PadLeft(2, '0') : string.Empty;
                                    
-                DisassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
+                disassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
                 {
                     Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
                     InstructionAddress = $"{secondByte}{firstByte}",
                     FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)
-                });
-                                
-            }
-        }
-
-        private void UpdateDisassemblerOnMemoryWrite(int address)
-        {
-            if (!DisassemblyEnabled)
-            {
-                return;
+                });                                
             }
 
-            var count = 0;
-
-            do
-            {
-                //If the data written is a valid instruction then do update the disassembly with the new instruction. 
-                if (OpCodeLookup.OpCodes.ContainsKey(Memory[address]))
-                {
-                    UpdateDisassembler(address - count);
-                    return;
-                }
-
-                count++;
-
-            } while (address > 0 && count < 3);            
-        }
-
-
-        private void UpdateDisassembler(int address)
-        {
-            var originalAddress = address.ToString("X").PadLeft(2, '0'); ;
-            var opCode = OpCodeLookup.OpCodes[Memory[address++]];
-
-            var firstByte = opCode.Length > 1 ? Memory[address++].ToString("X").PadLeft(2, '0') : string.Empty;
-            var secondByte = opCode.Length > 2 ? Memory[address++].ToString("X").PadLeft(2, '0') : string.Empty;           
-
-            if (DisassembledMemory.ContainsKey(originalAddress))
-            {
-                DisassembledMemory[originalAddress].Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0');
-                DisassembledMemory[originalAddress].InstructionAddress = $"{secondByte}{firstByte}";
-                DisassembledMemory[originalAddress].FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte);
-            }
-            else
-            {
-                DisassembledMemory.Add(originalAddress, new Disassembly
-                {
-                    Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
-                    InstructionAddress = $"{secondByte}{firstByte}",
-                    FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)
-                });
-            }
-        }
+            return disassembledMemory;
+        } 
     }
 }

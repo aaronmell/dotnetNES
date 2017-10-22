@@ -219,26 +219,10 @@ namespace dotnetNES.Engine.Main
         /// Returns the disassembled Memory from the CPU
         /// </summary>
         /// <returns>A collection of <see cref="Disassembly"/></returns>
-        public ObservableConcurrentDictionary<string, Disassembly> GetDisassembledMemory()
+        public Dictionary<string, Disassembly> GetDisassembledMemory()
         {
-            return Processor.DisassembledMemory;
-        }
-
-        /// <summary>
-        /// Enables Disassembly
-        /// </summary>
-        public void EnableDisassembly()
-        {
-            Processor.EnableDisassembly();
-        }
-
-        /// <summary>
-        /// Disables Disassembly
-        /// </summary>
-        public void DisableDisassembly()
-        {
-            Processor.DisableDisassembly();
-        }
+            return Processor.GenerateDisassembledMemory();
+        }        
 
         /// <summary>
         /// An action that is fired whenever the Engine is paused
