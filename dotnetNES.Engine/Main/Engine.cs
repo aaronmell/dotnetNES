@@ -20,7 +20,7 @@ namespace dotnetNES.Engine.Main
         internal PPU PictureProcessingUnit { get; private set; }
         private readonly CartridgeModel _cartridgeModel;
         private BackgroundWorker _backgroundWorker;
-        private double cyclesToSkip = 0;
+        private double cyclesToSkip = 0;  
         private bool _skipCycles;
 
         /// <summary>
@@ -327,6 +327,66 @@ namespace dotnetNES.Engine.Main
             cyclesToSkip = PictureProcessingUnit.TotalCycles + (340 * 261);
 
             UnPauseEngine();
+        }
+
+        public string GetAccumulator()
+        {
+            return Processor.Accumulator.ToString("X").PadLeft(2, '0');
+        }
+
+        public string GetYRegister()
+        {
+            return Processor.YRegister.ToString("X").PadLeft(2, '0');
+        }
+
+        public string GetXRegister()
+        {
+            return Processor.YRegister.ToString("X").PadLeft(2, '0');
+        }
+
+        public string GetProgramCounter()
+        {
+            return Processor.ProgramCounter.ToString("X").PadLeft(4, '0');
+        }
+
+        public bool GetDisableInterruptFlag()
+        {
+            return Processor.DisableInterruptFlag;
+        }
+
+        public bool GetOverflowFlag()
+        {
+            return Processor.OverflowFlag;
+        }
+
+        public bool GetNegativeFlag()
+        {
+            return Processor.NegativeFlag;
+        }
+
+        public bool GetDecimalFlag()
+        {
+            return Processor.DecimalFlag;
+        }
+
+        public bool GetZeroFlag()
+        {
+            return Processor.ZeroFlag;
+        }
+
+        public bool GetCarryFlag()
+        {
+            return Processor.CarryFlag;
+        }
+
+        public string GetStackPointer()
+        {
+            return Processor.StackPointer.ToString("X").PadLeft(4,'0');
+        }
+
+        public long GetCycleCount()
+        {
+            return Processor.GetCycleCount();
         }
     }
 }

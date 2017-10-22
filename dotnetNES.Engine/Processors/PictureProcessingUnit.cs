@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using dotnetNES.Engine.Models;
 using NLog;
 
 namespace dotnetNES.Engine.Models

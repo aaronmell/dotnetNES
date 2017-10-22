@@ -1,10 +1,7 @@
-﻿using dotnetNES.Engine.Main;
+﻿using dotnetNES.Client.Models;
 using dotnetNES.Engine.Models;
-using dotnetNES.Engine.Utilities;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -14,6 +11,8 @@ namespace dotnetNES.Client.ViewModel
 {
     public class DebuggerViewModel : DebuggingBaseViewModel
     {
+        private object _disassemblyLock = new object();
+
         public ObservableCollection<KeyValuePair<string,Disassembly>> Disassembly
         {
             get
@@ -25,7 +24,8 @@ namespace dotnetNES.Client.ViewModel
                 return new ObservableCollection<KeyValuePair<string, Disassembly>>(Engine.GetDisassembledMemory().OrderBy(x => x.Key).ToList());
             }
         }
-        private object _disassemblyLock = new object();
+
+        public CPUFlags CPUFlags { get; set; }
 
         public RelayCommand ContinueCommand { get; set; }
         public RelayCommand BreakCommand { get; set; }
@@ -40,6 +40,8 @@ namespace dotnetNES.Client.ViewModel
             StepCommand = new RelayCommand(() => 
             {
                 Engine.Step();
+                CPUFlags.UpdateFlags(Engine);
+                RaisePropertyChanged("CPUFlags");
             });
 
             RunOneScanlineCommand = new RelayCommand(() => Engine.RuntoNextScanLine());
@@ -62,11 +64,16 @@ namespace dotnetNES.Client.ViewModel
 
             BindingOperations.EnableCollectionSynchronization(Disassembly, _disassemblyLock);   
             RaisePropertyChanged("Disassembly");
+
+            CPUFlags = new CPUFlags();
+            CPUFlags.UpdateFlags(Engine);
+            RaisePropertyChanged("CPUFlags");
         }
 
         private void Engine_EnginePaused(object sender, System.EventArgs e)
         {
-           
+            CPUFlags.UpdateFlags(Engine);
+            RaisePropertyChanged("CPUFlags");
         }
 
         public override void Cleanup()

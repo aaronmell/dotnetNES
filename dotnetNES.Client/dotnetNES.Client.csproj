@@ -100,6 +100,7 @@
     <Compile Include="Debugger.xaml.cs">
       <DependentUpon>Debugger.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\CPUFlags.cs" />
     <Compile Include="NameTables.xaml.cs">
       <DependentUpon>NameTables.xaml</DependentUpon>
     </Compile>
@@ -199,9 +200,7 @@
       <Name>dotnetNES.Engine</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
