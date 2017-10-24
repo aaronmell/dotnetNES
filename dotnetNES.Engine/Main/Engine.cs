@@ -299,7 +299,8 @@ namespace dotnetNES.Engine.Main
         {
             _skipCycles = true;
 
-            cyclesToSkip = PictureProcessingUnit.TotalCycles + 340;
+            //This will always run slightly less than a full scanline, so it will never jump past the cycle you were previously on. 
+            cyclesToSkip = PictureProcessingUnit.TotalCycles + 330;
 
             UnPauseEngine();
         }
@@ -308,7 +309,8 @@ namespace dotnetNES.Engine.Main
         {
             _skipCycles = true;
 
-            cyclesToSkip = PictureProcessingUnit.TotalCycles + (340 * 261);
+            //This will always run slightly less than an entire frame, so you will never jump past the previous cycle scanline and cycle. 
+            cyclesToSkip = PictureProcessingUnit.TotalCycles + 89327;
 
             UnPauseEngine();
         }
@@ -368,9 +370,34 @@ namespace dotnetNES.Engine.Main
             return Processor.StackPointer.ToString("X").PadLeft(4,'0');
         }
 
-        public long GetCycleCount()
+        public long GetProcessorCycles()
         {
             return Processor.GetCycleCount();
+        }
+
+        public int GetPPUCycleCount()
+        {
+            return PictureProcessingUnit.CycleCount;
+        }
+
+        public int GetNTAddress()
+        {
+            return PictureProcessingUnit.NameTableAddress;
+        }
+
+        public int GetXScroll()
+        {
+            return PictureProcessingUnit.FineXScroll;
+        }
+
+        public int GetVRAMAddress()
+        {
+            return PictureProcessingUnit.VRamAddress;
+        }
+
+        public int GetScanLine()
+        {
+            return PictureProcessingUnit.ScanLine;
         }
     }
 }

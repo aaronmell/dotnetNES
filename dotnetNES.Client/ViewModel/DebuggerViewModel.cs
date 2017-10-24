@@ -15,7 +15,8 @@ namespace dotnetNES.Client.ViewModel
         private object _disassemblyLock = new object();
 
         public Dictionary<string,Disassembly> Disassembly { get; set; }  
-        public CPUFlags CPUFlags { get; set; }
+        public CPUFlags CPUFlags { get; set; } = new CPUFlags();
+        public PPUFlags PPUFlags { get; set; } = new PPUFlags();
 
         public RelayCommand ContinueCommand { get; set; }
         public RelayCommand BreakCommand { get; set; }
@@ -47,6 +48,9 @@ namespace dotnetNES.Client.ViewModel
             CPUFlags.UpdateFlags(Engine);
             RaisePropertyChanged("CPUFlags");
 
+            PPUFlags.UpdateFlags(Engine);
+            RaisePropertyChanged("PPUFlags");
+
         }
 
         protected override void LoadView(NotificationMessage notificationMessage)
@@ -56,10 +60,7 @@ namespace dotnetNES.Client.ViewModel
                 return;
             }
 
-            Engine.EnginePaused += Engine_EnginePaused;
-                        
-            
-            CPUFlags = new CPUFlags();
+            Engine.EnginePaused += Engine_EnginePaused;            
 
             UpdateAfterPause();           
         }

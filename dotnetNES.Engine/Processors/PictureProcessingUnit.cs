@@ -141,33 +141,34 @@ namespace dotnetNES.Engine.Models
 		/// The second write to the <see cref="ScrollRegister"/> will copy the lower 3 bitmapPointer to D14-D12 and the upper five bitmapPointer to D9-D5 in the register.
 		/// 
 		/// The first write to the <see cref="AddressRegister"/> will clear D14, and D13-D8 will be loaded with the lower six bitmapPointer of the value written
-		/// The second write to the <see cref="AddressRegister"/> will be copied to D7-D0 of this register. After this write the temporary address will be copied into the <see cref="_currentAddress"/>
+		/// The second write to the <see cref="AddressRegister"/> will be copied to D7-D0 of this register. After this write the temporary address will be copied into the <see cref="VRamAddress"/>
 		/// 
 		/// Writing to <see cref="ControlRegister"/> will copy the NameTable bitmapPointer from the ControlRegister into D10-D11
 		/// 
-		/// At the beginning of each frame, this address will be copied into <see cref="_currentAddress"/>. This will also occur from cycle 280 to 304
-		/// At cycle 257 D10, and D4-D0 are coped into <see cref="_currentAddress"/>
+		/// At the beginning of each frame, this address will be copied into <see cref="VRamAddress"/>. This will also occur from cycle 280 to 304
+		/// At cycle 257 D10, and D4-D0 are coped into <see cref="VRamAddress"/>
 		/// </summary>
-		private int _temporaryAddress;
-
-		/// <summary>
-		/// This is the current address. The PPU uses this address to get the data it needs to render a pixel.
-		/// </summary>
-		private int _currentAddress;
+		private int _temporaryAddress;		
 
 		/// <summary>
 		/// 
 		/// </summary>
 		private int _objectAttributeMemoryAddress;
-		/// <summary>
-		/// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bitmapPointer of the value are copied here
-		/// </summary>
-		private int _fineXScroll;
+
+        /// <summary>
+        /// This is the current address. The PPU uses this address to get the data it needs to render a pixel.
+        /// </summary>
+        internal int VRamAddress { get; private set; }
+
+        /// <summary>
+        /// Controls the Fine X Scroll. On the first write to <see cref="ScrollRegister"/> the lower three bitmapPointer of the value are copied here
+        /// </summary>
+        internal int FineXScroll { get; private set; }
 	   
 		#endregion
 
 		#region Background Latches
-		private int _nameTableAddress;
+		internal int NameTableAddress { get; private set; }
 		private int _attributeTableAddress;
 		private int _highBackgroundTileAddress;
 		private int _lowBackgroundTileAddress;
@@ -885,7 +886,7 @@ namespace dotnetNES.Engine.Models
 				case 320:
 				case 328:
 					{
-						_nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
+						NameTableAddress = 0x2000 | (VRamAddress & 0x0FFF);
 						break;
 					}
 
@@ -925,7 +926,7 @@ namespace dotnetNES.Engine.Models
 				case 321:
 				case 329:
 					{
-						_nameTableByte = ReadInternalMemory(_nameTableAddress);
+						_nameTableByte = ReadInternalMemory(NameTableAddress);
 						break;
 					}
 				//Attribute table Address Fetch
@@ -964,7 +965,7 @@ namespace dotnetNES.Engine.Models
 				case 322:
 				case 330:
 					{
-						_attributeTableAddress = 0x23C0 | (_currentAddress & 0xC00) | ((_currentAddress & 0x380) >> 4) | ((_currentAddress & 0x1C) >> 2);
+						_attributeTableAddress = 0x23C0 | (VRamAddress & 0xC00) | ((VRamAddress & 0x380) >> 4) | ((VRamAddress & 0x1C) >> 2);
 						break;
 					}
 				//Attribute Table Store
@@ -1042,7 +1043,7 @@ namespace dotnetNES.Engine.Models
 				case 324:
 				case 332:
 					{
-						_lowBackgroundTileAddress = (_nameTableByte << 4) | (_currentAddress >> 12) | (_backgroundPatternTableAddressOffset);
+						_lowBackgroundTileAddress = (_nameTableByte << 4) | (VRamAddress >> 12) | (_backgroundPatternTableAddressOffset);
 						break;
 					}
 				//LowBackground Tile Byte Store
@@ -1177,7 +1178,7 @@ namespace dotnetNES.Engine.Models
 						IncrementVerticalCoordinate();
 
 						//Garbage NT Fetch
-						_nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
+						NameTableAddress = 0x2000 | (VRamAddress & 0x0FFF);
 
 						Array.Copy(_objectAttributeMemoryBufferNextLine, _objectAttributeMemoryBufferCurrentLine, 32);
 						Array.Clear(_spritePriorityMap, 0, 256);
@@ -1186,12 +1187,12 @@ namespace dotnetNES.Engine.Models
 				case 257:
 					{
 						WriteLog("Setting Hori(V) = Hori(T)");
-						_currentAddress = (_currentAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
+						VRamAddress = (VRamAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
 
 						ObjectAttributeMemoryRegister = 0;
 						
 						//Garbage NT Byte
-						_nameTableByte = ReadInternalMemory(_nameTableAddress);
+						_nameTableByte = ReadInternalMemory(NameTableAddress);
 					    _pixelIndex = 0;
 						break;
 					}
@@ -1207,7 +1208,7 @@ namespace dotnetNES.Engine.Models
 				case 304:
 				case 312:
 					{
-						_nameTableAddress = 0x2000 | (_currentAddress & 0x0FFF);
+						NameTableAddress = 0x2000 | (VRamAddress & 0x0FFF);
 						break;
 					}
 				//Garbarge nametable Byte
@@ -1219,7 +1220,7 @@ namespace dotnetNES.Engine.Models
 				case 305:	
 				case 313:
 				{
-					_nameTableByte = ReadInternalMemory(_nameTableAddress);
+					_nameTableByte = ReadInternalMemory(NameTableAddress);
 					break;
 				}
 				//Garbage attribute table address
@@ -1232,7 +1233,7 @@ namespace dotnetNES.Engine.Models
 				case 306:	
 				case 314:
 				{
-					_attributeTableAddress = 0x23C0 | (_currentAddress & 0xC00) | ((_currentAddress & 0x380) >> 4) | ((_currentAddress & 0x1C) >> 2);
+					_attributeTableAddress = 0x23C0 | (VRamAddress & 0xC00) | ((VRamAddress & 0x380) >> 4) | ((VRamAddress & 0x1C) >> 2);
 
 					break;
 				}
@@ -1323,7 +1324,7 @@ namespace dotnetNES.Engine.Models
 			if (ScanLine == 261 && CycleCount > 279 && CycleCount < 305)
 			{
 				WriteLog("Setting Vert(V) = Vert(T)");
-				_currentAddress = (_currentAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
+				VRamAddress = (VRamAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
 			}
 		}
 		#endregion
@@ -1333,14 +1334,14 @@ namespace dotnetNES.Engine.Models
 		private void IncrementHorizontalCoordinate()
 		{
 			//Perform the Coarse X Increment
-			if ((_currentAddress & 0x001F) == 0x001F)
+			if ((VRamAddress & 0x001F) == 0x001F)
 			{
-				_currentAddress ^= 0x041F;
+				VRamAddress ^= 0x041F;
 				WriteLog("IncrementH: Wrapping Occurred");
 			}
 			else
 			{
-				_currentAddress++;
+				VRamAddress++;
 				WriteLog("IncrementH: Current Address Incremented");
 			}
 		}
@@ -1348,23 +1349,23 @@ namespace dotnetNES.Engine.Models
 		//This method increments the Vertical Coordinate on Cycle 256 of the scanline
 		private void IncrementVerticalCoordinate()
 		{
-			if ((_currentAddress & 0x7000) != 0x7000)
+			if ((VRamAddress & 0x7000) != 0x7000)
 			{
-				_currentAddress += 0x1000; // increment fine Y
-				WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", _currentAddress));
+				VRamAddress += 0x1000; // increment fine Y
+				WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", VRamAddress));
 			}
 			else
 			{
-				_currentAddress ^= 0x7000;
+				VRamAddress ^= 0x7000;
 
-				switch (_currentAddress & 0x3E0)
+				switch (VRamAddress & 0x3E0)
 				{
-					case 0x3A0: _currentAddress ^= 0xBA0; break;
-					case 0x3E0: _currentAddress ^= 0x3E0; break;
-					default: _currentAddress += 0x20; break;
+					case 0x3A0: VRamAddress ^= 0xBA0; break;
+					case 0x3E0: VRamAddress ^= 0x3E0; break;
+					default: VRamAddress += 0x20; break;
 				}
 
-				WriteLog(string.Format("IncrementH: Wrapping Occurred, _currentAddress is now {0}", _currentAddress));
+				WriteLog(string.Format("IncrementH: Wrapping Occurred, _currentAddress is now {0}", VRamAddress));
 			}
 		}
 		#endregion
@@ -1440,23 +1441,23 @@ namespace dotnetNES.Engine.Models
 				{
 					//If the _crrent address is not a palette read, it goes into a buffer. Otherwise
 					//It is ready directly
-					if (_currentAddress  < 0x3F00)
+					if (VRamAddress  < 0x3F00)
 					{
 						DataRegister = _ppuDataReadBuffer;
-						_ppuDataReadBuffer = ReadInternalMemory(_currentAddress);
+						_ppuDataReadBuffer = ReadInternalMemory(VRamAddress);
 					}
 					else
 					{
 
-						DataRegister = ReadInternalMemory(_currentAddress);
+						DataRegister = ReadInternalMemory(VRamAddress);
 
 						//When the PPU returns a palette byte, it sets the buffer differently
-						var tempAddress = _currentAddress & 0x2FFF;
+						var tempAddress = VRamAddress & 0x2FFF;
 						_ppuDataReadBuffer = ReadInternalMemory(tempAddress);
 					}
 
-					_currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
-					WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", _currentAddress));
+					VRamAddress = (VRamAddress + _currentAddressIncrement) & 0x7FFF;
+					WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", VRamAddress));
 					break;
 				}
 			}
@@ -1522,7 +1523,7 @@ namespace dotnetNES.Engine.Models
 				   
 					if (!_tempAddressHasBeenWrittenTo)
 					{
-						_fineXScroll = value & 0x07;
+						FineXScroll = value & 0x07;
 						_temporaryAddress = (_temporaryAddress & 0x7FE0) | ((value & 0xF8) >> 3);
 						WriteLog(string.Format("Memory: 0x2005 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
 					}
@@ -1545,8 +1546,8 @@ namespace dotnetNES.Engine.Models
 					else
 					{
 						_temporaryAddress = (_temporaryAddress & 0x7F00) | value;
-						_currentAddress = _temporaryAddress;
-						WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}, _currentAddress is now {2} ", value, _temporaryAddress, _currentAddress));
+						VRamAddress = _temporaryAddress;
+						WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}, _currentAddress is now {2} ", value, _temporaryAddress, VRamAddress));
 					}
 					_tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
 
@@ -1555,8 +1556,8 @@ namespace dotnetNES.Engine.Models
 				}
 				case 0x2007:
 				{
-					WriteInternalMemory(_currentAddress, DataRegister);
-					_currentAddress = (_currentAddress + _currentAddressIncrement) & 0x7FFF;
+					WriteInternalMemory(VRamAddress, DataRegister);
+					VRamAddress = (VRamAddress + _currentAddressIncrement) & 0x7FFF;
 					break;
 				}
 				#endregion
@@ -1691,9 +1692,9 @@ namespace dotnetNES.Engine.Models
 			//There are 4 offsets per attribute byte top left, top right, bottom left and bottom right. 
 			//The correct offset is calculated as follows. Every 63 bytes we flip from D0-D3 to D4-D7
 			//Every 2 bytes we flip between D0-D1 or D4-D5 to D2-D3 or D6-D7
-			var attributeOffset = (_nameTableAddress & 0x40) == 0x40 ? 4 : 0;
+			var attributeOffset = (NameTableAddress & 0x40) == 0x40 ? 4 : 0;
 			
-			if ((_nameTableAddress & 0x3) > 1)
+			if ((NameTableAddress & 0x3) > 1)
 				attributeOffset += 2; 
 
 			fixed (byte* framePointer = _newFrame)
@@ -1948,7 +1949,7 @@ namespace dotnetNES.Engine.Models
 		[Conditional("DEBUG")]
 		private void WriteLog(string log)
 		{
-            _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, _currentAddress.ToString("X"), log);
+            _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, VRamAddress.ToString("X"), log);
 		}
 
 		[Conditional("DEBUG")]

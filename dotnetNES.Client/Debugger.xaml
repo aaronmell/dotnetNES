@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:command="http://www.galasoft.ch/mvvmlight"
-        Title="Debugger" Height="600" Width="600" 
+        Title="Debugger" Height="600" Width="700" 
         DataContext="{Binding Debugger, Source={StaticResource Locator}}"
         Background="LightGray">
     <i:Interaction.Triggers>
@@ -73,8 +73,7 @@
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
+            <RowDefinition />           
         </Grid.RowDefinitions>
 
         <Menu HorizontalAlignment="Left" Height="20" Margin="10,0,0,0" VerticalAlignment="Top" Width="{Binding ElementName=MainGrid, Path=ActualWidth}" Grid.Column="0" Grid.Row="0" >
@@ -95,111 +94,119 @@
                 <DataGridTextColumn Header="Instruction" Width="Auto" MinWidth="40" CanUserResize="False" IsReadOnly="True" Binding="{Binding Value.FormattedOpCode, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
             </DataGrid.Columns>
         </DataGrid>
-        <GroupBox Header="CPU" Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="47" />
-                    <ColumnDefinition />                    
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />                    
-                </Grid.RowDefinitions>
+        <StackPanel Grid.Column="1" Grid.Row="0">
+            <GroupBox Header="CPU" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="47" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal">
-                    <TextBlock  Style="{StaticResource TextBlockLabelStyle}">A:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.Accumulator, Mode=OneWay }" />
-                    </Border>
-               
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">X:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.XRegister, Mode=OneWay }" />
-                    </Border>
-                
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">Y:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.YRegister, Mode=OneWay }" />
-                    </Border>
-               
-                    <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource TextBlockLabelStyle}">PC:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.ProgramCounter, Mode=OneWay }" />
-                    </Border>                
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">Cycle:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.CycleCount, Mode=OneWay }" />
-                    </Border>
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">SP:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.StackPointer, Mode=OneWay }" />
-                    </Border>
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                        <TextBlock  Style="{StaticResource TextBlockLabelStyle}">A:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.Accumulator, Mode=OneWay }" />
+                        </Border>
 
-                <StackPanel Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">P:</TextBlock>
-                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                        <TextBlock Style="{StaticResource TextBlockValueStyle}">FF</TextBlock>
-                    </Border>
-                </StackPanel>
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">X:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.XRegister, Mode=OneWay }" />
+                        </Border>
 
-                <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" Margin="10,10,0,0">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">C:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">Y:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.YRegister, Mode=OneWay }" />
+                        </Border>
 
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,2,0">Z:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <TextBlock Grid.Column="0" Grid.Row="0" Style="{StaticResource TextBlockLabelStyle}">PC:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.ProgramCounter, Mode=OneWay }" />
+                        </Border>
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">Cycle:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.CycleCount, Mode=OneWay }" />
+                        </Border>
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">SP:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.StackPointer, Mode=OneWay }" />
+                        </Border>
+                    </StackPanel>
 
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,7,0">I:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                    <StackPanel Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">P:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}">FF</TextBlock>
+                        </Border>
+                    </StackPanel>
 
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">D:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" Margin="10,10,0,0">
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">C:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
 
-                <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Margin="10,0,0,0">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">B:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,2,0">Z:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
 
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">U:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="True"/>
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,7,0">I:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
 
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">O:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">D:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                    </StackPanel>
 
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">N:</TextBlock>
-                    <CheckBox  Style="{StaticResource CheckBoxStyle}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Margin="10,0,0,0">
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">B:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
 
-                <!--<StackPanel Grid.Column="2" Grid.Row="1" Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">U:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="True"/>
 
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">Zero:</TextBlock>
-                    <CheckBox VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Grid.Column="3" Grid.Row="1" Orientation="Horizontal">
-                   
-                </StackPanel>
-                <StackPanel Grid.Column="4" Grid.Row="1" Orientation="Horizontal">
-                   
-                </StackPanel>
-                <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">Break:</TextBlock>
-                    <CheckBox VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Grid.Column="2" Grid.Row="2" Orientation="Horizontal">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">Reserved:</TextBlock>
-                    <CheckBox VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Grid.Column="3" Grid.Row="2" Orientation="Horizontal">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">Overflow:</TextBlock>
-                    <CheckBox VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Grid.Column="4" Grid.Row="2" Orientation="Horizontal">
-                    <TextBlock Style="{StaticResource TextBlockLabelStyle}">Negative:</TextBlock>
-                    <CheckBox VerticalAlignment="Center" />
-                </StackPanel>-->
-            </Grid>
-        </GroupBox>
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">O:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+
+                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">N:</TextBlock>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                    </StackPanel>                 
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="PPU" Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="10,5,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />                       
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />                       
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
+                        <TextBlock  Style="{StaticResource TextBlockLabelStyle}">Cycle:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.Cycle, Mode=OneWay }" />
+                        </Border>
+                        <TextBlock  Style="{StaticResource TextBlockLabelStyle}">Scanline:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.ScanLine, Mode=OneWay }" />
+                        </Border>
+                        <TextBlock  Style="{StaticResource TextBlockLabelStyle}">VRAM Addr:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.VRAMAddress, Mode=OneWay }" />
+                        </Border>
+                        <TextBlock  Style="{StaticResource TextBlockLabelStyle}">NT Addr:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.NTAddress, Mode=OneWay }" />
+                        </Border>
+                        <TextBlock  Style="{StaticResource TextBlockLabelStyle}">X Scroll:</TextBlock>
+                        <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.XScroll, Mode=OneWay }" />
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+        </StackPanel>
+       
     </Grid>
 </Window>

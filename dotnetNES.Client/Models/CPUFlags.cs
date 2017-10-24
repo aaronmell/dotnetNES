@@ -37,7 +37,7 @@ namespace dotnetNES.Client.Models
             DecimalFlag = engine.GetDecimalFlag();
             OverflowFlag = engine.GetOverflowFlag();
             NegativeFlag = engine.GetNegativeFlag();
-            CycleCount = engine.GetCycleCount();            
+            CycleCount = engine.GetProcessorCycles();            
         }
     }
 }
