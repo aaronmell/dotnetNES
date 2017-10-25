@@ -140,36 +140,36 @@
                     <StackPanel Grid.Column="0" Grid.Row="1" Grid.RowSpan="2" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}">P:</TextBlock>
                         <Border Style="{StaticResource TextBlockValueBorderStyle}">
-                            <TextBlock Style="{StaticResource TextBlockValueStyle}">FF</TextBlock>
+                            <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=CPUFlags.FlagsRegister, Mode=OneWay }" />
                         </Border>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" Margin="10,10,0,0">
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}">C:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.CarryFlag}" />
 
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,2,0">Z:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.ZeroFlag}" />
 
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,7,0">I:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.DisableInterruptFlag}" />
 
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">D:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.DecimalFlag}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Margin="10,0,0,0">
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">B:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="False" />
 
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}">U:</TextBlock>
                         <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="True"/>
 
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}">O:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.OverflowFlag}" />
 
                         <TextBlock Style="{StaticResource TextBlockLabelStyle}">N:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.NegativeFlag}" />
                     </StackPanel>                 
                 </Grid>
             </GroupBox>

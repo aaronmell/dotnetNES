@@ -23,6 +23,7 @@ namespace dotnetNES.Client.Models
         public bool DecimalFlag { get; set; }
         public bool OverflowFlag { get; set; }
         public bool NegativeFlag { get; set; }
+        public string FlagsRegister { get; set; }
 
         public void UpdateFlags(dotnetNES.Engine.Main.Engine engine)
         {
@@ -37,7 +38,8 @@ namespace dotnetNES.Client.Models
             DecimalFlag = engine.GetDecimalFlag();
             OverflowFlag = engine.GetOverflowFlag();
             NegativeFlag = engine.GetNegativeFlag();
-            CycleCount = engine.GetProcessorCycles();            
+            CycleCount = engine.GetProcessorCycles();
+            FlagsRegister = engine.GetFlagsRegister();
         }
     }
 }

@@ -54,6 +54,7 @@ namespace dotnetNES.Engine.Main
                 Processor.GenerateDisassembledMemory();
             }            
         }
+             
 
         /// <summary>
         /// Public Constructor for the Engine
@@ -373,6 +374,13 @@ namespace dotnetNES.Engine.Main
         public long GetProcessorCycles()
         {
             return Processor.GetCycleCount();
+        }
+
+        public string GetFlagsRegister()
+        {
+            return ((Processor.CarryFlag ? 0x01 : 0) + (Processor.ZeroFlag ? 0x02 : 0) + (Processor.DisableInterruptFlag ? 0x04 : 0) +
+                         (Processor.DecimalFlag ? 0x08 : 0) + 0x20 + (Processor.OverflowFlag ? 0x40 : 0) + (Processor.NegativeFlag ? 0x80 : 0)).ToString("X").PadLeft(2,'0');
+          
         }
 
         public int GetPPUCycleCount()
