@@ -18,6 +18,36 @@ namespace dotnetNES.Client.Models
 
         public int XScroll { get; set; }
 
+        public bool GrayScale { get; set; }
+
+        public bool DrawLeftBackground { get; set; }
+
+        public bool DrawLeftSprites { get; set; }
+
+        public bool DrawBackGround { get; set; }
+
+        public bool DrawSprites { get; set; }
+
+        public bool IntensifyRed { get; set; }
+
+        public bool IntensifyBlue { get; set; }
+
+        public bool IntensifyGreen { get; set; }
+
+        public int BaseNameTable { get; set; }
+
+        public bool VRAMIncrement { get; set; }
+
+        public bool SpriteTableAddress { get; set; }
+
+        public bool BackgroundTableAddress { get; set; }
+
+        public bool SpriteSize { get; set; }
+
+        public bool PPUMasterSelect { get; set; }
+
+        public bool GenerateNMI { get; set; }
+
         public void UpdateFlags(dotnetNES.Engine.Main.Engine engine)
         {
             ScanLine = engine.GetScanLine();
@@ -25,6 +55,32 @@ namespace dotnetNES.Client.Models
             VRAMAddress = engine.GetVRAMAddress().ToString("X").PadLeft(4,'0');
             NTAddress = engine.GetNTAddress().ToString("X").PadLeft(4, '0');
             XScroll = engine.GetXScroll();
+
+            var mask = engine.GetMemoryLocation(0x2001);
+
+            GrayScale = IsBitSet(mask, 0);
+            DrawLeftBackground = IsBitSet(mask, 1);
+            DrawLeftSprites = IsBitSet(mask, 2);
+            DrawBackGround = IsBitSet(mask, 3);
+            DrawSprites = IsBitSet(mask, 4);
+            IntensifyRed = IsBitSet(mask, 5);
+            IntensifyGreen = IsBitSet(mask, 6);
+            IntensifyBlue = IsBitSet(mask, 7);
+
+            var controller = engine.GetMemoryLocation(0x2000);
+
+            BaseNameTable = controller & 0x03;
+            VRAMIncrement = IsBitSet(mask, 2);
+            SpriteTableAddress = IsBitSet(mask, 3);
+            BackgroundTableAddress = IsBitSet(mask, 4);
+            SpriteSize = IsBitSet(mask, 5);
+            PPUMasterSelect = IsBitSet(mask, 6);
+            GenerateNMI = IsBitSet(mask, 7);
+        }
+
+    private bool IsBitSet(byte bit, int position)
+        {
+            return (bit & (1 << position)) != 0;
         }
     }
 }

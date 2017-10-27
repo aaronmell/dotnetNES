@@ -20,7 +20,8 @@ namespace dotnetNES.Engine.Main
         internal PPU PictureProcessingUnit { get; private set; }
         private readonly CartridgeModel _cartridgeModel;
         private BackgroundWorker _backgroundWorker;
-        private double cyclesToSkip = 0;  
+        private double cyclesToSkip = 0;        
+
         private bool _skipCycles;
 
         /// <summary>
@@ -406,6 +407,11 @@ namespace dotnetNES.Engine.Main
         public int GetScanLine()
         {
             return PictureProcessingUnit.ScanLine;
+        }
+
+        public byte GetMemoryLocation(int address)
+        {
+            return Processor.ReadMemoryValueWithoutCycle(address);
         }
     }
 }

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:command="http://www.galasoft.ch/mvvmlight"
-        Title="Debugger" Height="600" Width="700" 
+        Title="Debugger" Height="600" Width="720" 
         DataContext="{Binding Debugger, Source={StaticResource Locator}}"
         Background="LightGray">
     <i:Interaction.Triggers>
@@ -63,6 +63,7 @@
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style x:Key="CheckBoxStyle" TargetType="{x:Type CheckBox}">
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,0,15,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -145,31 +146,17 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Grid.Row="1" Orientation="Horizontal" Margin="10,10,0,0">
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">C:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.CarryFlag}" />
-
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,2,0">Z:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.ZeroFlag}" />
-
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,7,0">I:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.DisableInterruptFlag}" />
-
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">D:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.DecimalFlag}"/>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.CarryFlag}" Margin="0,0,17,0" >Carry</CheckBox>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.ZeroFlag}" Margin="0,0,34,0" >Zero</CheckBox>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.DisableInterruptFlag}" Margin="0,0,17,0">Interrupt</CheckBox>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.DecimalFlag}">Decimal</CheckBox>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Margin="10,0,0,0">
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}" Padding="0,0,1,0">B:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="False" />
-
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">U:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="True"/>
-
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">O:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.OverflowFlag}" />
-
-                        <TextBlock Style="{StaticResource TextBlockLabelStyle}">N:</TextBlock>
-                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.NegativeFlag}" />
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="False" > Break</CheckBox>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="True">Unused</CheckBox>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.OverflowFlag}" >Overflow</CheckBox>
+                        <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=CPUFlags.NegativeFlag}" >Negative</CheckBox>
                     </StackPanel>                 
                 </Grid>
             </GroupBox>
@@ -179,7 +166,8 @@
                         <ColumnDefinition />                       
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition />                       
+                        <RowDefinition />
+                        <RowDefinition />
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
@@ -204,9 +192,49 @@
                             <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.XScroll, Mode=OneWay }" />
                         </Border>
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1" Margin="0,10,0,0">
+                        <GroupBox  Header="Ctrl" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,0" Height="{Binding RelativeSource={RelativeSource FindAncestor, 
+                            AncestorType={x:Type StackPanel}}, Path=ActualHeight}">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,4">                                    
+                                    <Border Style="{StaticResource TextBlockValueBorderStyle}">
+                                        <TextBlock Style="{StaticResource TextBlockValueStyle}" Text="{Binding Path=PPUFlags.BaseNameTable, Mode=OneWay }" />
+                                    </Border>
+                                    <TextBlock  Style="{StaticResource TextBlockLabelStyle}">Base Nametable</TextBlock>
+                                </StackPanel>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.VRAMIncrement, Mode=OneWay }" >Vram Increment</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteTableAddress, Mode=OneWay }" >Sprite Table Addr</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.BackgroundTableAddress, Mode=OneWay }" >BG Table Addr</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteSize, Mode=OneWay }" >SpriteSize</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.PPUMasterSelect, Mode=OneWay }" >PPU Master Select</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.GenerateNMI, Mode=OneWay }" >Generate NMI</CheckBox>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox  Header="Mask" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="3,0,0,0" Height="{Binding RelativeSource={RelativeSource FindAncestor, 
+                            AncestorType={x:Type StackPanel}}, Path=ActualHeight}">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.GrayScale, Mode=OneWay }" >GrayScale</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.DrawLeftBackground, Mode=OneWay }" >Draw Left BG</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.DrawLeftSprites, Mode=OneWay }" >Draw Left Sprites</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.DrawBackGround, Mode=OneWay }" >BG Enabled</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.DrawSprites, Mode=OneWay }" >Sprites Enabled</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.IntensifyRed, Mode=OneWay }" >Intensify Red</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.IntensifyBlue, Mode=OneWay }" >Intensify Blue</CheckBox>
+                                    <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.IntensifyGreen, Mode=OneWay }" >Intensify Green</CheckBox>
+                                </StackPanel>
+                            </GroupBox>
+                        <GroupBox  Header="Status" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="3,0,0,0" Height="{Binding RelativeSource={RelativeSource FindAncestor, 
+                            AncestorType={x:Type StackPanel}}, Path=ActualHeight}">
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteOverflow, Mode=OneWay }" >Sprite Overflow</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteZeroHit, Mode=OneWay }" >Sprite 0 Hit</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.VblankEnabled, Mode=OneWay }" >VBlank Enabled</CheckBox>                                
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>  
                 </Grid>
             </GroupBox>
         </StackPanel>
-       
+        
     </Grid>
 </Window>
