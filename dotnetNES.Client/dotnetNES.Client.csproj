@@ -96,6 +96,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Behaviors\ScrollIntoViewBehavior.cs" />
     <Compile Include="MessageNames.cs" />
     <Compile Include="Debugger.xaml.cs">
       <DependentUpon>Debugger.xaml</DependentUpon>

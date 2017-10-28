@@ -15,6 +15,9 @@ namespace dotnetNES.Client.ViewModel
         private object _disassemblyLock = new object();
 
         public Dictionary<string,Disassembly> Disassembly { get; set; }  
+        public string SelectedValue { get; set; }
+
+
         public CPUFlags CPUFlags { get; set; } = new CPUFlags();
         public PPUFlags PPUFlags { get; set; } = new PPUFlags();
 
@@ -30,6 +33,7 @@ namespace dotnetNES.Client.ViewModel
             BreakCommand = new RelayCommand(() => Engine.PauseEngine());
             StepCommand = new RelayCommand(() => 
             {
+                Engine.PauseEngine();
                 Engine.Step();
                 UpdateAfterPause();
             });
@@ -40,16 +44,24 @@ namespace dotnetNES.Client.ViewModel
 
         private void UpdateAfterPause()
         {
-            Disassembly = Engine.GetDisassembledMemory();
-            BindingOperations.EnableCollectionSynchronization(Disassembly, _disassemblyLock);
+            if (Engine.IsDissasemblyInvalid())
+            {
+                Disassembly = Engine.GetDisassembledMemory();
+                BindingOperations.EnableCollectionSynchronization(Disassembly, _disassemblyLock);
 
-            RaisePropertyChanged("Disassembly");
+                RaisePropertyChanged("Disassembly");
+            }
+
+
 
             CPUFlags.UpdateFlags(Engine);
             RaisePropertyChanged("CPUFlags");
 
             PPUFlags.UpdateFlags(Engine);
             RaisePropertyChanged("PPUFlags");
+
+            SelectedValue = CPUFlags.ProgramCounter;
+            RaisePropertyChanged("SelectedValue");
 
         }
 

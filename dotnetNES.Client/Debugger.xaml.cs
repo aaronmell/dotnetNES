@@ -1,4 +1,7 @@
-﻿namespace dotnetNES.Client
+﻿using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+
+namespace dotnetNES.Client
 {
     /// <summary>
     /// Interaction logic for NameTables.xaml
@@ -8,6 +11,6 @@
         public Debugger()
         {
             InitializeComponent();
-        }
+        }      
     }
 }

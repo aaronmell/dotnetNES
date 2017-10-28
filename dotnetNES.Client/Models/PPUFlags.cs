@@ -48,6 +48,12 @@ namespace dotnetNES.Client.Models
 
         public bool GenerateNMI { get; set; }
 
+        public bool SpriteOverflow { get; set; }
+
+        public bool SpriteZeroHit { get; set; }
+
+        public bool VblankEnabled { get; set; }
+
         public void UpdateFlags(dotnetNES.Engine.Main.Engine engine)
         {
             ScanLine = engine.GetScanLine();
@@ -76,6 +82,12 @@ namespace dotnetNES.Client.Models
             SpriteSize = IsBitSet(mask, 5);
             PPUMasterSelect = IsBitSet(mask, 6);
             GenerateNMI = IsBitSet(mask, 7);
+
+            var status = engine.GetMemoryLocation(0x2002);
+
+            SpriteOverflow = IsBitSet(status, 5);
+            SpriteZeroHit = IsBitSet(status, 6);
+            VblankEnabled = IsBitSet(status, 7);
         }
 
     private bool IsBitSet(byte bit, int position)

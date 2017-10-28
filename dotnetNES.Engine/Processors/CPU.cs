@@ -10,7 +10,12 @@ namespace dotnetNES.Engine.Models
     /// </summary>
     internal sealed class CPU : Processor.Processor
     {
+        private Dictionary<string, Disassembly> _disassembledMemory = new Dictionary<string, Disassembly>(65535);
+
         internal bool DisassemblyEnabled;
+
+        internal bool IsDissasemblyInvalid { get; set; } = true;
+
 
         internal CPU()
         {
@@ -55,7 +60,9 @@ namespace dotnetNES.Engine.Models
 
             //Doing this here so the memory has already been updated
 
-            IncrementCycleCount();            
+            IncrementCycleCount();
+
+            IsDissasemblyInvalid = true;
         }
              
 
@@ -123,6 +130,8 @@ namespace dotnetNES.Engine.Models
                 address = (address & 0x7) + 0x2000;
             }
             Memory[address] = data;
+
+            IsDissasemblyInvalid = true;
         }
 
         /// <summary>
@@ -180,9 +189,16 @@ namespace dotnetNES.Engine.Models
             Accumulator = newValue;
         }
 
+
         internal Dictionary<string, Disassembly> GenerateDisassembledMemory()
         {            
-            var disassembledMemory = new Dictionary<string, Disassembly>();
+            if (!IsDissasemblyInvalid)
+            {
+                return _disassembledMemory;
+            }
+
+            _disassembledMemory.Clear();
+            IsDissasemblyInvalid = false;
 
             var i = 0;
             while (i < Memory.Length - 1)
@@ -199,7 +215,7 @@ namespace dotnetNES.Engine.Models
                 var firstByte = opCode.Length > 1 ? Memory[i++].ToString("X").PadLeft(2,'0') : string.Empty;
                 var secondByte = opCode.Length > 2 ? Memory[i++].ToString("X").PadLeft(2, '0') : string.Empty;
                                    
-                disassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
+                _disassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
                 {
                     Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
                     InstructionAddress = $"{secondByte}{firstByte}",
@@ -207,7 +223,7 @@ namespace dotnetNES.Engine.Models
                 });                                
             }
 
-            return disassembledMemory;
+            return _disassembledMemory;
         } 
     }
 }

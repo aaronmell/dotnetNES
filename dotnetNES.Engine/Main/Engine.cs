@@ -224,7 +224,12 @@ namespace dotnetNES.Engine.Main
         public Dictionary<string, Disassembly> GetDisassembledMemory()
         {
             return Processor.GenerateDisassembledMemory();
-        }        
+        }       
+        
+        public bool IsDissasemblyInvalid()
+        {
+            return Processor.IsDissasemblyInvalid;
+        }
 
         /// <summary>
         /// An action that is fired whenever the Engine is paused

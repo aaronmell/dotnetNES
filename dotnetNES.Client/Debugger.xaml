@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:command="http://www.galasoft.ch/mvvmlight"
-        Title="Debugger" Height="600" Width="720" 
+        xmlns:behavior="clr-namespace:dotnetNES.Client.Behaviors"
+        Title="Debugger" Height="600" Width="750" 
         DataContext="{Binding Debugger, Source={StaticResource Locator}}"
         Background="LightGray">
     <i:Interaction.Triggers>
@@ -33,6 +34,11 @@
         <Style x:Key="CellStyle" TargetType="{x:Type DataGridCell}">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="MinHeight" Value="20"/>
+            <Style.Triggers>
+                <Trigger Property="DataGridCell.IsSelected" Value="True">
+                    <Setter Property="Background" Value="Yellow" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <Style x:Key="TextBlockLabelStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="14"/>
@@ -70,7 +76,7 @@
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="130"/>
+            <ColumnDefinition Width="160"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -89,17 +95,21 @@
         </Menu>
         <DataGrid Height="500" HorizontalAlignment="Left" Margin="10,25,0,0" Name="OutputLog" VerticalAlignment="Top" MaxWidth="500" Width="Auto" AutoGenerateColumns="False" 
 					CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserDeleteRows="False"
-					CanUserAddRows="False" ItemsSource="{Binding Disassembly}" CellStyle="{StaticResource CellStyle}" GridLinesVisibility="Horizontal" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2">
+					CanUserAddRows="False" SelectionMode="Single" ItemsSource="{Binding Disassembly}" CellStyle="{StaticResource CellStyle}" GridLinesVisibility="Horizontal" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
+                    SelectedValue="{Binding SelectedValue, Mode=OneWay}" SelectedValuePath="Key" SelectionUnit="FullRow" HorizontalScrollBarVisibility="Disabled">
+            <i:Interaction.Behaviors>
+                <behavior:ScrollIntoViewBehavior />
+            </i:Interaction.Behaviors>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Addr" Width="Auto" MinWidth="40" CanUserResize="False" IsReadOnly="True" Binding="{Binding Key, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
-                <DataGridTextColumn Header="Instruction" Width="Auto" MinWidth="40" CanUserResize="False" IsReadOnly="True" Binding="{Binding Value.FormattedOpCode, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
+                <DataGridTextColumn Header="Addr" Width="40" CanUserResize="False" IsReadOnly="True" Binding="{Binding Key, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
+                <DataGridTextColumn Header="Instruction" Width="110" CanUserResize="False" IsReadOnly="True" Binding="{Binding Value.FormattedOpCode, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
             </DataGrid.Columns>
         </DataGrid>
         <StackPanel Grid.Column="1" Grid.Row="0">
             <GroupBox Header="CPU" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="47" />
+                        <ColumnDefinition Width="50" />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
