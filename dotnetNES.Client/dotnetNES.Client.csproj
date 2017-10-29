@@ -92,57 +92,57 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <ApplicationDefinition Include="Views\App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="MessageNames.cs" />
-    <Compile Include="Debugger.xaml.cs">
+    <Compile Include="Views\Debugger.xaml.cs">
       <DependentUpon>Debugger.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\CPUFlags.cs" />
     <Compile Include="Models\PPUFlags.cs" />
-    <Compile Include="NameTables.xaml.cs">
+    <Compile Include="Views\NameTables.xaml.cs">
       <DependentUpon>NameTables.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Sprites.xaml.cs">
+    <Compile Include="Views\Sprites.xaml.cs">
       <DependentUpon>Sprites.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModel\DebuggerViewModel.cs" />
     <Compile Include="ViewModel\DebuggingBaseViewModel.cs" />
     <Compile Include="ViewModel\NameTablesViewModel.cs" />
-    <Compile Include="PatternsAndPalettes.xaml.cs">
+    <Compile Include="Views\PatternsAndPalettes.xaml.cs">
       <DependentUpon>PatternsAndPalettes.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\PatternsAndPalettesViewModel.cs" />
     <Compile Include="ViewModel\SpritesViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
-    <Page Include="MainWindow.xaml">
+    <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="App.xaml.cs">
+    <Compile Include="Views\App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Debugger.xaml">
+    <Page Include="Views\Debugger.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="NameTables.xaml">
+    <Page Include="Views\NameTables.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Sprites.xaml">
+    <Page Include="Views\Sprites.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PatternsAndPalettes.xaml">
+    <Page Include="Views\PatternsAndPalettes.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
