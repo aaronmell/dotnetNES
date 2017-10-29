@@ -22,7 +22,7 @@ namespace dotnetNES.Engine.Main
         internal PPU PictureProcessingUnit { get; private set; }
         private readonly CartridgeModel _cartridgeModel;
 
-        public ObservableCollection<BreakPoint> BreakPoints { get; set; }
+        public ObservableCollection<BreakPoint> BreakPoints { get; set; } = new ObservableCollection<BreakPoint>();
 
         private BackgroundWorker _backgroundWorker;
         private double cyclesToSkip = 0;        
