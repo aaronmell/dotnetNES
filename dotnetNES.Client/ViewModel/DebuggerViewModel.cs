@@ -73,7 +73,7 @@ namespace dotnetNES.Client.ViewModel
                 return;
             }
 
-            Engine.EnginePaused += Engine_EnginePaused;
+            Engine.OnEnginePaused += Engine_OnEnginePaused;
 
             RaisePropertyChanged(nameof(BreakPoints));
             RaisePropertyChanged(nameof(BreakPointTypes));
@@ -85,7 +85,7 @@ namespace dotnetNES.Client.ViewModel
             RaisePropertyChanged(nameof(Disassembly));
         }
 
-        private void Engine_EnginePaused(object sender, System.EventArgs e)
+        private void Engine_OnEnginePaused(object sender, System.EventArgs e)
         {
             UpdateAfterPause();
         }        

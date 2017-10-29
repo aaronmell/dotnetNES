@@ -7,6 +7,7 @@ using NLog;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 
 namespace dotnetNES.Engine.Main
 {
@@ -17,13 +18,15 @@ namespace dotnetNES.Engine.Main
     {
         private static readonly ILogger _logger = LogManager.GetLogger("Engine");
         private readonly CartridgeModel _cartridgeModel;
-        private BackgroundWorker _backgroundWorker;
+        private BackgroundWorker _backgroundWorker;       
+
         private double cyclesToSkip = 0;
         private bool _skipCycles;
+        private bool _isResetOrPowerEvent;
 
         internal CPU Processor { get; private set; }
-        internal PPU PictureProcessingUnit { get; private set; }
-      
+        internal PPU PictureProcessingUnit { get; private set; }        
+
         /// <summary>
         /// Collection of breakpoints
         /// </summary>
@@ -116,37 +119,27 @@ namespace dotnetNES.Engine.Main
         /// <summary>
         /// Resets the Engine, mimics the behavior of pressing the reset button on the console
         /// </summary>
-        public void Reset()
+        public void BeginReset()
         {
-            PauseEngine();
+            _isResetOrPowerEvent = true;
+            PauseEngine();            
+        }      
 
+        public void EndReset()
+        {
             Processor.Reset();
             PictureProcessingUnit.Reset();
 
-            if (Processor.DisassemblyEnabled)
-            {
-                Processor.GenerateDisassembledMemory();
-            }
-
             UnPauseEngine();
-        }      
+        }
 
         /// <summary>
         /// Resets the Engine, mimics the behavior of pressing the power button on the console
         /// </summary>
-        public void Power()
+        public void BeginPower()
         {
-            PauseEngine();
-
-            Processor.Reset();
-            PictureProcessingUnit.Power();
-
-            if (Processor.DisassemblyEnabled)
-            {
-                Processor.GenerateDisassembledMemory();
-            }
-
-            UnPauseEngine();
+            _isResetOrPowerEvent = true;
+            PauseEngine();           
         }
 
         /// <summary>
@@ -238,22 +231,41 @@ namespace dotnetNES.Engine.Main
         /// <summary>
         /// An action that is fired whenever the Engine is paused
         /// </summary>
-        public event EventHandler EnginePaused;
+        public event EventHandler OnEnginePaused;
 
-        protected virtual void OnEnginePaused(EventArgs e)
+        protected virtual void EnginePausedEvent(EventArgs e)
         {
-            EnginePaused?.Invoke(this, e);
+            OnEnginePaused?.Invoke(this, e);
+        }
+
+        public event EventHandler EngineUnPaused;
+
+        protected virtual void EngineUnPausedEvent(EventArgs e)
+        {
+            EngineUnPaused?.Invoke(this, e);
         }
 
         private void CreateNewBackgroundWorker()
         {
-            _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
-            _backgroundWorker.DoWork += BackgroundWorkerDoWork;
+            if (_backgroundWorker == null)
+            {
+                _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
+                _backgroundWorker.DoWork += BackgroundWorkerDoWork;
+                _backgroundWorker.RunWorkerCompleted += _backgroundWorker_RunWorkerCompleted;
+            }    
+        }
 
+        private void _backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (_isResetOrPowerEvent)
+            {
+                _isResetOrPowerEvent = false;
+                EndReset();
+            }
         }
 
         private void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
-        {
+        {            
             var firstCycle = true;
             var worker = sender as BackgroundWorker;
             while (true)
@@ -261,13 +273,17 @@ namespace dotnetNES.Engine.Main
                 if (worker != null && worker.CancellationPending || (!firstCycle && CheckforCancellation()))
                 {
                     e.Cancel = true;
-                    PauseEngine();
+                    if (!IsPaused)
+                    {
+                        PauseEngine();
+                    }
                     return;
-                }               
+                }
 
                 Step();
                 firstCycle = false;
-            }
+            }            
+            
         }
 
         private bool CheckforCancellation()
@@ -298,8 +314,11 @@ namespace dotnetNES.Engine.Main
             {
                 return;
             }
-            IsPaused = false;
+            IsPaused = false;           
+
             _backgroundWorker.RunWorkerAsync();
+
+            EngineUnPausedEvent(EventArgs.Empty);
         }
 
         public void PauseEngine()
@@ -310,7 +329,9 @@ namespace dotnetNES.Engine.Main
             }
             IsPaused = true;
 
-            OnEnginePaused(EventArgs.Empty);           
+            _backgroundWorker.CancelAsync();
+
+            EnginePausedEvent(EventArgs.Empty);           
         }
 
         public void RuntoNextScanLine()

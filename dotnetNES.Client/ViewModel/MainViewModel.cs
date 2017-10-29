@@ -76,12 +76,12 @@ namespace dotnetNES.Client.ViewModel
             LoadFileCommand = new RelayCommand(LoadFile);
             ResetNesCommand = new RelayCommand(() =>
             {
-                Engine.Reset();
+                Engine.BeginReset();
                 RaisePropertyChanged(nameof(IsEnginePaused));
             });
             PowerNesCommand = new RelayCommand(() =>
             {
-                Engine.Power();
+                Engine.BeginPower();
                 RaisePropertyChanged(nameof(IsEnginePaused));
             });
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
@@ -110,7 +110,7 @@ namespace dotnetNES.Client.ViewModel
             if (Engine != null)
             {
                 Engine.PauseEngine();
-                RaisePropertyChanged(nameof(IsEnginePaused));
+                RaisePropertyChanged(nameof(IsEnginePaused));                
             }
 
             var dlg = new OpenFileDialog {DefaultExt = ".nes", Filter = "NES Roms (*.nes)|*.nes"};
@@ -120,19 +120,30 @@ namespace dotnetNES.Client.ViewModel
                 if (Engine != null)
                 {
                     Engine.UnPauseEngine();
-                    RaisePropertyChanged(nameof(IsEnginePaused));
                 }
                 return;
             }
 
             _fileName = dlg.FileName;
             Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
+            Engine.EngineUnPaused += Engine_OnEngineUnPaused;
+            Engine.OnEnginePaused += Engine_OnEnginePaused;
             DebuggerViewModel.Engine = Engine;
             
             IsCartridgeLoaded = true;
             RaisePropertyChanged(nameof(IsCartridgeLoaded));
 
-            Engine.Power();
+            Engine.BeginPower();
+            Engine.UnPauseEngine();
+        }
+
+        private void Engine_OnEnginePaused(object sender, EventArgs e)
+        {
+            RaisePropertyChanged(nameof(IsEnginePaused));
+        }
+
+        private void Engine_OnEngineUnPaused(object sender, EventArgs e)
+        {
             RaisePropertyChanged(nameof(IsEnginePaused));
         }
 
@@ -173,13 +184,12 @@ namespace dotnetNES.Client.ViewModel
 
         private void PauseEngine()
         {
-            if (IsEnginePaused)
+            if (Engine.IsPaused)
                 Engine.UnPauseEngine();
             else
             {
                 Engine.PauseEngine();
             }
-            RaisePropertyChanged(nameof(IsEnginePaused));
         }
         #endregion
     }
