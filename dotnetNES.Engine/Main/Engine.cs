@@ -4,7 +4,6 @@ using dotnetNES.Engine.Models;
 using dotnetNES.Engine.Utilities;
 using PPU = dotnetNES.Engine.Models.PictureProcessingUnit;
 using NLog;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -17,17 +16,18 @@ namespace dotnetNES.Engine.Main
     public class Engine
     {
         private static readonly ILogger _logger = LogManager.GetLogger("Engine");
+        private readonly CartridgeModel _cartridgeModel;
+        private BackgroundWorker _backgroundWorker;
+        private double cyclesToSkip = 0;
+        private bool _skipCycles;
 
         internal CPU Processor { get; private set; }
         internal PPU PictureProcessingUnit { get; private set; }
-        private readonly CartridgeModel _cartridgeModel;
-
-        public ObservableCollection<BreakPoint> BreakPoints { get; set; } = new ObservableCollection<BreakPoint>();
-
-        private BackgroundWorker _backgroundWorker;
-        private double cyclesToSkip = 0;        
-
-        private bool _skipCycles;
+      
+        /// <summary>
+        /// Collection of breakpoints
+        /// </summary>
+        public ObservableCollection<BreakPoint> BreakPoints { get; set; } = new ObservableCollection<BreakPoint>();       
 
         /// <summary>
         /// The property is used to determine if vertical mirroring is used by the current cartridge.
@@ -59,8 +59,7 @@ namespace dotnetNES.Engine.Main
             {
                 Processor.GenerateDisassembledMemory();
             }            
-        }
-             
+        }             
 
         /// <summary>
         /// Public Constructor for the Engine

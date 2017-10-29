@@ -17,7 +17,6 @@ namespace dotnetNES.Engine.Models
 
         internal bool IsDissasemblyInvalid { get; set; } = true;
 
-
         internal CPU()
         {
             ReadMemoryAction = x => { };
@@ -65,7 +64,6 @@ namespace dotnetNES.Engine.Models
 
             IsDissasemblyInvalid = true;
         }
-             
 
         /// <summary>
         /// Returns the byte at the given address.
