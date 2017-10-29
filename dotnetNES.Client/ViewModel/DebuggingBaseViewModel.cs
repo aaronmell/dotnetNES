@@ -32,7 +32,10 @@ namespace dotnetNES.Client.ViewModel
 
         }
 
-        protected abstract void LoadView(NotificationMessage notificationMessage);
+        protected virtual void LoadView(NotificationMessage notificationMessage)
+        {
+
+        }
         protected abstract unsafe void Refresh();
 
         private void RefreshScreen(NotificationMessage obj)

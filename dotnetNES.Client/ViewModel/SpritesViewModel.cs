@@ -7,145 +7,73 @@ namespace dotnetNES.Client.ViewModel
     public sealed class SpritesViewModel : DebuggingBaseViewModel
     {
         #region Public Properties
-        public WriteableBitmap Sprite0 { get; set; }
-        public WriteableBitmap Sprite1 { get; set; }
-        public WriteableBitmap Sprite2 { get; set; }
-        public WriteableBitmap Sprite3 { get; set; }
-        public WriteableBitmap Sprite4 { get; set; }
-        public WriteableBitmap Sprite5 { get; set; }
-        public WriteableBitmap Sprite6 { get; set; }
-        public WriteableBitmap Sprite7 { get; set; }
-        public WriteableBitmap Sprite8 { get; set; }
-        public WriteableBitmap Sprite9 { get; set; }
-        public WriteableBitmap Sprite10 { get; set; }
-        public WriteableBitmap Sprite11 { get; set; }
-        public WriteableBitmap Sprite12 { get; set; }
-        public WriteableBitmap Sprite13 { get; set; }
-        public WriteableBitmap Sprite14 { get; set; }
-        public WriteableBitmap Sprite15 { get; set; }
-        public WriteableBitmap Sprite16 { get; set; }
-        public WriteableBitmap Sprite17 { get; set; }
-        public WriteableBitmap Sprite18 { get; set; }
-        public WriteableBitmap Sprite19 { get; set; }
-        public WriteableBitmap Sprite20 { get; set; }
-        public WriteableBitmap Sprite21 { get; set; }
-        public WriteableBitmap Sprite22 { get; set; }
-        public WriteableBitmap Sprite23 { get; set; }
-        public WriteableBitmap Sprite24 { get; set; }
-        public WriteableBitmap Sprite25 { get; set; }
-        public WriteableBitmap Sprite26 { get; set; }
-        public WriteableBitmap Sprite27 { get; set; }
-        public WriteableBitmap Sprite28 { get; set; }
-        public WriteableBitmap Sprite29 { get; set; }
-        public WriteableBitmap Sprite30 { get; set; }
-        public WriteableBitmap Sprite31 { get; set; }
-        public WriteableBitmap Sprite32 { get; set; }
-        public WriteableBitmap Sprite33 { get; set; }
-        public WriteableBitmap Sprite34 { get; set; }
-        public WriteableBitmap Sprite35 { get; set; }
-        public WriteableBitmap Sprite36 { get; set; }
-        public WriteableBitmap Sprite37 { get; set; }
-        public WriteableBitmap Sprite38 { get; set; }
-        public WriteableBitmap Sprite39 { get; set; }
-        public WriteableBitmap Sprite40 { get; set; }
-        public WriteableBitmap Sprite41 { get; set; }
-        public WriteableBitmap Sprite42 { get; set; }
-        public WriteableBitmap Sprite43 { get; set; }
-        public WriteableBitmap Sprite44 { get; set; }
-        public WriteableBitmap Sprite45 { get; set; }
-        public WriteableBitmap Sprite46 { get; set; }
-        public WriteableBitmap Sprite47 { get; set; }
-        public WriteableBitmap Sprite48 { get; set; }
-        public WriteableBitmap Sprite49 { get; set; }
-        public WriteableBitmap Sprite50 { get; set; }
-        public WriteableBitmap Sprite51 { get; set; }
-        public WriteableBitmap Sprite52 { get; set; }
-        public WriteableBitmap Sprite53 { get; set; }
-        public WriteableBitmap Sprite54 { get; set; }
-        public WriteableBitmap Sprite55 { get; set; }
-        public WriteableBitmap Sprite56 { get; set; }
-        public WriteableBitmap Sprite57 { get; set; }
-        public WriteableBitmap Sprite58 { get; set; }
-        public WriteableBitmap Sprite59 { get; set; }
-        public WriteableBitmap Sprite60 { get; set; }
-        public WriteableBitmap Sprite61 { get; set; }
-        public WriteableBitmap Sprite62 { get; set; }
-        public WriteableBitmap Sprite63 { get; set; }
+        public WriteableBitmap Sprite0 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite1 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite2 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite3 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite4 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite5 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite6 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite7 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite8 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite9 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite10 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite11 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite12 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite13 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite14 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite15 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite16 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite17 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite18 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite19 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite20 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite21 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite22 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite23 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite24 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite25 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite26 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite27 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite28 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite29 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite30 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite31 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite32 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite33 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite34 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite35 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite36 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite37 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite38 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite39 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite40 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite41 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite42 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite43 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite44 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite45 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite46 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite47 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite48 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite49 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite50 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite51 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite52 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite53 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite54 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite55 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite56 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite57 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite58 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite59 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite60 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite61 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite62 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
+        public WriteableBitmap Sprite63 { get; set; } = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
         #endregion
 
-        #region Protected Methods
-        protected override void LoadView(NotificationMessage obj)
-        {
-            if (obj.Notification != MessageNames.LoadDebugWindow)
-            {
-                return;
-            }
-            
-            Sprite0 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite1 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite2 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite3 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite4 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite5 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite6 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite7 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite8 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite9 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite10 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite11 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite12 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite13 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite14 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite15 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite16 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite17 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite18 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite19 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite20 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite21 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite22 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite23 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite24 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite25 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite26 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite27 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite28 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite29 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite30 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite31 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite32 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite33 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite34 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite35 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite36 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite37 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite38 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite39 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite40 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite41 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite42 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite43 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite44 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite45 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite46 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite47 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite48 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite49 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite50 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite51 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite52 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite53 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite54 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite55 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite56 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite57 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite58 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite59 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite60 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite61 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite62 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-            Sprite63 = new WriteableBitmap(8, 8, 1, 1, PixelFormats.Bgr24, null);
-        }
+        #region Protected Methods       
 
         protected override void Refresh()
         {

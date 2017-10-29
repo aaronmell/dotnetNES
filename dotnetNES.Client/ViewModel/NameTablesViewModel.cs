@@ -12,7 +12,7 @@ namespace dotnetNES.Client.ViewModel
     {
         #region Public Properties
 
-        public WriteableBitmap NameTable0 { get; set; }
+        public WriteableBitmap NameTable0 { get; set; } = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
         public WriteableBitmap NameTable1 { get; set; }
         public WriteableBitmap NameTable2 { get; set; }
         public WriteableBitmap NameTable3 { get; set; }
@@ -24,9 +24,7 @@ namespace dotnetNES.Client.ViewModel
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
-            }
-            
-            NameTable0 = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
+            }  
 
             if (Engine.IsVerticalMirroringEnabled)
             {
@@ -76,10 +74,10 @@ namespace dotnetNES.Client.ViewModel
                 NameTable2.Unlock();
             }
 
-            RaisePropertyChanged("NameTable0");
-            RaisePropertyChanged("NameTable1");
-            RaisePropertyChanged("NameTable2");
-            RaisePropertyChanged("NameTable3");
+            RaisePropertyChanged(nameof(NameTable0));
+            RaisePropertyChanged(nameof(NameTable1));
+            RaisePropertyChanged(nameof(NameTable2));
+            RaisePropertyChanged(nameof(NameTable3));
         }
         #endregion
     }

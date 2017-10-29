@@ -77,27 +77,25 @@ namespace dotnetNES.Client.ViewModel
             ResetNesCommand = new RelayCommand(() =>
             {
                 Engine.Reset();
-                RaisePropertyChanged("IsEnginePaused");
+                RaisePropertyChanged(nameof(IsEnginePaused));
             });
             PowerNesCommand = new RelayCommand(() =>
             {
                 Engine.Power();
-                RaisePropertyChanged("IsEnginePaused");
+                RaisePropertyChanged(nameof(IsEnginePaused));
             });
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
             OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
             OpenSpritesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenSprites));
             OpenDebuggerCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenDebugger));
 
-            PauseCommand = new RelayCommand(PauseEngine);   
-            
-            RaisePropertyChanged("IsEnginePaused");      
-            
-            Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
-            RaisePropertyChanged("Screen");
-        }
+            PauseCommand = new RelayCommand(PauseEngine);
 
-        
+            RaisePropertyChanged(nameof(IsEnginePaused));
+
+            Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
+            RaisePropertyChanged(nameof(Screen));            
+        }        
         #endregion
 
         #region Private Methods
@@ -105,16 +103,14 @@ namespace dotnetNES.Client.ViewModel
         {
             Messenger.Default.Send(new NotificationMessage(windowName));
             Messenger.Default.Send(new NotificationMessage(MessageNames.LoadDebugWindow));
-        }
-
-        
+        }       
 
         private void LoadFile()
         {
             if (Engine != null)
             {
                 Engine.PauseEngine();
-                RaisePropertyChanged("IsEnginePaused");
+                RaisePropertyChanged(nameof(IsEnginePaused));
             }
 
             var dlg = new OpenFileDialog {DefaultExt = ".nes", Filter = "NES Roms (*.nes)|*.nes"};
@@ -124,7 +120,7 @@ namespace dotnetNES.Client.ViewModel
                 if (Engine != null)
                 {
                     Engine.UnPauseEngine();
-                    RaisePropertyChanged("IsEnginePaused");
+                    RaisePropertyChanged(nameof(IsEnginePaused));
                 }
                 return;
             }
@@ -134,10 +130,10 @@ namespace dotnetNES.Client.ViewModel
             DebuggerViewModel.Engine = Engine;
             
             IsCartridgeLoaded = true;
-            RaisePropertyChanged("IsCartridgeLoaded");
+            RaisePropertyChanged(nameof(IsCartridgeLoaded));
 
-            Engine.Power();            
-            RaisePropertyChanged("IsEnginePaused");
+            Engine.Power();
+            RaisePropertyChanged(nameof(IsEnginePaused));
         }
 
         private void OnNewFrameAction()
@@ -172,7 +168,7 @@ namespace dotnetNES.Client.ViewModel
 
             Screen.AddDirtyRect(new Int32Rect(0, 0, 272, 240));
             Screen.Unlock();
-            RaisePropertyChanged("Screen");
+            RaisePropertyChanged(nameof(Screen));
         }
 
         private void PauseEngine()
@@ -182,8 +178,8 @@ namespace dotnetNES.Client.ViewModel
             else
             {
                 Engine.PauseEngine();
-            }            
-            RaisePropertyChanged("IsEnginePaused");
+            }
+            RaisePropertyChanged(nameof(IsEnginePaused));
         }
         #endregion
     }

@@ -10,30 +10,17 @@ namespace dotnetNES.Client.ViewModel
         #region Public Properties
        
 
-        public WriteableBitmap PatternTable0 { get; set; }
+        public WriteableBitmap PatternTable0 { get; set; } = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
 
-        public WriteableBitmap PatternTable1 { get; set; }
+        public WriteableBitmap PatternTable1 { get; set; } = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
 
-        public WriteableBitmap BackgroundPalettes { get; set; }
+        public WriteableBitmap BackgroundPalettes { get; set; } = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
 
-        public WriteableBitmap SpritePalettes { get; set; }
+        public WriteableBitmap SpritePalettes { get; set; } = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
         #endregion
 
         #region Protected Methods
-
-        protected override void LoadView(NotificationMessage obj)
-        {
-            if (obj.Notification != MessageNames.LoadDebugWindow)
-            {
-                return;
-            }            
-
-            PatternTable0 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
-            PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
-            BackgroundPalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
-            SpritePalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
-        }
-
+        
         protected override unsafe void Refresh()
         {
             #region Left Pattern Table
