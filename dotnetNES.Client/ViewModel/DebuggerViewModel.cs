@@ -24,8 +24,8 @@ namespace dotnetNES.Client.ViewModel
         public ObservableCollection<BreakPointType> BreakPointTypes { get; set; } = new ObservableCollection<BreakPointType>
         {
             BreakPointType.Execute,
-            BreakPointType.Read,
-            BreakPointType.Write
+            //BreakPointType.Read,
+            //BreakPointType.Write
         };
 
         public RelayCommand ContinueCommand { get; set; }

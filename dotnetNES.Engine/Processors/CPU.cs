@@ -141,7 +141,6 @@ namespace dotnetNES.Engine.Models
         internal Action<int> ReadMemoryAction { get; set; }
 
         internal Action<int, byte> WriteMemoryAction { get; set; }
-               
 
         /// <summary>
         /// Overriding the ADC Operation to remove decimal mode
@@ -189,7 +188,6 @@ namespace dotnetNES.Engine.Models
 
             Accumulator = newValue;
         }
-
 
         internal ObservableCollection<Disassembly> GenerateDisassembledMemory()
         {            

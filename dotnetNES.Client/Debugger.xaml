@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:command="http://www.galasoft.ch/mvvmlight"
-        Title="Debugger" Height="625" Width="750" 
+        Title="Debugger" Height="625" Width="700" 
         DataContext="{Binding Debugger, Source={StaticResource Locator}}"
         Background="LightGray">
     <i:Interaction.Triggers>
@@ -265,7 +265,7 @@
                 </Grid>
             </GroupBox>
             <FrameworkElement x:Name="dummyElement" Visibility="Collapsed"/>
-            <GroupBox Header="BreakPoints" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="10,0,0,0" Height="175">
+            <GroupBox Header="BreakPoints" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="10,0,0,0" Height="175" MinWidth="240" HorizontalAlignment="Left">
                <DataGrid HorizontalAlignment="Left" Margin="10,10,0,10" VerticalAlignment="Top" AutoGenerateColumns="False" CanUserReorderColumns="False" 
                         CanUserResizeRows="False" CanUserSortColumns="True" CanUserResizeColumns="False" CanUserDeleteRows="True" CanUserAddRows="True" 
                         SelectionMode="Single" ItemsSource="{Binding BreakPoints, Mode=TwoWay}" GridLinesVisibility="All" 
