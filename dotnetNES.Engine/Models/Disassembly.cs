@@ -1,12 +1,12 @@
 ﻿namespace dotnetNES.Engine.Models
 {
-    public class Disassembly
+    public struct Disassembly
     {
-        public string Instruction { get; set; }
+        public string Address { get; set; }
+
+        public int RawAddress { get; set; }
 
         public string FormattedOpCode { get; set; }
-
-        public string InstructionAddress { get; set; }
     }
 
 }

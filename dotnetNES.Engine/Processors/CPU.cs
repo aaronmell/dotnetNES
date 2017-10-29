@@ -2,6 +2,7 @@
 using Processor;
 using dotnetNES.Engine.Utilities;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace dotnetNES.Engine.Models
 {
@@ -10,7 +11,7 @@ namespace dotnetNES.Engine.Models
     /// </summary>
     internal sealed class CPU : Processor.Processor
     {
-        private Dictionary<string, Disassembly> _disassembledMemory = new Dictionary<string, Disassembly>(65535);
+        private ObservableCollection<Disassembly> _disassembledMemory = new ObservableCollection<Disassembly>();
 
         internal bool DisassemblyEnabled;
 
@@ -190,7 +191,7 @@ namespace dotnetNES.Engine.Models
         }
 
 
-        internal Dictionary<string, Disassembly> GenerateDisassembledMemory()
+        internal ObservableCollection<Disassembly> GenerateDisassembledMemory()
         {            
             if (!IsDissasemblyInvalid)
             {
@@ -215,10 +216,10 @@ namespace dotnetNES.Engine.Models
                 var firstByte = opCode.Length > 1 ? Memory[i++].ToString("X").PadLeft(2,'0') : string.Empty;
                 var secondByte = opCode.Length > 2 ? Memory[i++].ToString("X").PadLeft(2, '0') : string.Empty;
                                    
-                _disassembledMemory.Add(originalAddress.ToString("X").PadLeft(2, '0'), new Disassembly
+                _disassembledMemory.Add(new Disassembly
                 {
-                    Instruction = opCode.Instruction.ToString("X").PadLeft(2, '0'),
-                    InstructionAddress = $"{secondByte}{firstByte}",
+                    Address = originalAddress.ToString("X").PadLeft(2, '0'), 
+                    RawAddress = originalAddress,
                     FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)
                 });                                
             }

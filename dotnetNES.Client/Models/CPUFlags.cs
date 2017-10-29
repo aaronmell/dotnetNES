@@ -16,6 +16,7 @@ namespace dotnetNES.Client.Models
         public string YRegister { get; set; }
         public string StackPointer { get; set; }
         public string ProgramCounter { get; set; }
+        public int RawProgramCounter { get; set; }
         public long CycleCount { get; set; }
         public bool CarryFlag { get; set; }
         public bool ZeroFlag { get; set; }
@@ -32,6 +33,7 @@ namespace dotnetNES.Client.Models
             YRegister = engine.GetYRegister();
             StackPointer = engine.GetStackPointer();
             ProgramCounter = engine.GetProgramCounter();
+            RawProgramCounter = engine.GetRawProgramCounter();
             CarryFlag = engine.GetCarryFlag();
             ZeroFlag = engine.GetZeroFlag();
             DisableInterruptFlag = engine.GetDisableInterruptFlag();

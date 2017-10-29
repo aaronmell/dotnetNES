@@ -14,12 +14,19 @@ namespace dotnetNES.Client.ViewModel
     {
         private object _disassemblyLock = new object();
 
-        public Dictionary<string,Disassembly> Disassembly { get; set; }  
-        public string SelectedValue { get; set; }
-
-
+        public ObservableCollection<Disassembly> Disassembly { get; set; }  
+        public int SelectedValue { get; set; }       
+        
         public CPUFlags CPUFlags { get; set; } = new CPUFlags();
         public PPUFlags PPUFlags { get; set; } = new PPUFlags();
+
+        public ObservableCollection<BreakPoint> BreakPoints { get; set; } = new ObservableCollection<BreakPoint>();
+        public ObservableCollection<BreakPointType> BreakPointTypes { get; set; } = new ObservableCollection<BreakPointType>
+        {
+            BreakPointType.Execute,
+            BreakPointType.Read,
+            BreakPointType.Write
+        };
 
         public RelayCommand ContinueCommand { get; set; }
         public RelayCommand BreakCommand { get; set; }
@@ -29,7 +36,12 @@ namespace dotnetNES.Client.ViewModel
 
         public DebuggerViewModel()
         {
-            ContinueCommand = new RelayCommand(() => Engine.UnPauseEngine());
+            ContinueCommand = new RelayCommand(() => 
+            {
+                SelectedValue = -1;
+                RaisePropertyChanged(nameof(SelectedValue));
+                Engine.UnPauseEngine();
+            });
             BreakCommand = new RelayCommand(() => Engine.PauseEngine());
             StepCommand = new RelayCommand(() => 
             {
@@ -44,37 +56,33 @@ namespace dotnetNES.Client.ViewModel
 
         private void UpdateAfterPause()
         {
-            if (Engine.IsDissasemblyInvalid())
-            {
-                Disassembly = Engine.GetDisassembledMemory();
-                BindingOperations.EnableCollectionSynchronization(Disassembly, _disassemblyLock);
-
-                RaisePropertyChanged("Disassembly");
-            }
-
-
-
             CPUFlags.UpdateFlags(Engine);
-            RaisePropertyChanged("CPUFlags");
+            RaisePropertyChanged(nameof(CPUFlags));
 
             PPUFlags.UpdateFlags(Engine);
-            RaisePropertyChanged("PPUFlags");
+            RaisePropertyChanged(nameof(PPUFlags));
 
-            SelectedValue = CPUFlags.ProgramCounter;
-            RaisePropertyChanged("SelectedValue");
-
-        }
+            SelectedValue = CPUFlags.RawProgramCounter;
+            RaisePropertyChanged(nameof(SelectedValue));            
+        }        
 
         protected override void LoadView(NotificationMessage notificationMessage)
-        { 
+        {
             if (notificationMessage.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
             }
 
-            Engine.EnginePaused += Engine_EnginePaused;            
+            Engine.EnginePaused += Engine_EnginePaused;
 
-            UpdateAfterPause();           
+            RaisePropertyChanged(nameof(BreakPoints));
+            RaisePropertyChanged(nameof(BreakPointTypes));
+            Engine.BreakPoints = BreakPoints;
+
+            Engine.PauseEngine();
+
+            Disassembly = Engine.GetDisassembledMemory();
+            RaisePropertyChanged(nameof(Disassembly));
         }
 
         private void Engine_EnginePaused(object sender, System.EventArgs e)

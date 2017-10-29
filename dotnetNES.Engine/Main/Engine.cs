@@ -6,6 +6,8 @@ using PPU = dotnetNES.Engine.Models.PictureProcessingUnit;
 using NLog;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace dotnetNES.Engine.Main
 {
@@ -19,6 +21,9 @@ namespace dotnetNES.Engine.Main
         internal CPU Processor { get; private set; }
         internal PPU PictureProcessingUnit { get; private set; }
         private readonly CartridgeModel _cartridgeModel;
+
+        public ObservableCollection<BreakPoint> BreakPoints { get; set; }
+
         private BackgroundWorker _backgroundWorker;
         private double cyclesToSkip = 0;        
 
@@ -221,7 +226,7 @@ namespace dotnetNES.Engine.Main
         /// Returns the disassembled Memory from the CPU
         /// </summary>
         /// <returns>A collection of <see cref="Disassembly"/></returns>
-        public Dictionary<string, Disassembly> GetDisassembledMemory()
+        public ObservableCollection<Disassembly> GetDisassembledMemory()
         {
             return Processor.GenerateDisassembledMemory();
         }       
@@ -250,10 +255,11 @@ namespace dotnetNES.Engine.Main
 
         private void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
         {
+            var firstCycle = true;
             var worker = sender as BackgroundWorker;
             while (true)
             {
-                if (worker != null && worker.CancellationPending || CheckforCancellation())
+                if (worker != null && worker.CancellationPending || (!firstCycle && CheckforCancellation()))
                 {
                     e.Cancel = true;
                     PauseEngine();
@@ -261,6 +267,7 @@ namespace dotnetNES.Engine.Main
                 }               
 
                 Step();
+                firstCycle = false;
             }
         }
 
@@ -276,7 +283,12 @@ namespace dotnetNES.Engine.Main
                 _skipCycles = false;
 
                 return true;
-            }           
+            }
+
+            if (BreakPoints.Any(x => x.IsEnabled && x.BreakPointType == BreakPointType.Execute && x.ConvertedAddress == Processor.ProgramCounter))
+            {
+                return true;
+            }
 
             return false;
         }
@@ -340,6 +352,11 @@ namespace dotnetNES.Engine.Main
         public string GetProgramCounter()
         {
             return Processor.ProgramCounter.ToString("X").PadLeft(4, '0');
+        }
+
+        public int GetRawProgramCounter()
+        {
+            return Processor.ProgramCounter;
         }
 
         public bool GetDisableInterruptFlag()

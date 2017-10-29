@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         xmlns:command="http://www.galasoft.ch/mvvmlight"
-        xmlns:behavior="clr-namespace:dotnetNES.Client.Behaviors"
-        Title="Debugger" Height="600" Width="750" 
+        Title="Debugger" Height="625" Width="750" 
         DataContext="{Binding Debugger, Source={StaticResource Locator}}"
         Background="LightGray">
     <i:Interaction.Triggers>
@@ -40,6 +39,18 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <Style x:Key="ListBoxItemStyle" TargetType="{x:Type ListViewItem}">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="MinHeight" Value="20"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Style.Triggers>
+                <Trigger Property="ListBoxItem.IsSelected" Value="True">
+                    <Setter Property="Background" Value="Yellow" />
+                    <Setter Property="Foreground" Value="Black"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="TextBlockLabelStyle" TargetType="{x:Type TextBlock}">
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,0,5,0"/>
@@ -64,7 +75,7 @@
             <Setter Property="Margin" Value="10,25,0,0" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="BorderBrush" Value="Black" />
-            <Setter Property="Padding" Value="10" />
+            <Setter Property="Padding" Value="5" />
             <Setter Property="Height" Value="Auto" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
@@ -72,6 +83,17 @@
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,0,15,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="errorStyle" TargetType="{x:Type TextBox}">
+            <Setter Property="Padding" Value="-2"/>
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="True">
+                    <Setter Property="Background" Value="Red"/>
+                    <Setter Property="ToolTip" 
+          Value="{Binding RelativeSource={RelativeSource Self},
+            Path=(Validation.Errors)[0].ErrorContent}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
     <Grid>
@@ -83,7 +105,7 @@
             <RowDefinition />           
         </Grid.RowDefinitions>
 
-        <Menu HorizontalAlignment="Left" Height="20" Margin="10,0,0,0" VerticalAlignment="Top" Width="{Binding ElementName=MainGrid, Path=ActualWidth}" Grid.Column="0" Grid.Row="0" >
+        <Menu HorizontalAlignment="Left" Height="20" Margin="10,0,0,0" VerticalAlignment="Top" Grid.Column="0" Grid.Row="0" >
             <MenuItem Header="Debug">
                 <MenuItem Header="Continue" Command="{Binding Path=ContinueCommand}" InputGestureText="F5"></MenuItem>
                 <MenuItem Header="Break" Command="{Binding Path=BreakCommand}" InputGestureText="CTRL+End"></MenuItem>
@@ -93,18 +115,16 @@
                 <MenuItem Header="Run One Frame" Command="{Binding Path=RunOneFrameCommand}" InputGestureText="F7"></MenuItem>
             </MenuItem>
         </Menu>
-        <DataGrid Height="500" HorizontalAlignment="Left" Margin="10,25,0,0" Name="OutputLog" VerticalAlignment="Top" MaxWidth="500" Width="Auto" AutoGenerateColumns="False" 
-					CanUserReorderColumns="False" CanUserResizeRows="False" CanUserSortColumns="False" CanUserResizeColumns="False" CanUserDeleteRows="False"
-					CanUserAddRows="False" SelectionMode="Single" ItemsSource="{Binding Disassembly}" CellStyle="{StaticResource CellStyle}" GridLinesVisibility="Horizontal" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
-                    SelectedValue="{Binding SelectedValue, Mode=OneWay}" SelectedValuePath="Key" SelectionUnit="FullRow" HorizontalScrollBarVisibility="Disabled">
-            <i:Interaction.Behaviors>
-                <behavior:ScrollIntoViewBehavior />
-            </i:Interaction.Behaviors>
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Addr" Width="40" CanUserResize="False" IsReadOnly="True" Binding="{Binding Key, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
-                <DataGridTextColumn Header="Instruction" Width="110" CanUserResize="False" IsReadOnly="True" Binding="{Binding Value.FormattedOpCode, Mode=OneWay}" HeaderStyle="{StaticResource ColumnHeaderStyle}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <ListView Height="550" HorizontalAlignment="Left" Margin="10,25,0,0" Name="OutputLog" VerticalAlignment="Top" MaxWidth="500" Width="150" SelectionMode="Single" 
+                  ItemsSource="{Binding Disassembly}" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" SelectedValue="{Binding SelectedValue, Mode=TwoWay}" 
+                  SelectedValuePath="RawAddress" ItemContainerStyle="{StaticResource ListBoxItemStyle}" SelectionChanged="OutputLog_SelectionChanged">           
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Addr" Width="40" DisplayMemberBinding="{Binding Address, Mode=OneWay}" />
+                    <GridViewColumn Header="Instruction" Width="110" DisplayMemberBinding="{Binding FormattedOpCode, Mode=OneWay}" />
+                </GridView>
+            </ListView.View>            
+        </ListView>
         <StackPanel Grid.Column="1" Grid.Row="0">
             <GroupBox Header="CPU" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}">
                 <Grid>
@@ -170,7 +190,7 @@
                     </StackPanel>                 
                 </Grid>
             </GroupBox>
-            <GroupBox Header="PPU" Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="10,5,0,0">
+            <GroupBox Header="PPU" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="10,5,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />                       
@@ -179,7 +199,7 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-
+                    
                     <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
                         <TextBlock  Style="{StaticResource TextBlockLabelStyle}">Cycle:</TextBlock>
                         <Border Style="{StaticResource TextBlockValueBorderStyle}">
@@ -243,6 +263,20 @@
                         </GroupBox>
                     </StackPanel>  
                 </Grid>
+            </GroupBox>
+            <FrameworkElement x:Name="dummyElement" Visibility="Collapsed"/>
+            <GroupBox Header="BreakPoints" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="10,0,0,0" Height="175">
+               <DataGrid HorizontalAlignment="Left" Margin="10,10,0,10" VerticalAlignment="Top" AutoGenerateColumns="False" CanUserReorderColumns="False" 
+                        CanUserResizeRows="False" CanUserSortColumns="True" CanUserResizeColumns="False" CanUserDeleteRows="True" CanUserAddRows="True" 
+                        SelectionMode="Single" ItemsSource="{Binding BreakPoints, Mode=TwoWay}" GridLinesVisibility="All" 
+                        HorizontalScrollBarVisibility="Disabled" IsReadOnly="False" Height="120" Width="Auto">
+                    <DataGrid.Columns>
+                        <DataGridCheckBoxColumn Header="Enabled" Binding="{Binding IsEnabled, Mode=TwoWay}" />
+                        <DataGridComboBoxColumn Header="Type" ItemsSource="{Binding DataContext.BreakPointTypes, Source={x:Reference dummyElement}}" 
+                                                SelectedItemBinding="{Binding BreakPointType, Mode=TwoWay}" Width="70"/>
+                        <DataGridTextColumn Header="Address" Binding="{Binding Address, Mode=TwoWay, ValidatesOnExceptions=True, StringFormat=x}" Width="65" EditingElementStyle="{StaticResource errorStyle}" />                        
+                    </DataGrid.Columns>
+                </DataGrid>
             </GroupBox>
         </StackPanel>
         
