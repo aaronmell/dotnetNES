@@ -1,0 +1,103 @@
+﻿<Window x:Class="dotnetNES.Client.Sprites"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        xmlns:command="http://www.galasoft.ch/mvvmlight"
+        Title="Sprites" Height="492.5" Width="586"
+        DataContext="{Binding Sprites, Source={StaticResource Locator}}"
+        Background="LightGray">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Closing">
+            <command:EventToCommand Command="{Binding WindowClosingCommand}" PassEventArgsToCommand="True" />
+        </i:EventTrigger>
+        <i:EventTrigger EventName="Loaded">
+            <command:EventToCommand Command="{Binding WindowOpeningCommand}" PassEventArgsToCommand="True" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid Name="MainGrid" Height="384" Width="384">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+            <RowDefinition Height="48" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+            <ColumnDefinition Width="48" />
+        </Grid.ColumnDefinitions>
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite0 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite1 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite2 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite3 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite4 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite5 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite6 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite7 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="0" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite8 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite9 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite10 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite11 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite12 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite13 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite14 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite15 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="1" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite16 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite17 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite18 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite19 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite20 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite21 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite22 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite23 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="2" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite24 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite25 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite26 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite27 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite28 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite29 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite30 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite31 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="3" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite32 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite33 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite34 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite35 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite36 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite37 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite38 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite39 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="4" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite40 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite41 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite42 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite43 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite44 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite45 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite46 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite47 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="5" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite48 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite49 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite50 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite51 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite52 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite53 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite54 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite55 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="6" Grid.Column="7" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite56 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="0" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite57 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="1" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite58 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="2" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite59 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="3" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite60 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="4" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite61 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="5" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite62 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="6" />
+        <Image HorizontalAlignment="Left" Height="36" Margin="6" VerticalAlignment="Top" Width="36" Source="{Binding Sprite63 }" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.Row="7" Grid.Column="7" />
+    </Grid>
+</Window>

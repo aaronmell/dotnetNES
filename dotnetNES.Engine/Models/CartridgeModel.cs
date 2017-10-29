@@ -10,19 +10,16 @@ namespace dotnetNES.Engine.Models
         /// <summary>
         /// The ROM Banks
         /// </summary>
-        [NotNull]
         public byte[][] ROMBanks { get; set; }
 
         /// <summary>
         /// The VROM Banks
         /// </summary>
-        [NotNull]
         public byte[][] VROMBanks { get; set; }
 
         /// <summary>
         /// The trainer
         /// </summary>
-        [NotNull]
         public byte[] Trainer { get; set; }
 
         /// <summary>

@@ -1,13 +1,22 @@
 ﻿using System;
 using Processor;
+using dotnetNES.Engine.Utilities;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
-namespace dotnetNES.Engine.Processors
+namespace dotnetNES.Engine.Models
 {
     /// <summary>
     /// Overridden Processor. This was done so I can modify the behavior of several of the methods to work correctly in the NES, without breaking the emulator.
     /// </summary>
     internal sealed class CPU : Processor.Processor
     {
+        private ObservableCollection<Disassembly> _disassembledMemory = new ObservableCollection<Disassembly>();
+
+        internal bool DisassemblyEnabled;
+
+        internal bool IsDissasemblyInvalid { get; set; } = true;
+
         internal CPU()
         {
             ReadMemoryAction = x => { };
@@ -31,15 +40,29 @@ namespace dotnetNES.Engine.Processors
             {
                 address = (address & 0x7) + 0x2000;
 
-                Memory[0x2002] = (byte)(Memory[0x2002] | data & 0x1F);
+                Memory[0x2002] = (byte)(Memory[0x2002] | data & 0x1F);               
+            }
+
+            //OAMDMA When a byte is written to 4014 this triggers the memory in location XX00-XXFF to be copied to 2004 in the PPU, where XX is the byte written.
+            if (address == 0x4014)
+            {
+                
+                for (var i = 0; i < 0x100; i++)
+                {
+                    WriteMemoryAction(0x2004, (byte)(ReadMemoryValueWithoutCycle(data << 8 | i)));
+                }                
             }
             
             Memory[address] = data;
+            
             //Not sure if this is in the right place
             WriteMemoryAction(address, data);
 
-			IncrementCycleCount();
-            
+            //Doing this here so the memory has already been updated
+
+            IncrementCycleCount();
+
+            IsDissasemblyInvalid = true;
         }
 
         /// <summary>
@@ -63,11 +86,8 @@ namespace dotnetNES.Engine.Processors
 
 			ReadMemoryAction(address);
             IncrementCycleCount();
-
             
-            var value = Memory[address];
-           
-            return value;
+            return Memory[address];
         }
 
         /// <summary>
@@ -75,7 +95,7 @@ namespace dotnetNES.Engine.Processors
         /// </summary>
         /// <param name="address">The address to read from</param>
         /// <returns>the value from memory</returns>
-        public byte ReadMemoryValueWithoutCycle(int address)
+        public override byte ReadMemoryValueWithoutCycle(int address)
         {
             //Memory from 0x1000-0x17FF mirrors 0x0000-0x7FFF
             if (address < 0x1800)
@@ -88,8 +108,7 @@ namespace dotnetNES.Engine.Processors
                 address = (address & 0x7) + 0x2000;
             }
 
-            var value = Memory[address];
-            return value;
+           return Memory[address];
         }
 
         /// <summary>
@@ -109,8 +128,9 @@ namespace dotnetNES.Engine.Processors
             {
                 address = (address & 0x7) + 0x2000;
             }
-
             Memory[address] = data;
+
+            IsDissasemblyInvalid = true;
         }
 
         /// <summary>
@@ -166,5 +186,41 @@ namespace dotnetNES.Engine.Processors
 
             Accumulator = newValue;
         }
+
+        internal ObservableCollection<Disassembly> GenerateDisassembledMemory()
+        {            
+            if (!IsDissasemblyInvalid)
+            {
+                return _disassembledMemory;
+            }
+
+            _disassembledMemory.Clear();
+            IsDissasemblyInvalid = false;
+
+            var i = 0;
+            while (i < Memory.Length - 1)
+            {
+                if (!OpCodeLookup.OpCodes.ContainsKey(Memory[i]))
+                {
+                    i++;
+                    continue;
+                }
+                
+                var originalAddress = i;
+                var opCode = OpCodeLookup.OpCodes[Memory[i++]];
+
+                var firstByte = opCode.Length > 1 ? Memory[i++].ToString("X").PadLeft(2,'0') : string.Empty;
+                var secondByte = opCode.Length > 2 ? Memory[i++].ToString("X").PadLeft(2, '0') : string.Empty;
+                                   
+                _disassembledMemory.Add(new Disassembly
+                {
+                    Address = originalAddress.ToString("X").PadLeft(2, '0'), 
+                    RawAddress = originalAddress,
+                    FormattedOpCode = opCode.Length == 1 ? opCode.Format : opCode.Length == 2 ? string.Format(opCode.Format, firstByte) : string.Format(opCode.Format, secondByte, firstByte)
+                });                                
+            }
+
+            return _disassembledMemory;
+        } 
     }
 }

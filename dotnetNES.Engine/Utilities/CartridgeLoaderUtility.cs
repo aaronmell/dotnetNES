@@ -15,7 +15,6 @@ namespace dotnetNES.Engine.Utilities
         /// </summary>
         /// <param name="fileName">The file to load</param>
         /// <returns>The cartridge model</returns>
-        [Pure]
         internal static CartridgeModel LoadCartridge(string fileName)
         {
             var rawData = LoadRawData(fileName);
@@ -27,7 +26,6 @@ namespace dotnetNES.Engine.Utilities
         /// </summary>
         /// <param name="rawData">The raw data to load</param>
         /// <returns>The cartridge model</returns>
-        [Pure]
         internal static CartridgeModel LoadCartridge(byte[] rawData)
         {
             //First 3 bits are the always the ascii bits

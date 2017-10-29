@@ -9,10 +9,11 @@ namespace dotnetNES.Tests.Processors
          [Test]
         public void PPU_Palette_LoadedCorrectly_Instr_Test_V5()
         {
-            
+            var path = Utilities.GetTestPath("instr_test-v5",
+                  "01-basics.nes");
+
             var engine =
-              new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "instr_test-v5",
-                  "01-basics.nes"));
+              new Engine.Main.Engine(path);
 
             var steps = 0;
             while (steps < 126352)
@@ -42,10 +43,11 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_Palette_LoadedCorrectly_Nes_Test_Rom()
         {
+            var path = Utilities.GetTestPath("nestest",
+                  "nestest.nes");
 
             var engine =
-              new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
-                  "nestest.nes"));
+              new Engine.Main.Engine(path);            
 
             var steps = 0;
             while (steps < 124262)
@@ -78,9 +80,16 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_Palette_LoadedCorrectly_DK_Rom()
         {
+            var romName = "Donkey Kong (JU).nes";
 
-            var engine =
-              new Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
+            var path = Utilities.GetTestPath("roms", romName);
+
+            if (!File.Exists(path))
+            {
+                Assert.Inconclusive($"Unable to find rom {romName}");
+            }
+
+            var engine = new Engine.Main.Engine(path);
 
             var steps = 0;
             while (steps < 40000)
@@ -131,8 +140,16 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void PPU_NameTables_LoadedCorrectly_DK_Rom()
         {
-            var engine =
-               new Engine.Main.Engine(Path.Combine("F:", "roms", "Donkey Kong (JU).nes"));
+            var romName = "Donkey Kong (JU).nes";
+
+            var path = Utilities.GetTestPath("roms", romName);
+
+            if (!File.Exists(path))
+            {
+                Assert.Inconclusive($"Unable to find rom {romName}");
+            }
+
+            var engine = new Engine.Main.Engine(path);
 
             var steps = 0;
             while (steps < 154262)
@@ -140,7 +157,6 @@ namespace dotnetNES.Tests.Processors
                 engine.Step();
                 steps++;
             }
-
 
             for (var i = 0x2000; i < 0x2083; i++)
             {
@@ -157,9 +173,11 @@ namespace dotnetNES.Tests.Processors
         [TestCase("7.nmi_timing.nes", 2200000)]
         public void PPU_VBL_NMI_Tests(string fileName, int totalSteps)
         {
+            var path = Utilities.GetTestPath("vbl_nmi_timing",
+                  fileName);
+
             var engine =
-              new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "vbl_nmi_timing",
-                  fileName));
+              new Engine.Main.Engine(path);
             var steps = 0;
 
             while (steps < totalSteps)
@@ -179,21 +197,15 @@ namespace dotnetNES.Tests.Processors
 		[TestCase("vram_access.nes", 2200000)]
 		public void Misc_PPU_Tests(string fileName, int totalSteps)
 		{
-			var engine =
-			  new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "misc_ppu_tests",
-				  fileName));
+            var path = Utilities.GetTestPath("misc_ppu_tests",
+                 fileName);
+
+            var engine =
+			  new Engine.Main.Engine(path);
 			var steps = 0;
 
 			while (steps < totalSteps)
 			{
-
-				if (steps == 253298)
-				{
-					var x = 1;
-					var y = x;
-				}
-
-
 				engine.Step();
 				steps++;
 			}
@@ -215,9 +227,32 @@ namespace dotnetNES.Tests.Processors
         [TestCase("10-even_odd_timing.nes", "")]
         public void VBlank_NMI_Timing_Test_No_Errors(string fileName, string expectedString)
         {
-            var output = Utilties.RunTest(fileName, "ppu_vbl_nmi");
+            var output = Utilities.RunTest(fileName, "ppu_vbl_nmi");
 
             Assert.AreEqual(expectedString, output);
+        }
+
+        [TestCase("01.basics.nes")]
+        [TestCase("02.alignment.nes")]
+        public void PPU_Sprite_Hit_Tests(string fileName)
+        {
+            var path = Utilities.GetTestPath("sprite_hit_tests_2005.10.05",
+               fileName);
+
+            var engine =
+              new Engine.Main.Engine(path);
+           
+            var steps = 0;
+
+            while (steps < 250000)
+            {
+                engine.Step();
+                steps++;
+            }
+
+            var result = engine.PictureProcessingUnit.ReadPPUMemory(0x20C2);
+
+            Assert.AreEqual(80, result, "Nametable at 0x20c2 was not Set to P");
         }
     }
 }

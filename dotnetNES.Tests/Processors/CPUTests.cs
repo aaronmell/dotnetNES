@@ -25,7 +25,7 @@ namespace dotnetNES.Tests.Processors
         [TestCase("16-special.nes", "\n16-special\n\nPassed\n\0")]
         public void CPU_Instruction_Test_No_Errors(string fileName, string expectedString)
         {
-            var output = Utilties.RunTest(fileName, "instr_test-v5");
+            var output = Utilities.RunTest(fileName, "instr_test-v5");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -35,7 +35,7 @@ namespace dotnetNES.Tests.Processors
         //[TestCase("03-dummy_reads.nes", "\n02-branch_wrap\n\nPassed\n\0")]
         public void CPU_Instruction_Misc_No_Errors(string fileName, string expectedString)
         {
-            var output = Utilties.RunTest(fileName, "instr_misc");
+            var output = Utilities.RunTest(fileName, "instr_misc");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -47,7 +47,7 @@ namespace dotnetNES.Tests.Processors
         //[TestCase("5-branch_delays_irq.nes", "")]
         public void CPU_Interrupts_No_Errors(string fileName, string expectedString)
         {
-            var output = Utilties.RunTest(fileName, "cpu_int_v2");
+            var output = Utilities.RunTest(fileName, "cpu_int_v2");
 
             Assert.AreEqual(expectedString, output);
         }
@@ -55,9 +55,12 @@ namespace dotnetNES.Tests.Processors
         [Test]
         public void Nestest_Matches()
         {
+            var path = Utilities.GetTestPath("nestest",
+                 "nestest.nes");
+
             var engine =
-                new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", "nestest",
-                    "nestest.nes"));
+              new Engine.Main.Engine(path);
+           
             //Changing the Initial PC to 0xC000
             engine.Processor.WriteMemoryValueWithoutCycle(65532, 0);
             engine.Processor.Reset();
@@ -67,6 +70,7 @@ namespace dotnetNES.Tests.Processors
             var steps = 1;
             while (steps < 5002) //Can't run the full test, since past this point unofficial op codes show up.
             {
+               
                 engine.Step();
 
                 Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter,
@@ -88,7 +92,7 @@ namespace dotnetNES.Tests.Processors
                     string.Format("Step {0} StackPointer: ", steps));
 
                 Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount,
-                    string.Format("Step {0} CycleCount: ", steps));
+                   string.Format("Step {0} CycleCount: ", steps));
                 Assert.AreEqual(testData[steps].ScanLine, engine.PictureProcessingUnit.ScanLine,
                     string.Format("Step {0} ScanLine: ", steps));
                 steps++;
@@ -97,8 +101,10 @@ namespace dotnetNES.Tests.Processors
 
         private List<TestData> LoadTestData(string folder, string filename)
         {
+            var path = Utilities.GetTestPath(folder, filename);
+            
             var reader =
-                new StreamReader(File.OpenRead(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder, filename)));
+                new StreamReader(File.OpenRead(path));
 
             var data = new List<TestData>();
 

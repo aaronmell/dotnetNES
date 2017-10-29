@@ -11,5 +11,7 @@ namespace dotnetNES.Client
         public const string UpdateDebugScreens = "UpdateDebugScreens";
         public const string OpenNameTables = "OpenNameTables";
         public const string LoadDebugWindow = "LoadDebugWindow";
+        public const string OpenSprites = "OpenSprites";
+        public const string OpenDebugger = "OpenDebugger";
     }
 }

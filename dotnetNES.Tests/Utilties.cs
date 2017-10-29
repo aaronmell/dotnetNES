@@ -4,13 +4,28 @@ using System.IO;
 
 namespace dotnetNES.Tests
 {
-    public static class Utilties
+    public static class Utilities
     {
+        public static string GetTestPath(string folder, string fileName)
+        {
+            const string EnvironmentVariable = "TestDataDirectory";
+            string testDataDir = Environment.GetEnvironmentVariable(EnvironmentVariable);
+
+            if (string.IsNullOrWhiteSpace(testDataDir))
+            {
+                testDataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TestRoms");
+            }
+
+            return Path.Combine(testDataDir, folder,
+                   fileName);
+        }
+
         public static string RunTest(string fileName, string folder)
         {
+            
+
             var engine =
-               new Engine.Main.Engine(Path.Combine(Environment.CurrentDirectory, "TestRoms", folder,
-                   fileName));
+               new Engine.Main.Engine(GetTestPath(folder, fileName));
 
             var steps = 0;
             while (steps < 31000 || engine.Processor.ReadMemoryValueWithoutCycle(0x6000) >= 0x80)

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client.ViewModel
@@ -12,42 +8,23 @@ namespace dotnetNES.Client.ViewModel
     /// <summary>
     /// The view model for the NameTables View
     /// </summary>
-    public sealed class NameTablesViewModel : ViewModelBase
+    public sealed class NameTablesViewModel : DebuggingBaseViewModel
     {
         #region Public Properties
-        public Engine.Main.Engine Engine { get; set; }
 
-        public WriteableBitmap NameTable0 { get; set; }
+        public WriteableBitmap NameTable0 { get; set; } = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
         public WriteableBitmap NameTable1 { get; set; }
         public WriteableBitmap NameTable2 { get; set; }
         public WriteableBitmap NameTable3 { get; set; }
         #endregion
 
-        #region Constructors
-        public NameTablesViewModel(Engine.Main.Engine engine)
-            : this()
-        {
-            Engine = engine;
-        }
-
-        [PreferredConstructor]
-        public NameTablesViewModel()
-        {
-            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
-            Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
-        }
-        #endregion
-
-        #region Private Methods
-        private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
+        #region Protected Methods
+        protected override void LoadView(NotificationMessage obj)
         {
             if (obj.Notification != MessageNames.LoadDebugWindow)
             {
                 return;
-            }
-
-            Engine = obj.Content;
-            NameTable0 = new WriteableBitmap(256, 240, 1, 1, PixelFormats.Bgr24, null);
+            }  
 
             if (Engine.IsVerticalMirroringEnabled)
             {
@@ -62,17 +39,8 @@ namespace dotnetNES.Client.ViewModel
                 NameTable3 = NameTable2;
             }
         }
-
-        private void RefreshScreen(NotificationMessage obj)
-        {
-            if (obj.Notification != MessageNames.UpdateDebugScreens || Engine == null)
-                return;
-
-            if (Application.Current != null)
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal, new Action(Refresh));
-        }
-
-        private unsafe void Refresh()
+        
+        protected unsafe override void Refresh()
         {
             NameTable0.Lock();
             var nameTable0Ptr = NameTable0.BackBuffer;
@@ -106,10 +74,10 @@ namespace dotnetNES.Client.ViewModel
                 NameTable2.Unlock();
             }
 
-            RaisePropertyChanged("NameTable0");
-            RaisePropertyChanged("NameTable1");
-            RaisePropertyChanged("NameTable2");
-            RaisePropertyChanged("NameTable3");
+            RaisePropertyChanged(nameof(NameTable0));
+            RaisePropertyChanged(nameof(NameTable1));
+            RaisePropertyChanged(nameof(NameTable2));
+            RaisePropertyChanged(nameof(NameTable3));
         }
         #endregion
     }

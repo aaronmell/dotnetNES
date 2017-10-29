@@ -32,6 +32,8 @@ namespace dotnetNES.Client.ViewModel
             SimpleIoc.Default.Register<MainViewModel>();
             SimpleIoc.Default.Register<PatternsAndPalettesViewModel>();
             SimpleIoc.Default.Register<NameTablesViewModel>();
+            SimpleIoc.Default.Register<SpritesViewModel>();
+            SimpleIoc.Default.Register<DebuggerViewModel>();
         }
 
         public MainViewModel Main
@@ -50,6 +52,16 @@ namespace dotnetNES.Client.ViewModel
         public NameTablesViewModel NameTables
         {
             get { return ServiceLocator.Current.GetInstance<NameTablesViewModel>(); }
+        }
+
+        public SpritesViewModel Sprites
+        {
+            get { return ServiceLocator.Current.GetInstance<SpritesViewModel>(); }
+        }
+
+        public DebuggerViewModel Debugger
+        {
+            get { return ServiceLocator.Current.GetInstance<DebuggerViewModel>(); }
         }
         
         public static void Cleanup()

@@ -1,73 +1,29 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client.ViewModel
 {
-    public class PatternsAndPalettesViewModel : ViewModelBase
+    public sealed class PatternsAndPalettesViewModel : DebuggingBaseViewModel
     {
         #region Public Properties
-        public Engine.Main.Engine Engine { get; set; }
+       
 
-        public WriteableBitmap PatternTable0 { get; set; }
+        public WriteableBitmap PatternTable0 { get; set; } = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
 
-        public WriteableBitmap PatternTable1 { get; set; }
+        public WriteableBitmap PatternTable1 { get; set; } = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
 
-        public WriteableBitmap BackgroundPalettes { get; set; }
+        public WriteableBitmap BackgroundPalettes { get; set; } = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
 
-        public WriteableBitmap SpritePalettes { get; set; }
+        public WriteableBitmap SpritePalettes { get; set; } = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
         #endregion
 
-        #region Constructors
-        public PatternsAndPalettesViewModel(Engine.Main.Engine engine)
-            : this()
-        {
-            Engine = engine;
-        }
-
-        [PreferredConstructor]
-        public PatternsAndPalettesViewModel()
-        {
-            Messenger.Default.Register<NotificationMessage<Engine.Main.Engine>>(this, LoadView);
-            Messenger.Default.Register<NotificationMessage>(this, RefreshScreen);
-        }
-        #endregion
-
-        #region Private Methods
-        private void LoadView(NotificationMessage<Engine.Main.Engine> obj)
-        {
-            if (obj.Notification != MessageNames.LoadDebugWindow)
-            {
-                return;
-            }
-
-            Engine = obj.Content;
-
-            PatternTable0 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
-            PatternTable1 = new WriteableBitmap(128, 128, 1, 1, PixelFormats.Bgr24, null);
-            BackgroundPalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
-            SpritePalettes = new WriteableBitmap(512, 32, 1, 1, PixelFormats.Bgr24, null);
-        }
-
-        private void RefreshScreen(NotificationMessage obj)
-        {
-            if (obj.Notification != MessageNames.UpdateDebugScreens || Engine == null)
-                return;
-
-            if (Application.Current != null)
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Normal,new Action(Refresh)); 
-        }
-
-        private unsafe void Refresh()
+        #region Protected Methods
+        
+        protected override unsafe void Refresh()
         {
             #region Left Pattern Table
-           
-
             PatternTable0.Lock();
             var bufferPtr = PatternTable0.BackBuffer;
 

@@ -27,14 +27,25 @@ namespace dotnetNES.Client.ViewModel
     {
         #region Private Fields
         private string _fileName;
-        private readonly BackgroundWorker _backgroundWorker;
-        private int _frameCount;
+        private double _frameCount;
         #endregion
 
         #region Public Properties
-        public Engine.Main.Engine Engine { get; set; }
+        
+        public static Engine.Main.Engine Engine { get; set; }
         public bool IsCartridgeLoaded { get; set; }
-        public bool IsEnginePaused { get; set; }
+        public bool IsEnginePaused
+        {
+            get
+            {
+                if (Engine == null)
+                {
+                    return true;
+                }
+
+                return Engine.IsPaused;                  
+            }
+        }
         public WriteableBitmap Screen { get; set; }
         #endregion
 
@@ -49,6 +60,10 @@ namespace dotnetNES.Client.ViewModel
 
         public RelayCommand OpenNameTablesCommand { get; set; }
 
+        public RelayCommand OpenSpritesCommand { get; set; }
+
+        public RelayCommand OpenDebuggerCommand { get; set; }
+
         public RelayCommand PauseCommand { get; set; }
         #endregion
 
@@ -61,82 +76,64 @@ namespace dotnetNES.Client.ViewModel
             LoadFileCommand = new RelayCommand(LoadFile);
             ResetNesCommand = new RelayCommand(() =>
             {
-                _backgroundWorker.CancelAsync();
                 Engine.Reset();
-                _backgroundWorker.RunWorkerAsync();
+                RaisePropertyChanged(nameof(IsEnginePaused));
             });
             PowerNesCommand = new RelayCommand(() =>
             {
-                Engine = new Engine.Main.Engine(_fileName) { OnNewFrameAction = OnNewFrameAction };
+                Engine.Power();
+                RaisePropertyChanged(nameof(IsEnginePaused));
             });
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
             OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
+            OpenSpritesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenSprites));
+            OpenDebuggerCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenDebugger));
 
             PauseCommand = new RelayCommand(PauseEngine);
 
-            IsEnginePaused = false;
-            RaisePropertyChanged("IsEnginePaused");
-
-            _backgroundWorker = new BackgroundWorker { WorkerSupportsCancellation = true, WorkerReportsProgress = false };
-            _backgroundWorker.DoWork += BackgroundWorkerDoWork;
+            RaisePropertyChanged(nameof(IsEnginePaused));
 
             Screen = new WriteableBitmap(272, 240, 1, 1, PixelFormats.Bgr24, null);
-            RaisePropertyChanged("Screen");
-        }
+            RaisePropertyChanged(nameof(Screen));            
+        }        
         #endregion
 
         #region Private Methods
         private void OpenDebugWindowWithEngine(string windowName)
         {
             Messenger.Default.Send(new NotificationMessage(windowName));
-            Messenger.Default.Send(new NotificationMessage<Engine.Main.Engine>(Engine, MessageNames.LoadDebugWindow));
-        }
-
-        private void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
-        {
-            var worker = sender as BackgroundWorker;
-            while (true)
-            {
-                if (worker != null && worker.CancellationPending || IsEnginePaused)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-                Engine.Step();
-            }
-         }
+            Messenger.Default.Send(new NotificationMessage(MessageNames.LoadDebugWindow));
+        }       
 
         private void LoadFile()
         {
-            IsEnginePaused = true;
-            RaisePropertyChanged("IsEnginePaused");
+            if (Engine != null)
+            {
+                Engine.PauseEngine();
+                RaisePropertyChanged(nameof(IsEnginePaused));
+            }
 
             var dlg = new OpenFileDialog {DefaultExt = ".nes", Filter = "NES Roms (*.nes)|*.nes"};
 
             if (dlg.ShowDialog() != true)
             {
-                IsEnginePaused = false;
-                RaisePropertyChanged("IsEnginePaused");
+                if (Engine != null)
+                {
+                    Engine.UnPauseEngine();
+                    RaisePropertyChanged(nameof(IsEnginePaused));
+                }
                 return;
             }
 
             _fileName = dlg.FileName;
             Engine = new Engine.Main.Engine(_fileName) {OnNewFrameAction = OnNewFrameAction};
+            DebuggerViewModel.Engine = Engine;
             
             IsCartridgeLoaded = true;
-            RaisePropertyChanged("IsCartridgeLoaded");
+            RaisePropertyChanged(nameof(IsCartridgeLoaded));
 
-            _backgroundWorker.CancelAsync();
-
-            while (_backgroundWorker.IsBusy)
-            {
-
-            }
-
-            IsEnginePaused = false;
-            RaisePropertyChanged("IsEnginePaused");
-
-            _backgroundWorker.RunWorkerAsync();
+            Engine.Power();
+            RaisePropertyChanged(nameof(IsEnginePaused));
         }
 
         private void OnNewFrameAction()
@@ -171,20 +168,18 @@ namespace dotnetNES.Client.ViewModel
 
             Screen.AddDirtyRect(new Int32Rect(0, 0, 272, 240));
             Screen.Unlock();
-            RaisePropertyChanged("Screen");
+            RaisePropertyChanged(nameof(Screen));
         }
 
         private void PauseEngine()
         {
-                if (IsEnginePaused) 
-                    _backgroundWorker.RunWorkerAsync();
-                else
-                {
-                    _backgroundWorker.CancelAsync();
-                }
-
-            IsEnginePaused = !IsEnginePaused;
-            RaisePropertyChanged("IsEnginePaused");
+            if (IsEnginePaused)
+                Engine.UnPauseEngine();
+            else
+            {
+                Engine.PauseEngine();
+            }
+            RaisePropertyChanged(nameof(IsEnginePaused));
         }
         #endregion
     }
