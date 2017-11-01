@@ -115,19 +115,19 @@ namespace dotnetNES.Tests.Processors
             Assert.AreEqual(0x0, engine.PictureProcessingUnit.ReadPPUMemory(0x3f0e), "0X3F0e");
             Assert.AreEqual(0x0, engine.PictureProcessingUnit.ReadPPUMemory(0x3f0f), "0X3F0f");
 
-            Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F10), "0X3F10");
+            Assert.AreEqual(0x0F, engine.PictureProcessingUnit.ReadPPUMemory(0x3F10), "0X3F10");
             Assert.AreEqual(0x25, engine.PictureProcessingUnit.ReadPPUMemory(0x3F11), "0X3F11");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F12), "0X3F12");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F13), "0X3F13");
-            Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F14), "0X3F14");
+            Assert.AreEqual(0x0F, engine.PictureProcessingUnit.ReadPPUMemory(0x3F14), "0X3F14");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F15), "0X3F15");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F16), "0X3F16");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F17), "0X3F17");
-            Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F18), "0X3F18");
+            Assert.AreEqual(0x0F, engine.PictureProcessingUnit.ReadPPUMemory(0x3F18), "0X3F18");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F19), "0X3F19");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1a), "0X3F1a");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1b), "0X3F1b");
-            Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1c), "0X3F1c");
+            Assert.AreEqual(0x0F, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1c), "0X3F1c");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1d), "0X3F1d");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1e), "0X3F1e");
             Assert.AreEqual(0x00, engine.PictureProcessingUnit.ReadPPUMemory(0x3F1f), "0X3F1f");
