@@ -628,7 +628,7 @@ namespace dotnetNES.Engine.Models
 				InnerCycleAction();
 			}
 
-		   if ((ScanLine == 241) && (CycleCount == 0))
+		   if ((ScanLine == 241) && (CycleCount == 1))
             {
                 _ppuStatusFlags.VerticalBlank = 1;
                 
