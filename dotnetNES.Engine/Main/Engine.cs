@@ -22,6 +22,7 @@ namespace dotnetNES.Engine.Main
 
         private double cyclesToSkip = 0;
         private bool _skipCycles;
+
         private bool _isResetOrPowerEvent;
 
         internal CPU Processor { get; private set; }
@@ -129,6 +130,12 @@ namespace dotnetNES.Engine.Main
         {
             Processor.Reset();
             PictureProcessingUnit.Reset();
+
+            ///Warm up the PPU
+            for (int i = 0; i < 30; i++)
+            {
+                PictureProcessingUnit.StepPPU();
+            }
 
             UnPauseEngine();
         }
@@ -366,7 +373,7 @@ namespace dotnetNES.Engine.Main
 
         public string GetXRegister()
         {
-            return Processor.YRegister.ToString("X").PadLeft(2, '0');
+            return Processor.XRegister.ToString("X").PadLeft(2, '0');
         }
 
         public string GetProgramCounter()

@@ -21,8 +21,7 @@ namespace dotnetNES.Tests
         }
 
         public static string RunTest(string fileName, string folder)
-        {
-            
+        {           
 
             var engine =
                new Engine.Main.Engine(GetTestPath(folder, fileName));

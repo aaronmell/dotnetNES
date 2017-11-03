@@ -68,6 +68,7 @@
     <Compile Include="Models\BreakPoint.cs" />
     <Compile Include="Models\BreakPointType.cs" />
     <Compile Include="Models\Disassembly.cs" />
+    <Compile Include="Models\PPUFlags.cs" />
     <Compile Include="Processors\CPU.cs" />
     <Compile Include="Main\Engine.cs" />
     <Compile Include="Models\CartridgeModel.cs" />

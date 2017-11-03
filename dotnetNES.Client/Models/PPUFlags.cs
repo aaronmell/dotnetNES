@@ -76,12 +76,12 @@ namespace dotnetNES.Client.Models
             var controller = engine.GetMemoryLocation(0x2000);
 
             BaseNameTable = controller & 0x03;
-            VRAMIncrement = IsBitSet(mask, 2);
-            SpriteTableAddress = IsBitSet(mask, 3);
-            BackgroundTableAddress = IsBitSet(mask, 4);
-            SpriteSize = IsBitSet(mask, 5);
-            PPUMasterSelect = IsBitSet(mask, 6);
-            GenerateNMI = IsBitSet(mask, 7);
+            VRAMIncrement = IsBitSet(controller, 2);
+            SpriteTableAddress = IsBitSet(controller, 3);
+            BackgroundTableAddress = IsBitSet(controller, 4);
+            SpriteSize = IsBitSet(controller, 5);
+            PPUMasterSelect = IsBitSet(controller, 6);
+            GenerateNMI = IsBitSet(controller, 7);
 
             var status = engine.GetMemoryLocation(0x2002);
 

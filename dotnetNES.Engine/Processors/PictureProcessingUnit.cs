@@ -76,7 +76,7 @@ namespace dotnetNES.Engine.Models
 		}
 
 		/// <summary>
-		/// The PPUSTATUS Register. When the CPU reads this register, it clears bit 7 of this register, and also clears the Scroll and address register.
+		/// The PPUSTATUS Register. When the CPU reads this register, it clears bit 7 of this register after returning the register, and also clears the Scroll and address register.
 		/// 0-4: LSB previously written into a PPU Register
 		/// 5: Sprite Overflow flag
 		/// 6: Sprite 0 Hit
@@ -84,7 +84,7 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte StatusRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2002); }
+			//get { return _cpu.ReadMemoryValueWithoutCycle(0x2002); }
 			set { _cpu.WriteMemoryValueWithoutCycle(0x2002, value); }
 		}
 
@@ -209,21 +209,6 @@ namespace dotnetNES.Engine.Models
 		private bool _isOddFrame;
 
 		/// <summary>
-		/// This register is set to true at the start of vertical blanking. 
-		/// It is set to false and the end of vertical blanking, and also when the Status Register is read
-		/// </summary>
-		private bool _nmiOccurred;
-		/// <summary>
-		/// This register is set to bit 7 of the Controller Register when it is written to.
-		/// </summary>
-		private bool _nmiOutput;
-		
-		/// <summary>
-		/// This register is set when an _nmi has been triggered
-		/// </summary>
-		private bool _triggerNmi;
-
-		/// <summary>
 		/// A Buffer for reads from ppu memory when the address is in the 0x0 to 0x3EFF range.
 		/// </summary>
 		private byte _ppuDataReadBuffer;
@@ -235,8 +220,10 @@ namespace dotnetNES.Engine.Models
 
         internal long TotalCycles { get; private set; }
 
-        private bool ppuInitalized;
+        private PPUStatusFlags _ppuStatusFlags { get; set; } = new PPUStatusFlags();
         #endregion
+
+
 
         /// <summary>
         /// The CPU
@@ -388,7 +375,6 @@ namespace dotnetNES.Engine.Models
 			CycleCount = 0;
 			_isRenderingDisabled = true;
             TotalCycles = 0;
-            ppuInitalized = false;
 
             CurrentFrame = new byte[195840];
 			_newFrame = new byte[195840];
@@ -419,17 +405,22 @@ namespace dotnetNES.Engine.Models
 			DataRegister = 0;
 			ControlRegister = 0;
 			MaskRegister = 0;
-			ScanLine = 241;
+			ScanLine = 0;
 			CycleCount = 0;
 			_isRenderingDisabled = true;
 			_objectAttributeMemoryAddress = 0;
             TotalCycles = 0;
-            ppuInitalized = false;
 
             CurrentFrame = new byte[195840];
 			_newFrame = new byte[195840];
 			_tempFrame = new byte[195840];
 			Array.Clear(_objectAttributeMemory, 0, _objectAttributeMemory.Length);
+
+            _ppuStatusFlags.GenerateNMI = 0;
+            _ppuStatusFlags.SpriteOverflow = 0;
+            _ppuStatusFlags.SpriteZeroHit = 0;
+
+            TotalCycles = 0;
 		}
 
 		internal void Power()
@@ -440,26 +431,31 @@ namespace dotnetNES.Engine.Models
 			DataRegister = 0;
 			ControlRegister = 0;
 			MaskRegister = 0;
-			ScanLine = 241;
+			ScanLine = 0;
 			CycleCount = 0;
 			_isRenderingDisabled = true;
 			_objectAttributeMemoryAddress = 0;
             TotalCycles = 0;
-            ppuInitalized = false;
 
             CurrentFrame = new byte[195840];
 			_newFrame = new byte[195840];
 			_tempFrame = new byte[195840];
-			Array.Clear(_objectAttributeMemory,0, _objectAttributeMemory.Length);     
-		}
+			Array.Clear(_objectAttributeMemory,0, _objectAttributeMemory.Length);
+
+            _ppuStatusFlags.GenerateNMI = 0;
+            _ppuStatusFlags.SpriteOverflow = 0;
+            _ppuStatusFlags.SpriteZeroHit = 0;
+
+            TotalCycles = 0;            
+        }
 
 
 
-		/// <summary>
-		/// This sets the Pattern table 1 stored between 0x00 and 0x0FF on its bitmap
-		/// </summary>
-		/// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
-		internal unsafe void DrawPatternTable0(byte* bitmapPointer)
+        /// <summary>
+        /// This sets the Pattern table 1 stored between 0x00 and 0x0FF on its bitmap
+        /// </summary>
+        /// <param name="bitmapPointer">A pointer that points to the pattern table 1 bitmap</param>
+        internal unsafe void DrawPatternTable0(byte* bitmapPointer)
 		{
 			DrawPatternTableToBitmapArray(bitmapPointer, true);
 		}
@@ -575,40 +571,19 @@ namespace dotnetNES.Engine.Models
 
 		#region Main Loop
 		private void CPUCycleCountIncremented()
-		{           
-
-			StepPPU();
-
-			//We check the trigger here. Not 100% sure why this works, but if this is anywhere else a bunch of the nmi tests fail.
-			if (_triggerNmi)
-			{
-				_triggerNmi = false;
-				_cpu.NonMaskableInterrupt();
-				WriteLog("NMI Occurred!");
-			}
-
-			StepPPU();
+		{
+			StepPPU();           
+            StepPPU();
 			StepPPU();
 		}
 
-		private void StepPPU()
+		internal void StepPPU()
 		{
             //WriteLog("Stepping PPU");
-            TotalCycles++;
-
-            if (!ppuInitalized)
-            {
-                if (TotalCycles > 82178)
-                {
-                    ppuInitalized = true;
-                    return;
-                }
-            }            
+            TotalCycles++;                
 
             if (ScanLine == 240 && CycleCount == 340)
 			{
-				WriteLog("Setting _nmiOccurred");
-				_nmiOccurred = true;
 				_isRenderingDisabled = true;
 				OnNewFrameAction();
 				SwapFrames();
@@ -622,8 +597,10 @@ namespace dotnetNES.Engine.Models
 					WriteLog("Clearing _nmiOccurred");
 				}
                 else if (CycleCount == 1)
-                {
-                    StatusRegister = 0;
+                {                    
+                    _ppuStatusFlags.VerticalBlank = 0;
+                    _ppuStatusFlags.SpriteOverflow = 0;
+                    _ppuStatusFlags.SpriteZeroHit = 0;
                 }
                 else if (CycleCount == 320)
 				{
@@ -651,10 +628,14 @@ namespace dotnetNES.Engine.Models
 				InnerCycleAction();
 			}
 
-		   if ((ScanLine == 241) && (CycleCount == 1))
+		   if ((ScanLine == 241) && (CycleCount == 0))
             {
-                _triggerNmi = (_nmiOccurred & _nmiOutput);
-                StatusRegister |= 0x80;               
+                _ppuStatusFlags.VerticalBlank = 1;
+                
+                if (_ppuStatusFlags.GenerateNMI == 1)
+                {
+                   _cpu.TriggerNmi = true;
+                }                                     
             }				
 
 			if (CycleCount < 340)
@@ -670,8 +651,8 @@ namespace dotnetNES.Engine.Models
 				else
 				{
 					ScanLine = 0;
-					_isOddFrame = !_isOddFrame;
-				}
+					_isOddFrame = !_isOddFrame;                   
+                }
 			}
 		}
 
@@ -776,8 +757,9 @@ namespace dotnetNES.Engine.Models
 							if ((ScanLine >= _tempSprite) &&
 								(ScanLine <= _tempSprite + (_use8x16Sprite ? 0xF : 0x7)))
 							{
-								//Set the sprite overflow flag
-								StatusRegister |= 0x20;
+                                //Set the sprite overflow flag
+                                _ppuStatusFlags.SpriteOverflow = 1;
+								
 								_spriteEvaluationState = 3;
 								_objectAttributeMemoryBufferIndex = 1;
 
@@ -1383,23 +1365,27 @@ namespace dotnetNES.Engine.Models
 				//Reading from the Status Register
 				case 0x2002:
 				{
-					if (_nmiOccurred && (ScanLine != 241 || CycleCount != 0))
-					{
-						StatusRegister |= 0x80;
-					}
-					else
-					{
-						StatusRegister &= byte.MaxValue ^ (1 << 7);
-					}
+                        StatusRegister = (byte)((_ppuStatusFlags.SpriteOverflow << 5) |
+                            (_ppuStatusFlags.SpriteZeroHit << 6) |
+                            (_ppuStatusFlags.VerticalBlank << 7));
 
-					_tempAddressHasBeenWrittenTo = false;
-	
-					_nmiOccurred = false;
+                        _tempAddressHasBeenWrittenTo = false;
 
-				   if ((ScanLine == 241) && (CycleCount < 3))
-						_triggerNmi = (_nmiOccurred & _nmiOutput);
+                        _ppuStatusFlags.VerticalBlank = 0;                        
 
-					break;
+                        if (ScanLine == 241 && CycleCount < 3)
+                        {                           
+                            _ppuStatusFlags.VerticalBlank = 0;
+                            _cpu.TriggerNmi = false;
+
+                            if (CycleCount == 0)
+                            {
+                                //"Reading one PPU clock before vblank is set reads it as clear and never sets the flag or generates NMI for that frame. "
+                                StatusRegister = (byte)((_ppuStatusFlags.SpriteOverflow << 5) | (_ppuStatusFlags.SpriteZeroHit << 6));
+                            }                                                     
+                        }                       
+
+                        break;
 				}
 				case 0x2004:
 				{
@@ -1472,18 +1458,32 @@ namespace dotnetNES.Engine.Models
 				{
 					_temporaryAddress = (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
 
-					var previousNmiOutput = _nmiOutput;
-					_nmiOutput = (ControlRegister & 0x80) != 0;
+                    //"By toggling NMI_output ($2000 bit 7) during vertical blank without reading $2002, a program can cause /NMI to be pulled low multiple times, causing multiple NMIs to be generated."
+                    int originalGenerateNmi = _ppuStatusFlags.GenerateNMI;
 
-					if (!_nmiOutput)
-					{
-					   if ((ScanLine == 241) && (CycleCount < 3))
-							_triggerNmi = (_nmiOccurred & _nmiOutput);
-					}
-					else if (_nmiOccurred & !previousNmiOutput)
-						_triggerNmi = true;
+                     _ppuStatusFlags.GenerateNMI = (value & 0x80) == 0x80 ? 1 : 0;
 
-					_currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
+                    if (originalGenerateNmi == 0 && _ppuStatusFlags.GenerateNMI == 1 && _ppuStatusFlags.VerticalBlank == 1 && (ScanLine != 261 || CycleCount != 0))
+                    {
+                           _cpu.TriggerNmi = true;
+                    }
+                    if (ScanLine == 241 && CycleCount < 3 && _ppuStatusFlags.GenerateNMI == 0)
+                    {
+                            _cpu.TriggerNmi = false;
+                        }
+
+                        //var previousNmiOutput = _nmiOutput;
+                        //_nmiOutput = (ControlRegister & 0x80) != 0;
+
+                        //if (!_nmiOutput)
+                        //{
+                        //   if ((ScanLine == 241) && (CycleCount < 3))
+                        //		_triggerNmi = (_nmiOccurred & _nmiOutput);
+                        //}
+                        //else if (_nmiOccurred & !previousNmiOutput)
+                        //	_triggerNmi = true;
+
+                        _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
 					_backgroundPatternTableAddressOffset = ((value & 0x10) != 0) ? 0x1000 : 0x0000;
 					_spritePatternTableAddressOffset = ((value & 0x08) != 0) ? 0x1000 : 0x0000;
 					_use8x16Sprite = ((value & 0x20) != 0) ? true : false;
@@ -1901,7 +1901,7 @@ namespace dotnetNES.Engine.Models
             //Sprite0 does not occur when x = 255, x - 0 to 7 if clipping is enabled, or if the background or sprite pixel is transparent.
             if (_backgroundPixelOpaqueMap[xCoordinate] && (!_isRenderingDisabled) && (MaskRegister & 0x18) == 0x18) //&& xCoordinate != 255 && (xCoordinate > 7 || ((MaskRegister & 0x3) == 0 || ((MaskRegister & 0x1) == 0))))
             {
-                StatusRegister |= 0x40;
+                _ppuStatusFlags.SpriteZeroHit = 1;
             }
         }
 
@@ -1949,7 +1949,7 @@ namespace dotnetNES.Engine.Models
 		[Conditional("DEBUG")]
 		private void WriteLog(string log)
 		{
-            _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} NMIOccured: {4} NMIOutput: {5} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, _nmiOccurred, _nmiOutput, VRamAddress.ToString("X"), log);
+            _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, VRamAddress.ToString("X"), log);
 		}
 
 		[Conditional("DEBUG")]
