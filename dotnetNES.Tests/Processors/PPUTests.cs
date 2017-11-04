@@ -191,11 +191,11 @@ namespace dotnetNES.Tests.Processors
             Assert.AreEqual(80, result, "Nametable at 0x20c2 was not Set to P");
         }
 
-		[TestCase("palette_ram.nes", 2200000)]
-		[TestCase("sprite_ram.nes", 2200000)]
-		[TestCase("vbl_clear_time.nes", 2200000)]
-		[TestCase("vram_access.nes", 2200000)]
-		public void Misc_PPU_Tests(string fileName, int totalSteps)
+		[TestCase("palette_ram.nes", 2200000, 49)]
+		[TestCase("sprite_ram.nes", 2200000, 52)]
+		[TestCase("vbl_clear_time.nes", 2200000, 49)]
+		[TestCase("vram_access.nes", 2200000, 49)]
+		public void Misc_PPU_Tests(string fileName, int totalSteps, int expectedInteger)
 		{
             var path = Utilities.GetTestPath("misc_ppu_tests",
                  fileName);
@@ -212,7 +212,7 @@ namespace dotnetNES.Tests.Processors
 
 			var result = engine.PictureProcessingUnit.ReadPPUMemory(0x20a4);
 
-			Assert.AreEqual(49, result, "Nametable at 0x20c2 was not Set to P");
+			Assert.AreEqual(expectedInteger, result, "Nametable at 0x20c2 was not Set to P");
 		}
 
         [TestCase("01-vbl_basics.nes", "\n01-vbl_basics\n\nPassed\n\0")]
