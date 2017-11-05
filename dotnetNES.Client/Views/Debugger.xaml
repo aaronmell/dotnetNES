@@ -237,7 +237,7 @@
                                 <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.BackgroundTableAddress, Mode=OneWay }" >BG Table Addr</CheckBox>
                                 <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteSize, Mode=OneWay }" >SpriteSize</CheckBox>
                                 <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.PPUMasterSelect, Mode=OneWay }" >PPU Master Select</CheckBox>
-                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.GenerateNMI, Mode=OneWay }" >Generate NMI</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.PPUStatusFlags.GenerateNMI, Mode=OneWay }" >Generate NMI</CheckBox>
                             </StackPanel>
                         </GroupBox>
                         <GroupBox  Header="Mask" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="3,0,0,0" Height="{Binding RelativeSource={RelativeSource FindAncestor, 
@@ -256,9 +256,9 @@
                         <GroupBox  Header="Status" VerticalAlignment="Top" Style="{StaticResource GroupBoxStyle}" Margin="3,0,0,0" Height="{Binding RelativeSource={RelativeSource FindAncestor, 
                             AncestorType={x:Type StackPanel}}, Path=ActualHeight}">
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteOverflow, Mode=OneWay }" >Sprite Overflow</CheckBox>
-                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.SpriteZeroHit, Mode=OneWay }" >Sprite 0 Hit</CheckBox>
-                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.VblankEnabled, Mode=OneWay }" >VBlank Enabled</CheckBox>                                
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.PPUStatusFlags.SpriteOverflow, Mode=OneWay }" >Sprite Overflow</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.PPUStatusFlags.SpriteZeroHit, Mode=OneWay }" >Sprite 0 Hit</CheckBox>
+                                <CheckBox  Style="{StaticResource CheckBoxStyle}" IsChecked="{Binding Path=PPUFlags.PPUStatusFlags.VerticalBlank, Mode=OneWay }" >VBlank Enabled</CheckBox>                                
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>  

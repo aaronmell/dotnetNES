@@ -14,6 +14,7 @@ namespace dotnetNES.Client.ViewModel
     {
         private object _disassemblyLock = new object();
 
+
         public ObservableCollection<Disassembly> Disassembly { get; set; }  
         public int SelectedValue { get; set; }       
         
@@ -34,6 +35,7 @@ namespace dotnetNES.Client.ViewModel
         public RelayCommand RunOneScanlineCommand { get; set; }
         public RelayCommand RunOneFrameCommand { get; set; }
 
+
         public DebuggerViewModel()
         {
             ContinueCommand = new RelayCommand(() => 
@@ -50,8 +52,21 @@ namespace dotnetNES.Client.ViewModel
                 UpdateAfterPause();
             });
 
-            RunOneScanlineCommand = new RelayCommand(() => Engine.RuntoNextScanLine());
-            RunOneFrameCommand = new RelayCommand(() => Engine.RuntoNextFrame());
+            RunOneScanlineCommand = new RelayCommand(() =>
+            {
+                if (Engine.IsPaused)
+                {
+                    Engine.RuntoNextScanLine();
+                }
+            });
+            RunOneFrameCommand = new RelayCommand(() =>
+            {
+                if (Engine.IsPaused)
+                {
+                    Engine.RuntoNextFrame();
+                }
+     
+            });
         }
 
         private void UpdateAfterPause()
@@ -83,6 +98,10 @@ namespace dotnetNES.Client.ViewModel
 
             Disassembly = Engine.GetDisassembledMemory();
             RaisePropertyChanged(nameof(Disassembly));
+        }
+
+        private void Engine_OnEngineUnPaused(object sender, System.EventArgs e)
+        {
         }
 
         private void Engine_OnEnginePaused(object sender, System.EventArgs e)

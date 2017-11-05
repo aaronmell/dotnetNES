@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using dotnetNES.Engine.Models;
 
 namespace dotnetNES.Client.Models
 {
@@ -45,14 +46,10 @@ namespace dotnetNES.Client.Models
         public bool SpriteSize { get; set; }
 
         public bool PPUMasterSelect { get; set; }
+        
+        public PPUStatusFlags PPUStatusFlags { get; set; }
 
-        public bool GenerateNMI { get; set; }
-
-        public bool SpriteOverflow { get; set; }
-
-        public bool SpriteZeroHit { get; set; }
-
-        public bool VblankEnabled { get; set; }
+     
 
         public void UpdateFlags(dotnetNES.Engine.Main.Engine engine)
         {
@@ -81,13 +78,8 @@ namespace dotnetNES.Client.Models
             BackgroundTableAddress = IsBitSet(controller, 4);
             SpriteSize = IsBitSet(controller, 5);
             PPUMasterSelect = IsBitSet(controller, 6);
-            GenerateNMI = IsBitSet(controller, 7);
 
-            var status = engine.GetMemoryLocation(0x2002);
-
-            SpriteOverflow = IsBitSet(status, 5);
-            SpriteZeroHit = IsBitSet(status, 6);
-            VblankEnabled = IsBitSet(status, 7);
+            PPUStatusFlags = engine.GetPPUStatusFlags();
         }
 
     private bool IsBitSet(byte bit, int position)
