@@ -62,7 +62,7 @@ namespace dotnetNES.Engine.Models
 
             IncrementCycleCount();
 
-            IsDissasemblyInvalid = true;
+            //IsDissasemblyInvalid = true;
         }
 
         /// <summary>
@@ -78,15 +78,15 @@ namespace dotnetNES.Engine.Models
                 address &= 0x7FF;
             }
             //Memory between 0x2008-0x3FFF mirrors every 8 bytes.
-            else if (address > 0x1FFF &&  address < 0x4000) 
+            else if (address > 0x1FFF && address < 0x4000)
             {
                 address = (address & 0x7) + 0x2000;
             }
 
+            ReadMemoryAction(address);
 
-			ReadMemoryAction(address);
             IncrementCycleCount();
-            
+
             return Memory[address];
         }
 
@@ -130,7 +130,7 @@ namespace dotnetNES.Engine.Models
             }
             Memory[address] = data;
 
-            IsDissasemblyInvalid = true;
+            //IsDissasemblyInvalid = true;
         }
 
         /// <summary>

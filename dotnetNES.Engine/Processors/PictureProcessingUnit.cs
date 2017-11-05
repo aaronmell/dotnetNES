@@ -220,7 +220,7 @@ namespace dotnetNES.Engine.Models
 
         internal long TotalCycles { get; private set; }
 
-        private PPUStatusFlags _ppuStatusFlags { get; set; } = new PPUStatusFlags();
+        internal PPUStatusFlags PPUStatusFlags { get; set; } = new PPUStatusFlags();
         #endregion
 
 
@@ -416,9 +416,9 @@ namespace dotnetNES.Engine.Models
 			_tempFrame = new byte[195840];
 			Array.Clear(_objectAttributeMemory, 0, _objectAttributeMemory.Length);
 
-            _ppuStatusFlags.GenerateNMI = 0;
-            _ppuStatusFlags.SpriteOverflow = 0;
-            _ppuStatusFlags.SpriteZeroHit = 0;
+            PPUStatusFlags.GenerateNMI = 0;
+            PPUStatusFlags.SpriteOverflow = 0;
+            PPUStatusFlags.SpriteZeroHit = 0;
 
             TotalCycles = 0;
 		}
@@ -442,9 +442,9 @@ namespace dotnetNES.Engine.Models
 			_tempFrame = new byte[195840];
 			Array.Clear(_objectAttributeMemory,0, _objectAttributeMemory.Length);
 
-            _ppuStatusFlags.GenerateNMI = 0;
-            _ppuStatusFlags.SpriteOverflow = 0;
-            _ppuStatusFlags.SpriteZeroHit = 0;
+            PPUStatusFlags.GenerateNMI = 0;
+            PPUStatusFlags.SpriteOverflow = 0;
+            PPUStatusFlags.SpriteZeroHit = 0;
 
             TotalCycles = 0;            
         }
@@ -579,7 +579,7 @@ namespace dotnetNES.Engine.Models
 
 		internal void StepPPU()
 		{
-            //WriteLog("Stepping PPU");
+            ////WriteLog("Stepping PPU");
             TotalCycles++;                
 
             if (ScanLine == 240 && CycleCount == 340)
@@ -594,13 +594,13 @@ namespace dotnetNES.Engine.Models
 				{
                     _isRenderingDisabled = (MaskRegister & 0x18) == 0;
 
-					WriteLog("Clearing _nmiOccurred");
+					//WriteLog("Clearing _nmiOccurred");
 				}
                 else if (CycleCount == 1)
                 {                    
-                    _ppuStatusFlags.VerticalBlank = 0;
-                    _ppuStatusFlags.SpriteOverflow = 0;
-                    _ppuStatusFlags.SpriteZeroHit = 0;
+                    PPUStatusFlags.VerticalBlank = 0;
+                    PPUStatusFlags.SpriteOverflow = 0;
+                    PPUStatusFlags.SpriteZeroHit = 0;
                 }
                 else if (CycleCount == 320)
 				{
@@ -609,7 +609,7 @@ namespace dotnetNES.Engine.Models
 				}
 				else if (CycleCount == 339 && _isOddFrame && !_isRenderingDisabled)
 				{
-					WriteLog("Odd Frame, skipping first cycle");
+					//WriteLog("Odd Frame, skipping first cycle");
 					CycleCount = 0;
                     ScanLine = 0;
                     _isOddFrame = !_isOddFrame;
@@ -630,9 +630,9 @@ namespace dotnetNES.Engine.Models
 
 		   if ((ScanLine == 241) && (CycleCount == 1))
             {
-                _ppuStatusFlags.VerticalBlank = 1;
+                PPUStatusFlags.VerticalBlank = 1;
                 
-                if (_ppuStatusFlags.GenerateNMI == 1)
+                if (PPUStatusFlags.GenerateNMI == 1)
                 {
                    _cpu.TriggerNmi = true;
                 }                                     
@@ -664,14 +664,14 @@ namespace dotnetNES.Engine.Models
 			if (CycleCount < 64)
 			{
 				_objectAttributeMemoryBufferNextLine[(CycleCount >> 1)] = 0xFF;
-				WriteSpriteEvaluationLog(string.Format("Setting OAM Buffer at position {0} to 0xFF", (CycleCount >> 1)));
+				//WriteSpriteEvaluationLog(string.Format("Setting OAM Buffer at position {0} to 0xFF", (CycleCount >> 1)));
 			}
 			//Cycles 63 - 255 Sprite Evauation
 			else if (CycleCount < 256)
 			{
 				if (CycleCount == 64)
 				{
-					WriteSpriteEvaluationLog("Cycle64 Reset Occurred");
+					//WriteSpriteEvaluationLog("Cycle64 Reset Occurred");
 					
 					_totalSpritesFound = 0;
 					_tempSprite = 0;
@@ -684,7 +684,7 @@ namespace dotnetNES.Engine.Models
 				{
 					_tempSprite = _objectAttributeMemory[_objectAttributeMemoryAddress];
 				    
-					WriteSpriteEvaluationLog(string.Format("Read Cycle TempSprite = {0} from Index {1}", _tempSprite, _objectAttributeMemoryAddress));
+					//WriteSpriteEvaluationLog(string.Format("Read Cycle TempSprite = {0} from Index {1}", _tempSprite, _objectAttributeMemoryAddress));
 				}
 				//Even Cycle: Write Data to OAM
 				else
@@ -758,7 +758,7 @@ namespace dotnetNES.Engine.Models
 								(ScanLine <= _tempSprite + (_use8x16Sprite ? 0xF : 0x7)))
 							{
                                 //Set the sprite overflow flag
-                                _ppuStatusFlags.SpriteOverflow = 1;
+                                PPUStatusFlags.SpriteOverflow = 1;
 								
 								_spriteEvaluationState = 3;
 								_objectAttributeMemoryBufferIndex = 1;
@@ -1168,7 +1168,7 @@ namespace dotnetNES.Engine.Models
 					}
 				case 257:
 					{
-						WriteLog("Setting Hori(V) = Hori(T)");
+						//WriteLog("Setting Hori(V) = Hori(T)");
 						VRamAddress = (VRamAddress & 0x7BE0) | (_temporaryAddress & 0x041F);
 
 						ObjectAttributeMemoryRegister = 0;
@@ -1305,7 +1305,7 @@ namespace dotnetNES.Engine.Models
 			
 			if (ScanLine == 261 && CycleCount > 279 && CycleCount < 305)
 			{
-				WriteLog("Setting Vert(V) = Vert(T)");
+				//WriteLog("Setting Vert(V) = Vert(T)");
 				VRamAddress = (VRamAddress & 0x041F) | (_temporaryAddress & 0x7BE0);
 			}
 		}
@@ -1319,12 +1319,12 @@ namespace dotnetNES.Engine.Models
 			if ((VRamAddress & 0x001F) == 0x001F)
 			{
 				VRamAddress ^= 0x041F;
-				WriteLog("IncrementH: Wrapping Occurred");
+				//WriteLog("IncrementH: Wrapping Occurred");
 			}
 			else
 			{
 				VRamAddress++;
-				WriteLog("IncrementH: Current Address Incremented");
+				//WriteLog("IncrementH: Current Address Incremented");
 			}
 		}
 
@@ -1334,7 +1334,7 @@ namespace dotnetNES.Engine.Models
 			if ((VRamAddress & 0x7000) != 0x7000)
 			{
 				VRamAddress += 0x1000; // increment fine Y
-				WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", VRamAddress));
+				//WriteLog(string.Format("IncrementH: Current Address Incremented, _currentAddress is now {0}", VRamAddress));
 			}
 			else
 			{
@@ -1347,7 +1347,7 @@ namespace dotnetNES.Engine.Models
 					default: VRamAddress += 0x20; break;
 				}
 
-				WriteLog(string.Format("IncrementH: Wrapping Occurred, _currentAddress is now {0}", VRamAddress));
+				//WriteLog(string.Format("IncrementH: Wrapping Occurred, _currentAddress is now {0}", VRamAddress));
 			}
 		}
 		#endregion
@@ -1365,23 +1365,23 @@ namespace dotnetNES.Engine.Models
 				//Reading from the Status Register
 				case 0x2002:
 				{
-                        StatusRegister = (byte)((_ppuStatusFlags.SpriteOverflow << 5) |
-                            (_ppuStatusFlags.SpriteZeroHit << 6) |
-                            (_ppuStatusFlags.VerticalBlank << 7));
+                        StatusRegister = (byte)((PPUStatusFlags.SpriteOverflow << 5) |
+                            (PPUStatusFlags.SpriteZeroHit << 6) |
+                            (PPUStatusFlags.VerticalBlank << 7));
 
                         _tempAddressHasBeenWrittenTo = false;
 
-                        _ppuStatusFlags.VerticalBlank = 0;                        
+                        PPUStatusFlags.VerticalBlank = 0;                        
 
                         if (ScanLine == 241 && CycleCount < 3)
                         {                           
-                            _ppuStatusFlags.VerticalBlank = 0;
+                            PPUStatusFlags.VerticalBlank = 0;
                             _cpu.TriggerNmi = false;
 
                             if (CycleCount == 0)
                             {
                                 //"Reading one PPU clock before vblank is set reads it as clear and never sets the flag or generates NMI for that frame. "
-                                StatusRegister = (byte)((_ppuStatusFlags.SpriteOverflow << 5) | (_ppuStatusFlags.SpriteZeroHit << 6));
+                                StatusRegister = (byte)((PPUStatusFlags.SpriteOverflow << 5) | (PPUStatusFlags.SpriteZeroHit << 6));
                             }                                                     
                         }                       
 
@@ -1443,7 +1443,7 @@ namespace dotnetNES.Engine.Models
 					}
 
 					VRamAddress = (VRamAddress + _currentAddressIncrement) & 0x7FFF;
-					WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", VRamAddress));
+					//WriteLog(string.Format("Memory: 0x2007 Read, Current Address Incremented to {0}", VRamAddress));
 					break;
 				}
 			}
@@ -1459,15 +1459,15 @@ namespace dotnetNES.Engine.Models
 					_temporaryAddress = (_temporaryAddress & 0x73FF) | ((value & 0x3) << 10);
 
                     //"By toggling NMI_output ($2000 bit 7) during vertical blank without reading $2002, a program can cause /NMI to be pulled low multiple times, causing multiple NMIs to be generated."
-                    int originalGenerateNmi = _ppuStatusFlags.GenerateNMI;
+                    int originalGenerateNmi = PPUStatusFlags.GenerateNMI;
 
-                     _ppuStatusFlags.GenerateNMI = (value & 0x80) == 0x80 ? 1 : 0;
+                     PPUStatusFlags.GenerateNMI = (value & 0x80) == 0x80 ? 1 : 0;
 
-                    if (originalGenerateNmi == 0 && _ppuStatusFlags.GenerateNMI == 1 && _ppuStatusFlags.VerticalBlank == 1 && (ScanLine != 261 || CycleCount != 0))
+                    if (originalGenerateNmi == 0 && PPUStatusFlags.GenerateNMI == 1 && PPUStatusFlags.VerticalBlank == 1 && (ScanLine != 261 || CycleCount != 0))
                     {
                            _cpu.TriggerNmi = true;
                     }
-                    if (ScanLine == 241 && CycleCount < 3 && _ppuStatusFlags.GenerateNMI == 0)
+                    if (ScanLine == 241 && CycleCount < 3 && PPUStatusFlags.GenerateNMI == 0)
                     {
                             _cpu.TriggerNmi = false;
                         }
@@ -1525,12 +1525,12 @@ namespace dotnetNES.Engine.Models
 					{
 						FineXScroll = value & 0x07;
 						_temporaryAddress = (_temporaryAddress & 0x7FE0) | ((value & 0xF8) >> 3);
-						WriteLog(string.Format("Memory: 0x2005 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
+						//WriteLog(string.Format("Memory: 0x2005 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
 					}
 					else
 					{
 						_temporaryAddress = (_temporaryAddress & 0x0C1F) | ((value & 0x7) << 12) | ((value & 0xF8) << 2);
-						WriteLog(string.Format("Memory: 0x2005 write x2, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
+						//WriteLog(string.Format("Memory: 0x2005 write x2, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
 					}
 					_tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
 
@@ -1541,13 +1541,13 @@ namespace dotnetNES.Engine.Models
 					if (!_tempAddressHasBeenWrittenTo)
 					{
 						_temporaryAddress = (_temporaryAddress & 0x00FF) | ((value & 0x3F) << 8);
-						WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
+						//WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}", value, _temporaryAddress));
 					}
 					else
 					{
 						_temporaryAddress = (_temporaryAddress & 0x7F00) | value;
 						VRamAddress = _temporaryAddress;
-						WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}, _currentAddress is now {2} ", value, _temporaryAddress, VRamAddress));
+						//WriteLog(string.Format("Memory: 0x2006 write, value {0} written to _temporaryAddress latch. Latch is now {1}, _currentAddress is now {2} ", value, _temporaryAddress, VRamAddress));
 					}
 					_tempAddressHasBeenWrittenTo = !_tempAddressHasBeenWrittenTo;
 
@@ -1608,7 +1608,7 @@ namespace dotnetNES.Engine.Models
 				tempAddress -= 0x1000;
 			}
 
-			WriteLog(string.Format("Memory: write, value {0} written to address {1}", value, _temporaryAddress));
+			//WriteLog(string.Format("Memory: write, value {0} written to address {1}", value, _temporaryAddress));
 			_internalMemory[tempAddress] = value;
 		}
 		#endregion
@@ -1901,7 +1901,7 @@ namespace dotnetNES.Engine.Models
             //Sprite0 does not occur when x = 255, x - 0 to 7 if clipping is enabled, or if the background or sprite pixel is transparent.
             if (_backgroundPixelOpaqueMap[xCoordinate] && (!_isRenderingDisabled) && (MaskRegister & 0x18) == 0x18) //&& xCoordinate != 255 && (xCoordinate > 7 || ((MaskRegister & 0x3) == 0 || ((MaskRegister & 0x1) == 0))))
             {
-                _ppuStatusFlags.SpriteZeroHit = 1;
+                PPUStatusFlags.SpriteZeroHit = 1;
             }
         }
 
@@ -1946,17 +1946,17 @@ namespace dotnetNES.Engine.Models
 		}
 		#endregion
 
-		[Conditional("DEBUG")]
-		private void WriteLog(string log)
-		{
-            _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, VRamAddress.ToString("X"), log);
-		}
+		//[Conditional("DEBUG")]
+		//private void //WriteLog(string log)
+		//{
+  //          _logger.Debug("SL: {0} P: {1} IsOdd: {2} Rend: {3} CurrentAddress: {6} {7}", ScanLine, CycleCount, _isOddFrame, _isRenderingDisabled, VRamAddress.ToString("X"), log);
+		//}
 
-		[Conditional("DEBUG")]
-		private void WriteSpriteEvaluationLog(string log)
-		{
-			_logger.Trace("SL: {0} CYC: {1} Rend:{2} OAM ADDR: {3} {4}", ScanLine, CycleCount, _isRenderingDisabled, _objectAttributeMemoryAddress, log);
-		}
+		//[Conditional("DEBUG")]
+		//private void WriteSpriteEvaluationLog(string log)
+		//{
+		//	_logger.Trace("SL: {0} CYC: {1} Rend:{2} OAM ADDR: {3} {4}", ScanLine, CycleCount, _isRenderingDisabled, _objectAttributeMemoryAddress, log);
+		//}
 		#endregion
 	}
 }

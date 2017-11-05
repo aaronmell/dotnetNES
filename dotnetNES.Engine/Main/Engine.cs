@@ -89,7 +89,7 @@ namespace dotnetNES.Engine.Main
         public void Step()
         {
             Processor.NextStep();
-            WriteLog();
+            //WriteLog();
         }
 
         [Conditional("DEBUG")]
@@ -131,7 +131,7 @@ namespace dotnetNES.Engine.Main
             Processor.Reset();
             PictureProcessingUnit.Reset();
 
-            ///Warm up the PPU
+            //Warm up the PPU
             for (int i = 0; i < 30; i++)
             {
                 PictureProcessingUnit.StepPPU();
@@ -461,6 +461,11 @@ namespace dotnetNES.Engine.Main
         public byte GetMemoryLocation(int address)
         {
             return Processor.ReadMemoryValueWithoutCycle(address);
+        }
+
+        public PPUStatusFlags GetPPUStatusFlags()
+        {
+            return PictureProcessingUnit.PPUStatusFlags;
         }
     }
 }
