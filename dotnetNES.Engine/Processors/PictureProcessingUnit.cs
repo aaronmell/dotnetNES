@@ -206,7 +206,7 @@ namespace dotnetNES.Engine.Models
 	    /// <summary>
 	    /// Odd frames skip a cycle on the first cycle and scanline
 	    /// </summary>
-	    private bool _isOddFrame = true;
+	    private bool _isOddFrame = false;
 
 		/// <summary>
 		/// A Buffer for reads from ppu memory when the address is in the 0x0 to 0x3EFF range.
@@ -399,7 +399,7 @@ namespace dotnetNES.Engine.Models
 
 		internal void Reset()
 		{
-			_isOddFrame = true;
+			_isOddFrame = false;
 			_tempAddressHasBeenWrittenTo = false;
 			ScrollRegister = 0;
 			DataRegister = 0;
@@ -425,7 +425,7 @@ namespace dotnetNES.Engine.Models
 
 		internal void Power()
 		{
-			_isOddFrame = true;
+			_isOddFrame = false;
 			_tempAddressHasBeenWrittenTo = false;
 			ScrollRegister = 0;
 			DataRegister = 0;
@@ -617,7 +617,7 @@ namespace dotnetNES.Engine.Models
                     ScanLine = 0;
                     _isOddFrame = !_isOddFrame;
 
-				    return;
+                    return;
 				}
 			}
 			else if (ScanLine == 239 && CycleCount == 320)
@@ -631,7 +631,7 @@ namespace dotnetNES.Engine.Models
 				InnerCycleAction();
 			}
 
-		   if ((ScanLine == 241) && (CycleCount == 1))
+		   if ((ScanLine == 241) && (CycleCount == 2))
             {
                 PPUStatusFlags.VerticalBlank = 1;
                 

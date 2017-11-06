@@ -83,9 +83,9 @@ namespace dotnetNES.Engine.Models
                 address = (address & 0x7) + 0x2000;
             }
 
-            ReadMemoryAction(address);
-
             IncrementCycleCount();
+
+            ReadMemoryAction(address);
 
             return Memory[address];
         }
