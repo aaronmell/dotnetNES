@@ -11,10 +11,7 @@ namespace dotnetNES.Engine.Models
                 
         public string Address
         {
-            get
-            {
-                return _address;
-            }
+            get => _address;
             set
             {
                 _address = value;

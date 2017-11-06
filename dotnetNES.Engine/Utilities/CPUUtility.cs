@@ -1,5 +1,6 @@
 ﻿using System;
 using dotnetNES.Engine.Models;
+using dotnetNES.Engine.Processors;
 
 namespace dotnetNES.Engine.Utilities
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using dotnetNES.Engine.Models;
-using JetBrains.Annotations;
 
 namespace dotnetNES.Engine.Utilities
 {

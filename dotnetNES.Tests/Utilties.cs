@@ -8,8 +8,8 @@ namespace dotnetNES.Tests
     {
         public static string GetTestPath(string folder, string fileName)
         {
-            const string EnvironmentVariable = "TestDataDirectory";
-            string testDataDir = Environment.GetEnvironmentVariable(EnvironmentVariable);
+            const string environmentVariable = "TestDataDirectory";
+            var testDataDir = Environment.GetEnvironmentVariable(environmentVariable);
 
             if (string.IsNullOrWhiteSpace(testDataDir))
             {

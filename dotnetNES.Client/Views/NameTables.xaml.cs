@@ -1,4 +1,4 @@
-﻿namespace dotnetNES.Client
+﻿namespace dotnetNES.Client.Views
 {
     /// <summary>
     /// Interaction logic for NameTables.xaml

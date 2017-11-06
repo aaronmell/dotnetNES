@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using GalaSoft.MvvmLight.Messaging;
 
 namespace dotnetNES.Client.ViewModel
 {
@@ -31,7 +30,7 @@ namespace dotnetNES.Client.ViewModel
            
             PatternTable0.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable0.Unlock();
-            RaisePropertyChanged("PatternTable0");
+            RaisePropertyChanged(nameof(PatternTable0));
             #endregion
 
             #region Right Pattern Table
@@ -43,7 +42,7 @@ namespace dotnetNES.Client.ViewModel
            
             PatternTable1.AddDirtyRect(new Int32Rect(0, 0, 128, 128));
             PatternTable1.Unlock();
-            RaisePropertyChanged("PatternTable1");
+            RaisePropertyChanged(nameof(PatternTable1));
             #endregion
 
             #region Background Palette
@@ -55,7 +54,7 @@ namespace dotnetNES.Client.ViewModel
             
             BackgroundPalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
             BackgroundPalettes.Unlock();
-            RaisePropertyChanged("BackgroundPalettes");
+            RaisePropertyChanged(nameof(BackgroundPalettes));
             #endregion
 
             #region Sprite Palette
@@ -66,7 +65,7 @@ namespace dotnetNES.Client.ViewModel
             
             SpritePalettes.AddDirtyRect(new Int32Rect(0, 0, 512, 32));
             SpritePalettes.Unlock();
-            RaisePropertyChanged("SpritePalettes");
+            RaisePropertyChanged(nameof(SpritePalettes));
             #endregion
         }
         #endregion

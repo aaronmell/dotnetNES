@@ -1,20 +1,14 @@
-﻿using dotnetNES.Client.Models;
+﻿using System;
+using dotnetNES.Client.Models;
 using dotnetNES.Engine.Models;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Data;
-using System;
 
 namespace dotnetNES.Client.ViewModel
 {
     public class DebuggerViewModel : DebuggingBaseViewModel
     {
-        private object _disassemblyLock = new object();
-
-
         public ObservableCollection<Disassembly> Disassembly { get; set; }  
         public int SelectedValue { get; set; }       
         
@@ -100,11 +94,7 @@ namespace dotnetNES.Client.ViewModel
             RaisePropertyChanged(nameof(Disassembly));
         }
 
-        private void Engine_OnEngineUnPaused(object sender, System.EventArgs e)
-        {
-        }
-
-        private void Engine_OnEnginePaused(object sender, System.EventArgs e)
+        private void Engine_OnEnginePaused(object sender, EventArgs e)
         {
             UpdateAfterPause();
         }        

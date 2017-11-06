@@ -1,7 +1,6 @@
 ﻿using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 
-namespace dotnetNES.Client
+namespace dotnetNES.Client.Views
 {
     /// <summary>
     /// Interaction logic for NameTables.xaml
@@ -15,17 +14,14 @@ namespace dotnetNES.Client
 
         private void OutputLog_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is ListView)
-            {
-                ListView grid = (sender as ListView);
-                if (grid.SelectedItem != null)
-                {                    
+            var grid = sender as ListView;
+            if (grid?.SelectedItem != null)
+            {                    
 
-                    grid.Dispatcher.InvokeAsync(() =>
-                    {                       
-                        grid.ScrollIntoView(grid.SelectedItem);
-                    });
-                }
+                grid.Dispatcher.InvokeAsync(() =>
+                {                       
+                    grid.ScrollIntoView(grid.SelectedItem);
+                });
             }
         }
     }

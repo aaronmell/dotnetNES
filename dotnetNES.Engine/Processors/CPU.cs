@@ -1,17 +1,17 @@
 ﻿using System;
-using Processor;
-using dotnetNES.Engine.Utilities;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using dotnetNES.Engine.Utilities;
+using Processor;
+using Disassembly = dotnetNES.Engine.Models.Disassembly;
 
-namespace dotnetNES.Engine.Models
+namespace dotnetNES.Engine.Processors
 {
     /// <summary>
     /// Overridden Processor. This was done so I can modify the behavior of several of the methods to work correctly in the NES, without breaking the emulator.
     /// </summary>
     internal sealed class CPU : Processor.Processor
     {
-        private ObservableCollection<Disassembly> _disassembledMemory = new ObservableCollection<Disassembly>();
+        private readonly ObservableCollection<Disassembly> _disassembledMemory = new ObservableCollection<Disassembly>();
 
         internal bool DisassemblyEnabled;
 
@@ -49,7 +49,7 @@ namespace dotnetNES.Engine.Models
                 
                 for (var i = 0; i < 0x100; i++)
                 {
-                    WriteMemoryAction(0x2004, (byte)(ReadMemoryValueWithoutCycle(data << 8 | i)));
+                    WriteMemoryAction(0x2004, ReadMemoryValueWithoutCycle(data << 8 | i));
                 }                
             }
             

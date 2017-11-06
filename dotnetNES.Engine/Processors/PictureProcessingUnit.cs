@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using dotnetNES.Engine.Models;
 using NLog;
 
-namespace dotnetNES.Engine.Models
+namespace dotnetNES.Engine.Processors
 {
 	/// <summary>
 	/// The Picture Processing Unit or PPU
@@ -53,8 +54,8 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte ControlRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2000); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2000, value); }
+			get => _cpu.ReadMemoryValueWithoutCycle(0x2000);
+		    set => _cpu.WriteMemoryValueWithoutCycle(0x2000, value);
 		}
 
 		/// <summary>
@@ -71,8 +72,8 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte MaskRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2001); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2001, value); }
+			get => _cpu.ReadMemoryValueWithoutCycle(0x2001);
+		    set => _cpu.WriteMemoryValueWithoutCycle(0x2001, value);
 		}
 
 		/// <summary>
@@ -85,7 +86,7 @@ namespace dotnetNES.Engine.Models
 		private byte StatusRegister
 		{
 			//get { return _cpu.ReadMemoryValueWithoutCycle(0x2002); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2002, value); }
+			set => _cpu.WriteMemoryValueWithoutCycle(0x2002, value);
 		}
 
 		/// <summary>
@@ -93,8 +94,8 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte ObjectAttributeMemoryRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2004); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2004, value); }
+			get => _cpu.ReadMemoryValueWithoutCycle(0x2004);
+		    set => _cpu.WriteMemoryValueWithoutCycle(0x2004, value);
 		}
 
 		/// <summary>
@@ -104,8 +105,8 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte ScrollRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2005); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2005, value); }
+			get => _cpu.ReadMemoryValueWithoutCycle(0x2005);
+		    set => _cpu.WriteMemoryValueWithoutCycle(0x2005, value);
 		}
 
 		/// <summary>
@@ -114,8 +115,8 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte AddressRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2006); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2006, value); }
+			get => _cpu.ReadMemoryValueWithoutCycle(0x2006);
+		    set => _cpu.WriteMemoryValueWithoutCycle(0x2006, value);
 		}
 
 		/// <summary>
@@ -123,8 +124,8 @@ namespace dotnetNES.Engine.Models
 		/// </summary>
 		private byte DataRegister
 		{
-			get { return _cpu.ReadMemoryValueWithoutCycle(0x2007); }
-			set { _cpu.WriteMemoryValueWithoutCycle(0x2007, value); }
+			get => _cpu.ReadMemoryValueWithoutCycle(0x2007);
+		    set => _cpu.WriteMemoryValueWithoutCycle(0x2007, value);
 		}
 		#endregion
 
@@ -206,7 +207,7 @@ namespace dotnetNES.Engine.Models
 	    /// <summary>
 	    /// Odd frames skip a cycle on the first cycle and scanline
 	    /// </summary>
-	    private bool _isOddFrame = false;
+	    private bool _isOddFrame;
 
 		/// <summary>
 		/// A Buffer for reads from ppu memory when the address is in the 0x0 to 0x3EFF range.
@@ -228,12 +229,12 @@ namespace dotnetNES.Engine.Models
         /// <summary>
         /// The CPU
         /// </summary>
-        private readonly CPU _cpu = new CPU();
+        private readonly CPU _cpu;
 
-        private static readonly ILogger _logger = LogManager.GetLogger("PictureProcessingUnit");
+        private static readonly ILogger Logger = LogManager.GetLogger("PictureProcessingUnit");
 
 		//This contains all of the colors the NES can display converted into RGB format.
-		private static readonly byte[] _pallet =
+		private static readonly byte[] Pallet =
 		{
 			0x66, 0x66, 0x66, 0x00, 0x2a, 0x88, 0x14, 0x12, 0xa7, 0x3b, 0x00, 0xa4, 0x5c, 0x00, 0x7e, 0x6e,
 			0x00, 0x40, 0x6c, 0x07, 0x00, 0x56, 0x1d, 0x00, 0x33, 0x35, 0x00, 0x0c, 0x48, 0x00, 0x00, 0x52,
@@ -252,7 +253,7 @@ namespace dotnetNES.Engine.Models
 		/// <summary>
 		/// This is used when mirroring is enable to flip the sprite
 		/// </summary>
-		private static readonly byte[] spriteMirror =
+		private static readonly byte[] SpriteMirror =
 		{
 			0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
 			0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8,
@@ -290,7 +291,7 @@ namespace dotnetNES.Engine.Models
 		/// <summary>
 		/// This is set by <see cref="ControlRegister"/> bit 6
 		/// </summary>
-		private bool _use8x16Sprite;
+		private bool _use8X16Sprite;
 
 		/// <summary>
 		/// This is used by the screen to draw to the correct location on the screen.
@@ -701,7 +702,7 @@ namespace dotnetNES.Engine.Models
 
 							//Determine if current Y Coordinate is in range for this scanline
 							if ((ScanLine >= _tempSprite) &&
-								(ScanLine <= _tempSprite + (_use8x16Sprite ? 0xF : 0x7)))
+								(ScanLine <= _tempSprite + (_use8X16Sprite ? 0xF : 0x7)))
 							{
 								//Y Coordinate is in range
 								_spriteEvaluationState = 1;
@@ -758,7 +759,7 @@ namespace dotnetNES.Engine.Models
 						{
 							//Determine if current Y Coordinate is in range for this scanline for the 9th sprite
 							if ((ScanLine >= _tempSprite) &&
-								(ScanLine <= _tempSprite + (_use8x16Sprite ? 0xF : 0x7)))
+								(ScanLine <= _tempSprite + (_use8X16Sprite ? 0xF : 0x7)))
 							{
                                 //Set the sprite overflow flag
                                 PPUStatusFlags.SpriteOverflow = 1;
@@ -823,7 +824,7 @@ namespace dotnetNES.Engine.Models
 			}			
 		}
 
-		static private void SwapFrames()
+		private static void SwapFrames()
 		{
 			_tempFrame = CurrentFrame;
 			CurrentFrame = _newFrame;
@@ -1264,7 +1265,7 @@ namespace dotnetNES.Engine.Models
 					//Get the low byte of the tile. We need to check the sprite to see if its been mirrored and apply the mirrored version if so.
 					_lowSpriteTileByte = (_objectAttributeMemoryBufferCurrentLine[((CycleCount >> 3 & 7)*4) + 2] & 0x40) == 0
 						? _internalMemory[_lowSpriteTileAddress]
-						: spriteMirror[_internalMemory[_lowSpriteTileAddress]];
+						: SpriteMirror[_internalMemory[_lowSpriteTileAddress]];
 					break;
 				}
 				//Sprite Tile Fetch High Address
@@ -1293,7 +1294,7 @@ namespace dotnetNES.Engine.Models
 					//Get the high byte of the tile. We need to check the sprite to see if its been mirrored and apply the mirrored version if so.
 					_highSpriteTileByte = (_objectAttributeMemoryBufferCurrentLine[((CycleCount >> 3 & 7) * 4) + 2] & 0x40) == 0
 						? _internalMemory[_highSpriteTileAddress]
-						: spriteMirror[_internalMemory[_highSpriteTileAddress]];
+						: SpriteMirror[_internalMemory[_highSpriteTileAddress]];
 
 					DrawSpriteToScreen();
 					break;
@@ -1489,7 +1490,7 @@ namespace dotnetNES.Engine.Models
                         _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
 					_backgroundPatternTableAddressOffset = ((value & 0x10) != 0) ? 0x1000 : 0x0000;
 					_spritePatternTableAddressOffset = ((value & 0x08) != 0) ? 0x1000 : 0x0000;
-					_use8x16Sprite = ((value & 0x20) != 0) ? true : false;
+					_use8X16Sprite = (value & 0x20) != 0;
 						break;
 				}
 				case 0x2001:
@@ -1637,19 +1638,6 @@ namespace dotnetNES.Engine.Models
 
             //Calculate the starting place in memory of the tile. 
             var tileMemoryIndex = (16 * byte1) + _spritePatternTableAddressOffset;
-
-            //DrawTileToBitmapArray(spritePointer, 1, byte1, _spritePatternTableAddressOffset, 0, 0, paletteIndex, true);
-            //DrawBackgroundTileToBitmapArray(byte* bitmapArray, int totalColumns, int tileAddress, int tileOffset, int row, int column, int paletteOffset)
-            //Calculate the StartPosition of the first pixel in the array;
-            //var pixelArrayInitialPosition = (row * totalColumns * 192) + (column * 24);
-            //var pixelArrayOffsetPosition = pixelArrayInitialPosition;
-
-            //Iterate of each row of the tile and draw the array
-            //for (var pixelRow = 0; pixelRow < 8; pixelRow++)
-            //{
-            //    //offset the array
-            //    if ((tileMemoryIndex & 0x07) != 0)
-            //        pixelArrayOffsetPosition = pixelArrayInitialPosition + (totalColumns * 24 * (tileMemoryIndex & 0x07));
 
 		    var pixelArrayOffsetPosition = 0;
 
@@ -1943,9 +1931,9 @@ namespace dotnetNES.Engine.Models
 		/// <param name="paletteIndex">The index of the color to draw</param>
 		private static unsafe void DrawPixelToByteArray(byte* bitmapArray, int pixelArrayIndex, int paletteIndex)
 		{
-			bitmapArray[pixelArrayIndex] = _pallet[paletteIndex * 3 + 2];
-			bitmapArray[pixelArrayIndex + 1] = _pallet[paletteIndex * 3 + 1];
-			bitmapArray[pixelArrayIndex + 2] = _pallet[paletteIndex * 3];
+			bitmapArray[pixelArrayIndex] = Pallet[paletteIndex * 3 + 2];
+			bitmapArray[pixelArrayIndex + 1] = Pallet[paletteIndex * 3 + 1];
+			bitmapArray[pixelArrayIndex + 2] = Pallet[paletteIndex * 3];
 		}
 		#endregion
 

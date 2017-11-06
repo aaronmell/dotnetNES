@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using GalaSoft.MvvmLight.Messaging;
+
 namespace dotnetNES.Client.ViewModel
 {
     public sealed class SpritesViewModel : DebuggingBaseViewModel

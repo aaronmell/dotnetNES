@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 
@@ -74,32 +73,32 @@ namespace dotnetNES.Tests.Processors
                 engine.Step();
 
                 Assert.AreEqual(testData[steps].ProgramCounter, engine.Processor.ProgramCounter,
-                    string.Format("Step {0} PC: ", steps));
+                                $"Step {steps} PC: ");
                 Assert.AreEqual(testData[steps].Accumulator, engine.Processor.Accumulator,
-                    string.Format("Step {0} Accumulator: ", steps));
+                                $"Step {steps} Accumulator: ");
                 Assert.AreEqual(testData[steps].XRegister, engine.Processor.XRegister,
-                    string.Format("Step {0} XRegister: ", steps));
+                                $"Step {steps} XRegister: ");
                 Assert.AreEqual(testData[steps].YRegister, engine.Processor.YRegister,
-                    string.Format("Step {0} YRegister: ", steps));
+                                $"Step {steps} YRegister: ");
                 Assert.AreEqual(testData[steps].Flags,
                     (byte)
                         ((engine.Processor.CarryFlag ? 0x01 : 0) + (engine.Processor.ZeroFlag ? 0x02 : 0) +
                          (engine.Processor.DisableInterruptFlag ? 0x04 : 0) +
                          (engine.Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 +
                          (engine.Processor.OverflowFlag ? 0x40 : 0) + (engine.Processor.NegativeFlag ? 0x80 : 0)),
-                    string.Format("Step {0} Flag:", steps));
+                                $"Step {steps} Flag:");
                 Assert.AreEqual(testData[steps].StackPointer, engine.Processor.StackPointer,
-                    string.Format("Step {0} StackPointer: ", steps));
+                                $"Step {steps} StackPointer: ");
 
                 Assert.AreEqual(testData[steps].CycleCount, engine.PictureProcessingUnit.CycleCount,
-                   string.Format("Step {0} CycleCount: ", steps));
+                                $"Step {steps} CycleCount: ");
                 Assert.AreEqual(testData[steps].ScanLine, engine.PictureProcessingUnit.ScanLine,
-                    string.Format("Step {0} ScanLine: ", steps));
+                                $"Step {steps} ScanLine: ");
                 steps++;
             }
         }
 
-        private List<TestData> LoadTestData(string folder, string filename)
+        private static List<TestData> LoadTestData(string folder, string filename)
         {
             var path = Utilities.GetTestPath(folder, filename);
             
@@ -115,12 +114,12 @@ namespace dotnetNES.Tests.Processors
 
                 data.Add(new TestData
                 {
-                    ProgramCounter = Int32.Parse(values[0], System.Globalization.NumberStyles.HexNumber),
-                    Accumulator = Int32.Parse(values[1], System.Globalization.NumberStyles.HexNumber),
-                    XRegister = Int32.Parse(values[2], System.Globalization.NumberStyles.HexNumber),
-                    YRegister = Int32.Parse(values[3], System.Globalization.NumberStyles.HexNumber),
-                    Flags = Int32.Parse(values[4], System.Globalization.NumberStyles.HexNumber),
-                    StackPointer = Int32.Parse(values[5], System.Globalization.NumberStyles.HexNumber),
+                    ProgramCounter = int.Parse(values[0], System.Globalization.NumberStyles.HexNumber),
+                    Accumulator = int.Parse(values[1], System.Globalization.NumberStyles.HexNumber),
+                    XRegister = int.Parse(values[2], System.Globalization.NumberStyles.HexNumber),
+                    YRegister = int.Parse(values[3], System.Globalization.NumberStyles.HexNumber),
+                    Flags = int.Parse(values[4], System.Globalization.NumberStyles.HexNumber),
+                    StackPointer = int.Parse(values[5], System.Globalization.NumberStyles.HexNumber),
                     CycleCount = int.Parse(values[6]),
                     ScanLine = int.Parse(values[7]),
                 });

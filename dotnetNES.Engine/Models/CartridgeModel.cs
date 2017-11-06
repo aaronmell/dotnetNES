@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace dotnetNES.Engine.Models
+﻿namespace dotnetNES.Engine.Models
 {
     /// <summary>
     /// The data model for a cartridge.

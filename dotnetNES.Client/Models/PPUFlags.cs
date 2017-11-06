@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using dotnetNES.Engine.Models;
+﻿using dotnetNES.Engine.Models;
 
 namespace dotnetNES.Client.Models
 {
@@ -51,12 +46,12 @@ namespace dotnetNES.Client.Models
 
      
 
-        public void UpdateFlags(dotnetNES.Engine.Main.Engine engine)
+        public void UpdateFlags(Engine.Main.Engine engine)
         {
             ScanLine = engine.GetScanLine();
             Cycle = engine.GetPPUCycleCount();
             VRAMAddress = engine.GetVRAMAddress().ToString("X").PadLeft(4,'0');
-            NTAddress = engine.GetNTAddress().ToString("X").PadLeft(4, '0');
+            NTAddress = engine.GetNameTableAddress().ToString("X").PadLeft(4, '0');
             XScroll = engine.GetXScroll();
 
             var mask = engine.GetMemoryLocation(0x2001);

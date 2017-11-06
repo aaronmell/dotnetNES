@@ -40,7 +40,7 @@ namespace dotnetNES.Client.ViewModel
             }
         }
         
-        protected unsafe override void Refresh()
+        protected override unsafe void Refresh()
         {
             NameTable0.Lock();
             var nameTable0Ptr = NameTable0.BackBuffer;

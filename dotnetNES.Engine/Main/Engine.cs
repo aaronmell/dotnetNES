@@ -2,12 +2,12 @@
 using System.Diagnostics;
 using dotnetNES.Engine.Models;
 using dotnetNES.Engine.Utilities;
-using PPU = dotnetNES.Engine.Models.PictureProcessingUnit;
+using PPU = dotnetNES.Engine.Processors.PictureProcessingUnit;
 using NLog;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
+using dotnetNES.Engine.Processors;
 
 namespace dotnetNES.Engine.Main
 {
@@ -16,17 +16,17 @@ namespace dotnetNES.Engine.Main
     /// </summary>
     public class Engine
     {
-        private static readonly ILogger _logger = LogManager.GetLogger("Engine");
+        private static readonly ILogger Logger = LogManager.GetLogger("Engine");
         private readonly CartridgeModel _cartridgeModel;
         private BackgroundWorker _backgroundWorker;       
 
-        private double cyclesToSkip = 0;
+        private double _cyclesToSkip;
         private bool _skipCycles;
 
         private bool _isResetOrPowerEvent;
 
-        internal CPU Processor { get; private set; }
-        internal PPU PictureProcessingUnit { get; private set; }        
+        internal CPU Processor { get; }
+        internal PPU PictureProcessingUnit { get; }        
 
         /// <summary>
         /// Collection of breakpoints
@@ -37,11 +37,7 @@ namespace dotnetNES.Engine.Main
         /// The property is used to determine if vertical mirroring is used by the current cartridge.
         /// If its set to true, it changes the drawing behavior of the Nametables screen.
         /// </summary>
-        public bool IsVerticalMirroringEnabled
-        {
-            get { return _cartridgeModel.IsVerticalMirroringEnabled; }
-        }
-
+        public bool IsVerticalMirroringEnabled => _cartridgeModel.IsVerticalMirroringEnabled;
         /// <summary>
         /// returns a value indicating if the engine is running or paused
         /// </summary>
@@ -95,25 +91,10 @@ namespace dotnetNES.Engine.Main
         [Conditional("DEBUG")]
         private void WriteLog()
         {
-            if (_logger.IsDebugEnabled)
+            if (Logger.IsDebugEnabled)
             {
-                _logger.Debug(string.Format("{0}  {1} {2} {3} {4} {5} A:{6} X:{7} Y:{8} P:{9} SP:{10} CYC:{11} SL:{12}",
-               Processor.ProgramCounter.ToString("X").PadLeft(4, '0'),
-               Processor.CurrentOpCode.ToString("X"),
-               Processor.CurrentDisassembly.LowAddress.PadRight(2),
-               Processor.CurrentDisassembly.HighAddress.PadRight(2),
-               Processor.CurrentDisassembly.OpCodeString.PadRight(2),
-               Processor.CurrentDisassembly.DisassemblyOutput.PadRight(16, ' '),
-               Processor.Accumulator.ToString("X").PadLeft(2, '0'),
-               Processor.XRegister.ToString("X").PadLeft(2, '0'),
-               Processor.YRegister.ToString("X").PadLeft(2, '0'),
-               ((byte)
-                   ((Processor.CarryFlag ? 0x01 : 0) + (Processor.ZeroFlag ? 0x02 : 0) +
-                    (Processor.DisableInterruptFlag ? 0x04 : 0) +
-                    (Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (Processor.OverflowFlag ? 0x40 : 0) +
-                    (Processor.NegativeFlag ? 0x80 : 0))).ToString("X"),
-               Processor.StackPointer.ToString("X").PadLeft(2, '0'), PictureProcessingUnit.CycleCount,
-               PictureProcessingUnit.ScanLine));
+                Logger.Debug(
+                             $"{Processor.ProgramCounter.ToString("X").PadLeft(4, '0')} {Processor.CurrentOpCode:X} {Processor.CurrentDisassembly.LowAddress.PadRight(2)} {Processor.CurrentDisassembly.HighAddress.PadRight(2)} {Processor.CurrentDisassembly.OpCodeString.PadRight(2)} {Processor.CurrentDisassembly.DisassemblyOutput.PadRight(16, ' ')} A:{Processor.Accumulator.ToString("X").PadLeft(2, '0')} X:{Processor.XRegister.ToString("X").PadLeft(2, '0')} Y:{Processor.YRegister.ToString("X").PadLeft(2, '0')} P:{((byte)((Processor.CarryFlag ? 0x01 : 0) + (Processor.ZeroFlag ? 0x02 : 0) + (Processor.DisableInterruptFlag ? 0x04 : 0) + (Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (Processor.OverflowFlag ? 0x40 : 0) + (Processor.NegativeFlag ? 0x80 : 0))):X} SP:{Processor.StackPointer.ToString("X").PadLeft(2, '0')} CYC:{PictureProcessingUnit.CycleCount} SL:{PictureProcessingUnit.ScanLine}");
             }
         }
 
@@ -153,8 +134,9 @@ namespace dotnetNES.Engine.Main
         /// An Action method that fires each time a new Frame Occurs. This is by the API to redraw the screen for example.
         /// </summary>
         public Action OnNewFrameAction {
-            get { return PictureProcessingUnit.OnNewFrameAction; }
-            set { PictureProcessingUnit.OnNewFrameAction = value; } }
+            get => PictureProcessingUnit.OnNewFrameAction;
+            set => PictureProcessingUnit.OnNewFrameAction = value;
+        }
 
         /// <summary>
         /// This draws PatternTable0 on its bitmap.
@@ -300,7 +282,7 @@ namespace dotnetNES.Engine.Main
                 return true;
             }
 
-            if (_skipCycles && PictureProcessingUnit.TotalCycles >= cyclesToSkip)
+            if (_skipCycles && PictureProcessingUnit.TotalCycles >= _cyclesToSkip)
             {
                 _skipCycles = false;
 
@@ -346,7 +328,7 @@ namespace dotnetNES.Engine.Main
             _skipCycles = true;
 
             //This will always run slightly less than a full scanline, so it will never jump past the cycle you were previously on. 
-            cyclesToSkip = PictureProcessingUnit.TotalCycles + 330;
+            _cyclesToSkip = PictureProcessingUnit.TotalCycles + 330;
 
             UnPauseEngine();
         }
@@ -356,7 +338,7 @@ namespace dotnetNES.Engine.Main
             _skipCycles = true;
 
             //This will always run slightly less than an entire frame, so you will never jump past the previous cycle scanline and cycle. 
-            cyclesToSkip = PictureProcessingUnit.TotalCycles + 89327;
+            _cyclesToSkip = PictureProcessingUnit.TotalCycles + 89327;
 
             UnPauseEngine();
         }
@@ -438,7 +420,7 @@ namespace dotnetNES.Engine.Main
             return PictureProcessingUnit.CycleCount;
         }
 
-        public int GetNTAddress()
+        public int GetNameTableAddress()
         {
             return PictureProcessingUnit.NameTableAddress;
         }

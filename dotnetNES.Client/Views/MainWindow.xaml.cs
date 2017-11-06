@@ -1,6 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
 
-namespace dotnetNES.Client
+namespace dotnetNES.Client.Views
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
