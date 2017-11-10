@@ -9,6 +9,8 @@ namespace dotnetNES.Client.ViewModel
 {
     public class DebuggerViewModel : DebuggingBaseViewModel
     {
+        private bool _isrunningToNext;
+
         public ObservableCollection<Disassembly> Disassembly { get; set; }  
         public int SelectedValue { get; set; }       
         
@@ -48,15 +50,17 @@ namespace dotnetNES.Client.ViewModel
 
             RunOneScanlineCommand = new RelayCommand(() =>
             {
-                if (Engine.IsPaused)
+                if (!_isrunningToNext)
                 {
+                    _isrunningToNext = true;
                     Engine.RuntoNextScanLine();
                 }
             });
             RunOneFrameCommand = new RelayCommand(() =>
             {
-                if (Engine.IsPaused)
+                if (!_isrunningToNext)
                 {
+                    _isrunningToNext = true;
                     Engine.RuntoNextFrame();
                 }
      
@@ -96,6 +100,7 @@ namespace dotnetNES.Client.ViewModel
 
         private void Engine_OnEnginePaused(object sender, EventArgs e)
         {
+            _isrunningToNext = false;
             UpdateAfterPause();
         }        
 
