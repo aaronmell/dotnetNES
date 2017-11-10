@@ -28,6 +28,9 @@ namespace dotnetNES.Client.ViewModel
         #region Private Fields
         private string _fileName;
         private double _frameCount;
+        private bool _isReset;
+        private bool _isPower;
+        private bool _isLoadCartridge;
         #endregion
 
         #region Public Properties
@@ -73,16 +76,43 @@ namespace dotnetNES.Client.ViewModel
         /// </summary>
         public MainViewModel()
         {
-            LoadFileCommand = new RelayCommand(LoadFile);
-            ResetNesCommand = new RelayCommand(() =>
+            LoadFileCommand = new RelayCommand(() =>
             {
-                Engine.BeginReset();
-                RaisePropertyChanged(nameof(IsEnginePaused));
+                if (Engine != null && !Engine.IsPaused)
+                {
+                    _isLoadCartridge = true;
+                    Engine.PauseEngine();
+                    return;
+                }
+
+                LoadFile();
+
+            });
+            ResetNesCommand = new RelayCommand(() =>
+            {              
+
+                if (!Engine.IsPaused)
+                {
+                    _isReset = true;
+                    Engine.PauseEngine();
+                }
+                else
+                {
+                    Engine.Reset();
+                }
+                            
             });
             PowerNesCommand = new RelayCommand(() =>
             {
-                Engine.BeginPower();
-                RaisePropertyChanged(nameof(IsEnginePaused));
+                if (!Engine.IsPaused)
+                {
+                    _isPower = true;
+                    Engine.PauseEngine();
+                }
+                else
+                {
+                    Engine.Power();
+                }
             });
             OpenPatternsAndPalettesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenPatternsAndPalettes));
             OpenNameTablesCommand = new RelayCommand(() => OpenDebugWindowWithEngine(MessageNames.OpenNameTables));
@@ -107,12 +137,6 @@ namespace dotnetNES.Client.ViewModel
 
         private void LoadFile()
         {
-            if (Engine != null)
-            {
-                Engine.PauseEngine();
-                RaisePropertyChanged(nameof(IsEnginePaused));                
-            }
-
             var dlg = new OpenFileDialog {DefaultExt = ".nes", Filter = "NES Roms (*.nes)|*.nes"};
 
             if (dlg.ShowDialog() != true)
@@ -133,12 +157,30 @@ namespace dotnetNES.Client.ViewModel
             IsCartridgeLoaded = true;
             RaisePropertyChanged(nameof(IsCartridgeLoaded));
 
-            Engine.BeginPower();
+            Engine.Power();
             Engine.UnPauseEngine();
         }
 
         private void Engine_OnEnginePaused(object sender, EventArgs e)
         {
+            if (_isReset)
+            {
+                _isReset = false;
+                Engine.Reset();                
+            }
+
+            if (_isPower)
+            {
+                _isPower = false;
+                Engine.Power();
+            }
+
+            if (_isLoadCartridge)
+            {
+                _isLoadCartridge = false;
+                LoadFile();
+            }
+
             RaisePropertyChanged(nameof(IsEnginePaused));
         }
 

@@ -23,8 +23,6 @@ namespace dotnetNES.Engine.Main
         private double _cyclesToSkip;
         private bool _skipCycles;
 
-        private bool _isResetOrPowerEvent;
-
         internal CPU Processor { get; }
         internal PPU PictureProcessingUnit { get; }        
 
@@ -96,19 +94,10 @@ namespace dotnetNES.Engine.Main
                 Logger.Debug(
                              $"{Processor.ProgramCounter.ToString("X").PadLeft(4, '0')} {Processor.CurrentOpCode:X} {Processor.CurrentDisassembly.LowAddress.PadRight(2)} {Processor.CurrentDisassembly.HighAddress.PadRight(2)} {Processor.CurrentDisassembly.OpCodeString.PadRight(2)} {Processor.CurrentDisassembly.DisassemblyOutput.PadRight(16, ' ')} A:{Processor.Accumulator.ToString("X").PadLeft(2, '0')} X:{Processor.XRegister.ToString("X").PadLeft(2, '0')} Y:{Processor.YRegister.ToString("X").PadLeft(2, '0')} P:{((byte)((Processor.CarryFlag ? 0x01 : 0) + (Processor.ZeroFlag ? 0x02 : 0) + (Processor.DisableInterruptFlag ? 0x04 : 0) + (Processor.DecimalFlag ? 8 : 0) + (0) + 0x20 + (Processor.OverflowFlag ? 0x40 : 0) + (Processor.NegativeFlag ? 0x80 : 0))):X} SP:{Processor.StackPointer.ToString("X").PadLeft(2, '0')} CYC:{PictureProcessingUnit.CycleCount} SL:{PictureProcessingUnit.ScanLine}");
             }
-        }
+        }             
 
-        /// <summary>
-        /// Resets the Engine, mimics the behavior of pressing the reset button on the console
-        /// </summary>
-        public void BeginReset()
-        {
-            _isResetOrPowerEvent = true;
-            PauseEngine();            
-        }      
-
-        public void EndReset()
-        {
+        public void Reset()
+        {           
             Processor.Reset();
             PictureProcessingUnit.Reset();
 
@@ -121,14 +110,21 @@ namespace dotnetNES.Engine.Main
             UnPauseEngine();
         }
 
-        /// <summary>
-        /// Resets the Engine, mimics the behavior of pressing the power button on the console
-        /// </summary>
-        public void BeginPower()
+        public void Power()
         {
-            _isResetOrPowerEvent = true;
-            PauseEngine();           
+            Processor.Reset();
+            PictureProcessingUnit.Power();
+
+            //Warm up the PPU
+            for (int i = 0; i < 30; i++)
+            {
+                PictureProcessingUnit.StepPPU();
+            }
+
+            UnPauseEngine();
         }
+
+        
 
         /// <summary>
         /// An Action method that fires each time a new Frame Occurs. This is by the API to redraw the screen for example.
@@ -246,11 +242,7 @@ namespace dotnetNES.Engine.Main
 
         private void _backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (_isResetOrPowerEvent)
-            {
-                _isResetOrPowerEvent = false;
-                EndReset();
-            }
+            EnginePausedEvent(EventArgs.Empty);
         }
 
         private void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -318,9 +310,7 @@ namespace dotnetNES.Engine.Main
             }
             IsPaused = true;
 
-            _backgroundWorker.CancelAsync();
-
-            EnginePausedEvent(EventArgs.Empty);           
+            _backgroundWorker.CancelAsync();                  
         }
 
         public void RuntoNextScanLine()
