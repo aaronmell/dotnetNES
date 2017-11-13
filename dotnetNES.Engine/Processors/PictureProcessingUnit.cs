@@ -581,7 +581,7 @@ namespace dotnetNES.Engine.Processors
 		internal void StepPPU()
 		{
             ////WriteLog("Stepping PPU");
-            TotalCycles++;                
+            TotalCycles++;  
 
             if (ScanLine == 240 && CycleCount == 340)
 			{
@@ -594,14 +594,10 @@ namespace dotnetNES.Engine.Processors
 				if (CycleCount == 0)
 				{
                     _isRenderingDisabled = (MaskRegister & 0x18) == 0;
-
-					//WriteLog("Clearing _nmiOccurred");
-				}
-                else if (CycleCount == 1)
-                {                    
                     PPUStatusFlags.VerticalBlank = 0;
                     PPUStatusFlags.SpriteOverflow = 0;
                     PPUStatusFlags.SpriteZeroHit = 0;
+                    //WriteLog("Clearing _nmiOccurred");
                 }
                 else if (CycleCount == 320)
 				{
@@ -632,7 +628,7 @@ namespace dotnetNES.Engine.Processors
 				InnerCycleAction();
 			}
 
-		   if ((ScanLine == 241) && (CycleCount == 1))
+		   if ((ScanLine == 240) && (CycleCount == 340))
             {
                 PPUStatusFlags.VerticalBlank = 1;
                 
