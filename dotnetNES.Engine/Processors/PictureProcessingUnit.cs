@@ -1470,24 +1470,13 @@ namespace dotnetNES.Engine.Processors
                     if (ScanLine == 241 && CycleCount < 3 && PPUStatusFlags.GenerateNMI == 0)
                     {
                             _cpu.TriggerNmi = false;
-                        }
+                    }
 
-                        //var previousNmiOutput = _nmiOutput;
-                        //_nmiOutput = (ControlRegister & 0x80) != 0;
-
-                        //if (!_nmiOutput)
-                        //{
-                        //   if ((ScanLine == 241) && (CycleCount < 3))
-                        //		_triggerNmi = (_nmiOccurred & _nmiOutput);
-                        //}
-                        //else if (_nmiOccurred & !previousNmiOutput)
-                        //	_triggerNmi = true;
-
-                        _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
+                    _currentAddressIncrement = ((value & 0x4) != 0) ? 32 : 1;
 					_backgroundPatternTableAddressOffset = ((value & 0x10) != 0) ? 0x1000 : 0x0000;
 					_spritePatternTableAddressOffset = ((value & 0x08) != 0) ? 0x1000 : 0x0000;
 					_use8X16Sprite = (value & 0x20) != 0;
-						break;
+					break;
 				}
 				case 0x2001:
 				{
