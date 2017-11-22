@@ -45,8 +45,7 @@ namespace dotnetNES.Engine.Processors
 
             //OAMDMA When a byte is written to 4014 this triggers the memory in location XX00-XXFF to be copied to 2004 in the PPU, where XX is the byte written.
             if (address == 0x4014)
-            {
-                
+            {                
                 for (var i = 0; i < 0x100; i++)
                 {
                     WriteMemoryAction(0x2004, ReadMemoryValueWithoutCycle(data << 8 | i));
@@ -54,15 +53,11 @@ namespace dotnetNES.Engine.Processors
             }
             
             Memory[address] = data;
-            
-            //Not sure if this is in the right place
-            WriteMemoryAction(address, data);
 
-            //Doing this here so the memory has already been updated
-
+            //Believe the cycle count is incremented before writing
             IncrementCycleCount();
-
-            //IsDissasemblyInvalid = true;
+           
+            WriteMemoryAction(address, data);
         }
 
         /// <summary>
