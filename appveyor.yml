@@ -1,6 +1,8 @@
 version: 0.3.{build}
 configuration: Release
 platform: Any CPU
+image: Visual Studio 2017
+
 before_build:
   - nuget restore
 build:
